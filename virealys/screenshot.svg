@@ -9,20 +9,74 @@
       <stop offset="50%" style="stop-color:#4d7cff"/>
       <stop offset="100%" style="stop-color:#a855f7"/>
     </linearGradient>
-    <radialGradient id="glow1" cx="30%" cy="40%">
-      <stop offset="0%" style="stop-color:#00e5ff;stop-opacity:0.1"/>
+    <linearGradient id="neonV" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#00e5ff"/>
+      <stop offset="100%" style="stop-color:#a855f7"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="25%" cy="35%">
+      <stop offset="0%" style="stop-color:#00e5ff;stop-opacity:0.12"/>
       <stop offset="100%" style="stop-color:#06060f;stop-opacity:0"/>
     </radialGradient>
-    <radialGradient id="glow2" cx="70%" cy="60%">
-      <stop offset="0%" style="stop-color:#a855f7;stop-opacity:0.08"/>
+    <radialGradient id="glow2" cx="75%" cy="65%">
+      <stop offset="0%" style="stop-color:#a855f7;stop-opacity:0.1"/>
+      <stop offset="100%" style="stop-color:#06060f;stop-opacity:0"/>
+    </radialGradient>
+    <radialGradient id="glow3" cx="50%" cy="90%">
+      <stop offset="0%" style="stop-color:#4d7cff;stop-opacity:0.08"/>
       <stop offset="100%" style="stop-color:#06060f;stop-opacity:0"/>
     </radialGradient>
   </defs>
+
+  <!-- Background -->
   <rect width="1200" height="900" fill="url(#bg)"/>
   <rect width="1200" height="900" fill="url(#glow1)"/>
   <rect width="1200" height="900" fill="url(#glow2)"/>
-  <text x="600" y="380" font-family="sans-serif" font-size="72" font-weight="700" fill="url(#neon)" text-anchor="middle" letter-spacing="12">VIREALYS</text>
-  <text x="600" y="440" font-family="sans-serif" font-size="18" fill="#7a8ba0" text-anchor="middle" letter-spacing="4" text-transform="uppercase">SLOW FOOD IMMERSIF &amp; ÉVOLUTIF</text>
-  <line x1="480" y1="470" x2="720" y2="470" stroke="url(#neon)" stroke-width="1" opacity="0.4"/>
-  <text x="600" y="510" font-family="sans-serif" font-size="22" fill="#c8d6e5" text-anchor="middle">Voyagez sans quitter votre table</text>
+  <rect width="1200" height="900" fill="url(#glow3)"/>
+
+  <!-- Header bar (compact) -->
+  <rect x="0" y="0" width="1200" height="56" fill="#06060f" opacity="0.7"/>
+  <line x1="0" y1="56" x2="1200" y2="56" stroke="#00e5ff" stroke-width="0.5" opacity="0.15"/>
+  <text x="60" y="36" font-family="sans-serif" font-size="16" font-weight="700" fill="url(#neon)" letter-spacing="3">VIREALYS</text>
+  <text x="430" y="35" font-family="sans-serif" font-size="10" fill="#7a8ba0" letter-spacing="2">CONCEPT</text>
+  <text x="560" y="35" font-family="sans-serif" font-size="10" fill="#7a8ba0" letter-spacing="2">MENUS</text>
+  <text x="670" y="35" font-family="sans-serif" font-size="10" fill="#7a8ba0" letter-spacing="2">ZONES</text>
+  <text x="780" y="35" font-family="sans-serif" font-size="10" fill="#7a8ba0" letter-spacing="2">PASSEPORT</text>
+  <text x="920" y="35" font-family="sans-serif" font-size="10" fill="#7a8ba0" letter-spacing="2">CONTACT</text>
+  <!-- CTA button -->
+  <rect x="1050" y="18" width="100" height="28" rx="6" fill="url(#neon)" opacity="0.9"/>
+  <text x="1100" y="37" font-family="sans-serif" font-size="9" font-weight="600" fill="#06060f" text-anchor="middle" letter-spacing="1">RESERVER</text>
+
+  <!-- Badge -->
+  <rect x="440" y="280" width="320" height="30" rx="15" fill="none" stroke="#00e5ff" stroke-width="0.8" opacity="0.4"/>
+  <circle cx="470" cy="295" r="4" fill="#00e5ff" opacity="0.7"/>
+  <text x="600" y="300" font-family="sans-serif" font-size="10" fill="#00e5ff" text-anchor="middle" letter-spacing="2" opacity="0.8">SLOW FOOD IMMERSIF &amp; EVOLUTIF</text>
+
+  <!-- Title -->
+  <text x="600" y="380" font-family="sans-serif" font-size="52" font-weight="700" fill="#e8f0ff" text-anchor="middle" letter-spacing="1">Voyagez sans quitter</text>
+  <text x="600" y="440" font-family="sans-serif" font-size="52" font-weight="700" fill="#c8d6e5" text-anchor="middle" letter-spacing="1">votre table</text>
+
+  <!-- Subtitle -->
+  <text x="600" y="490" font-family="sans-serif" font-size="16" fill="#7a8ba0" text-anchor="middle">Le premier restaurant Slow Food immersif et evolutif</text>
+
+  <!-- CTA Buttons -->
+  <rect x="385" y="530" width="220" height="44" rx="8" fill="url(#neon)"/>
+  <text x="495" y="557" font-family="sans-serif" font-size="12" font-weight="600" fill="#06060f" text-anchor="middle" letter-spacing="1">VIVRE L'EXPERIENCE</text>
+  <rect x="625" y="530" width="190" height="44" rx="8" fill="none" stroke="#7a8ba0" stroke-width="0.8" opacity="0.5"/>
+  <text x="720" y="557" font-family="sans-serif" font-size="12" fill="#7a8ba0" text-anchor="middle" letter-spacing="1">DECOUVRIR</text>
+
+  <!-- Scroll indicator -->
+  <line x1="600" y1="820" x2="600" y2="860" stroke="url(#neonV)" stroke-width="1" opacity="0.4"/>
+
+  <!-- Decorative particles -->
+  <circle cx="180" cy="300" r="1.5" fill="#00e5ff" opacity="0.4"/>
+  <circle cx="950" cy="250" r="1" fill="#a855f7" opacity="0.3"/>
+  <circle cx="300" cy="600" r="1.5" fill="#4d7cff" opacity="0.3"/>
+  <circle cx="850" cy="500" r="1" fill="#00e5ff" opacity="0.35"/>
+  <circle cx="150" cy="700" r="1" fill="#a855f7" opacity="0.25"/>
+  <circle cx="1050" cy="650" r="1.5" fill="#4d7cff" opacity="0.3"/>
+  <circle cx="400" cy="180" r="1" fill="#00e5ff" opacity="0.3"/>
+  <circle cx="750" cy="750" r="1" fill="#a855f7" opacity="0.2"/>
+
+  <!-- Bottom gradient line -->
+  <line x1="200" y1="870" x2="1000" y2="870" stroke="url(#neon)" stroke-width="0.5" opacity="0.1"/>
 </svg>

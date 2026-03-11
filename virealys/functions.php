@@ -1,10 +1,11 @@
 <?php
 /**
  * Virealys - Functions and definitions
+ * User-Centric Immersive Restaurant Theme
  */
 
 if ( ! defined( 'VIREALYS_VERSION' ) ) {
-    define( 'VIREALYS_VERSION', '1.0.0' );
+    define( 'VIREALYS_VERSION', '2.0.0' );
 }
 
 /**
@@ -14,8 +15,8 @@ function virealys_setup() {
     add_theme_support( 'title-tag' );
     add_theme_support( 'post-thumbnails' );
     add_theme_support( 'custom-logo', array(
-        'height'      => 80,
-        'width'       => 250,
+        'height'      => 40,
+        'width'       => 160,
         'flex-height' => true,
         'flex-width'  => true,
     ) );
@@ -30,12 +31,13 @@ function virealys_setup() {
     ) );
 
     register_nav_menus( array(
-        'primary'   => __( 'Menu Principal', 'virealys' ),
-        'footer'    => __( 'Menu Footer', 'virealys' ),
+        'primary' => __( 'Menu Principal', 'virealys' ),
+        'footer'  => __( 'Menu Footer', 'virealys' ),
     ) );
 
     add_image_size( 'virealys-hero', 1920, 1080, true );
     add_image_size( 'virealys-card', 600, 400, true );
+    add_image_size( 'virealys-wide', 1200, 600, true );
 }
 add_action( 'after_setup_theme', 'virealys_setup' );
 
@@ -43,7 +45,6 @@ add_action( 'after_setup_theme', 'virealys_setup' );
  * Enqueue scripts and styles
  */
 function virealys_scripts() {
-    // Google Fonts
     wp_enqueue_style(
         'virealys-fonts',
         'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap',
@@ -51,16 +52,15 @@ function virealys_scripts() {
         null
     );
 
-    // Main stylesheet
     wp_enqueue_style( 'virealys-style', get_stylesheet_uri(), array(), VIREALYS_VERSION );
     wp_enqueue_style( 'virealys-main', get_template_directory_uri() . '/assets/css/main.css', array(), VIREALYS_VERSION );
 
-    // Main JS
     wp_enqueue_script( 'virealys-main', get_template_directory_uri() . '/assets/js/main.js', array(), VIREALYS_VERSION, true );
 
     wp_localize_script( 'virealys-main', 'virealys', array(
-        'ajax_url' => admin_url( 'admin-ajax.php' ),
-        'nonce'    => wp_create_nonce( 'virealys_nonce' ),
+        'ajax_url'  => admin_url( 'admin-ajax.php' ),
+        'nonce'     => wp_create_nonce( 'virealys_nonce' ),
+        'theme_url' => get_template_directory_uri(),
     ) );
 }
 add_action( 'wp_enqueue_scripts', 'virealys_scripts' );
@@ -98,12 +98,13 @@ class Virealys_Nav_Walker extends Walker_Nav_Menu {
 }
 
 /**
- * Customizer settings
+ * Customizer settings - organized by user journey
  */
 function virealys_customize_register( $wp_customize ) {
-    // Hero Section
+
+    // === HERO SECTION ===
     $wp_customize->add_section( 'virealys_hero', array(
-        'title'    => __( 'Section Hero', 'virealys' ),
+        'title'    => __( 'Hero / Accueil', 'virealys' ),
         'priority' => 30,
     ) );
 
@@ -131,18 +132,43 @@ function virealys_customize_register( $wp_customize ) {
         'sanitize_callback' => 'esc_url_raw',
     ) );
     $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, 'hero_bg', array(
-        'label'   => __( 'Image de fond Hero', 'virealys' ),
-        'section' => 'virealys_hero',
+        'label'       => __( 'Image Hero (restaurant VR)', 'virealys' ),
+        'description' => __( 'Image principale : le restaurant immersif avec casques VR', 'virealys' ),
+        'section'     => 'virealys_hero',
     ) ) );
 
-    // Reservation Section
+    // === IMAGES DES SECTIONS ===
+    $wp_customize->add_section( 'virealys_images', array(
+        'title'    => __( 'Images des sections', 'virealys' ),
+        'priority' => 35,
+    ) );
+
+    $images = array(
+        'img_menus'      => array( 'label' => 'Image Menus (4 cartes holographiques)', 'desc' => 'Les 4 menus en format holographique' ),
+        'img_tracabilite' => array( 'label' => 'Image Traçabilité (plat + hologramme)', 'desc' => 'Un plat avec son hologramme de traçabilité' ),
+        'img_ambiances'  => array( 'label' => 'Image Ambiances (4 salles)', 'desc' => 'Les 4 ambiances de salle du restaurant' ),
+        'img_logo'       => array( 'label' => 'Logo Virealys', 'desc' => 'Logo avec cloche VR' ),
+    );
+
+    foreach ( $images as $key => $data ) {
+        $wp_customize->add_setting( $key, array(
+            'sanitize_callback' => 'esc_url_raw',
+        ) );
+        $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, $key, array(
+            'label'       => __( $data['label'], 'virealys' ),
+            'description' => __( $data['desc'], 'virealys' ),
+            'section'     => 'virealys_images',
+        ) ) );
+    }
+
+    // === RESERVATION ===
     $wp_customize->add_section( 'virealys_reservation', array(
-        'title'    => __( 'Réservation', 'virealys' ),
+        'title'    => __( 'Réservation & Contact', 'virealys' ),
         'priority' => 40,
     ) );
 
     $wp_customize->add_setting( 'reservation_url', array(
-        'default'           => '#',
+        'default'           => '#reservation',
         'sanitize_callback' => 'esc_url_raw',
     ) );
     $wp_customize->add_control( 'reservation_url', array(
@@ -161,7 +187,27 @@ function virealys_customize_register( $wp_customize ) {
         'type'    => 'text',
     ) );
 
-    // Social Media
+    $wp_customize->add_setting( 'address', array(
+        'default'           => '',
+        'sanitize_callback' => 'sanitize_text_field',
+    ) );
+    $wp_customize->add_control( 'address', array(
+        'label'   => __( 'Adresse du restaurant', 'virealys' ),
+        'section' => 'virealys_reservation',
+        'type'    => 'text',
+    ) );
+
+    $wp_customize->add_setting( 'email', array(
+        'default'           => 'contact@virealys.com',
+        'sanitize_callback' => 'sanitize_email',
+    ) );
+    $wp_customize->add_control( 'email', array(
+        'label'   => __( 'Email', 'virealys' ),
+        'section' => 'virealys_reservation',
+        'type'    => 'email',
+    ) );
+
+    // === SOCIAL MEDIA ===
     $wp_customize->add_section( 'virealys_social', array(
         'title'    => __( 'Réseaux Sociaux', 'virealys' ),
         'priority' => 50,
@@ -182,7 +228,35 @@ function virealys_customize_register( $wp_customize ) {
 add_action( 'customize_register', 'virealys_customize_register' );
 
 /**
+ * Helper: get theme image URL with fallback
+ */
+function virealys_get_image( $key, $fallback = '' ) {
+    $url = get_theme_mod( $key );
+    return $url ? $url : $fallback;
+}
+
+/**
  * Disable emoji scripts for performance
  */
 remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
 remove_action( 'wp_print_styles', 'print_emoji_styles' );
+
+/**
+ * Footer menu fallback
+ */
+function virealys_footer_fallback() {
+    $links = array(
+        'concept'   => 'Le Concept',
+        'menus'     => 'Nos Menus',
+        'zones'     => 'Les Zones',
+        'passeport' => 'Passeport',
+        'contact'   => 'Contact',
+    );
+    echo '<ul class="footer-links">';
+    foreach ( $links as $slug => $label ) {
+        $page = get_page_by_path( $slug );
+        $url = $page ? get_permalink( $page ) : home_url( '/#' . $slug );
+        echo '<li><a href="' . esc_url( $url ) . '">' . esc_html( $label ) . '</a></li>';
+    }
+    echo '</ul>';
+}
