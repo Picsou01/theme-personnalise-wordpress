@@ -3,7 +3,7 @@
   <component name="WebServers">
     <option name="servers">
       <webServer id="c81dea28-1880-4e46-8a3d-f1570c071d4a" name="172.18.95.13" url="http://172.18.95.13:32770/">
-        <fileTransfer rootFolder="/var/lib/docker/volumes/126e4953b68d55f31cfea09dcefe052000f11da4601eab24bff1880f8026416c/_data/wp-content/themes/mon-theme-ia" accessType="SFTP" host="172.18.95.13" port="22" sshConfigId="f4e198ed-c746-44ec-abc6-cfa03946fbd7" sshConfig="user@172.18.95.13:22 password">
+        <fileTransfer rootFolder="/var/lib/docker/volumes/126e4953b68d55f31cfea09dcefe052000f11da4601eab24bff1880f8026416c/_data/wp-content/themes/mon-theme-ia" accessType="SFTP" host="localhost" port="2222" sshConfigId="f4e198ed-c746-44ec-abc6-cfa03946fbd7" sshConfig="user@localhost:2222 password">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
           </advancedOptions>

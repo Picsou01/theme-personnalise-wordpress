@@ -1,0 +1,20 @@
+name: Deploy Theme to WordPress
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'virealys/**'
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy theme
+        run: |
+          THEME_DIR=/var/lib/docker/volumes/126e4953b68d55f31cfea09dcefe052000f11da4601eab24bff1880f8026416c/_data/wp-content/themes/mon-theme-ia
+          sudo cp -r virealys/* "$THEME_DIR/"
+          echo "Theme deployed successfully!"
