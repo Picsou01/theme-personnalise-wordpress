@@ -289,12 +289,12 @@
         radialMenuEl.setAttribute('aria-hidden', 'false');
         document.body.classList.add('vr-radial-active');
 
-        // Place items at equal angles
+        // Place items at equal angles — translate includes -50%,-50% centering
         radialItems.forEach(function (item, i) {
             var tx = Math.cos(item.angle) * CFG.RADIAL_RADIUS;
             var ty = Math.sin(item.angle) * CFG.RADIAL_RADIUS;
             item.el.style.transitionDelay = (i * 0.03) + 's';
-            item.el.style.transform = 'translate(' + tx.toFixed(1) + 'px, ' + ty.toFixed(1) + 'px) scale(1)';
+            item.el.style.transform = 'translate(calc(-50% + ' + tx.toFixed(1) + 'px), calc(-50% + ' + ty.toFixed(1) + 'px)) scale(1)';
             item.el.style.opacity = '1';
         });
 
@@ -361,7 +361,7 @@
 
         radialItems.forEach(function (item) {
             item.el.style.transitionDelay = '0s';
-            item.el.style.transform = 'translate(0, 0) scale(0.3)';
+            item.el.style.transform = 'translate(-50%, -50%) scale(0.3)';
             item.el.style.opacity = '0';
             item.el.classList.remove('vr-radial-item-active');
         });
@@ -394,74 +394,17 @@
         var hub = document.getElementById('vr-constellation-hub');
         if (!hub) return;
 
-        // Generate floating stars forming a VR headset silhouette
+        // Generate floating stars — scattered randomly across the sky
         var starsContainer = document.getElementById('constellation-stars');
         if (starsContainer) {
-            // VR headset shape points (percentage coords)
-            // Main body: rounded rectangle ~30-70% x, ~30-65% y
-            // Strap curves on sides, lens circles inside
-            var vrShapePoints = [];
-
-            // Headset body outline (top edge)
-            for (var t = 0; t < 1; t += 0.02) {
-                vrShapePoints.push({ x: 25 + t * 50, y: 28 + Math.sin(t * Math.PI) * 3 });
-            }
-            // Bottom edge
-            for (var t = 0; t < 1; t += 0.02) {
-                vrShapePoints.push({ x: 25 + t * 50, y: 68 - Math.sin(t * Math.PI) * 3 });
-            }
-            // Left side curve (strap)
-            for (var t = 0; t < 1; t += 0.04) {
-                var angle = -Math.PI / 2 + t * Math.PI;
-                vrShapePoints.push({ x: 24 + Math.cos(angle) * 8, y: 48 + Math.sin(angle) * 20 });
-            }
-            // Right side curve (strap)
-            for (var t = 0; t < 1; t += 0.04) {
-                var angle = Math.PI / 2 + t * Math.PI;
-                vrShapePoints.push({ x: 76 + Math.cos(angle) * 8, y: 48 + Math.sin(angle) * 20 });
-            }
-            // Left lens circle
-            for (var t = 0; t < 1; t += 0.03) {
-                var angle = t * 2 * Math.PI;
-                vrShapePoints.push({ x: 40 + Math.cos(angle) * 10, y: 48 + Math.sin(angle) * 12 });
-            }
-            // Right lens circle
-            for (var t = 0; t < 1; t += 0.03) {
-                var angle = t * 2 * Math.PI;
-                vrShapePoints.push({ x: 60 + Math.cos(angle) * 10, y: 48 + Math.sin(angle) * 12 });
-            }
-            // Bridge between lenses
-            vrShapePoints.push({ x: 48, y: 46 }, { x: 49, y: 48 }, { x: 50, y: 47 }, { x: 51, y: 49 }, { x: 52, y: 46 });
-
-            // Place stars on the VR shape + scatter ambient stars
-            var totalStars = 120;
-            var shapeStars = Math.floor(totalStars * 0.6);
-            var ambientStars = totalStars - shapeStars;
-
-            // Shape stars (brighter, forming the headset outline)
-            for (var i = 0; i < shapeStars; i++) {
-                var pt = vrShapePoints[Math.floor(Math.random() * vrShapePoints.length)];
-                var star = document.createElement('div');
-                star.className = 'constellation-star vr-shape-star';
-                star.style.left = (pt.x + (Math.random() - 0.5) * 3) + '%';
-                star.style.top = (pt.y + (Math.random() - 0.5) * 3) + '%';
-                star.style.animationDelay = (Math.random() * 5) + 's';
-                star.style.animationDuration = (2 + Math.random() * 3) + 's';
-                var size = 1.5 + Math.random() * 2.5;
-                star.style.width = size + 'px';
-                star.style.height = size + 'px';
-                starsContainer.appendChild(star);
-            }
-
-            // Ambient scattered stars (dimmer background)
-            for (var i = 0; i < ambientStars; i++) {
+            for (var i = 0; i < 100; i++) {
                 var star = document.createElement('div');
                 star.className = 'constellation-star';
                 star.style.left = (Math.random() * 100) + '%';
                 star.style.top = (Math.random() * 100) + '%';
                 star.style.animationDelay = (Math.random() * 5) + 's';
                 star.style.animationDuration = (3 + Math.random() * 4) + 's';
-                var size = 1 + Math.random() * 1.5;
+                var size = 1 + Math.random() * 2;
                 star.style.width = size + 'px';
                 star.style.height = size + 'px';
                 starsContainer.appendChild(star);

@@ -2236,21 +2236,6 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: 0 0 4px rgba(var(--neon-blue-rgb), 0.3);
 }
 
-/* VR headset shape stars — brighter, more prominent */
-.constellation-star.vr-shape-star {
-    background: rgba(var(--neon-cyan-rgb), 0.85);
-    box-shadow: 0 0 8px rgba(var(--neon-cyan-rgb), 0.5), 0 0 16px rgba(var(--neon-cyan-rgb), 0.2);
-}
-
-.constellation-star.vr-shape-star:nth-child(3n) {
-    background: rgba(var(--neon-purple-rgb), 0.75);
-    box-shadow: 0 0 8px rgba(var(--neon-purple-rgb), 0.5), 0 0 16px rgba(var(--neon-purple-rgb), 0.2);
-}
-
-.constellation-star.vr-shape-star:nth-child(5n) {
-    background: rgba(var(--neon-blue-rgb), 0.75);
-    box-shadow: 0 0 8px rgba(var(--neon-blue-rgb), 0.5), 0 0 16px rgba(var(--neon-blue-rgb), 0.2);
-}
 
 @keyframes starTwinkle {
     0%, 100% { opacity: 0.2; transform: scale(0.8); }
@@ -2299,15 +2284,15 @@ h1, h2, h3, h4, h5, h6 {
     75% { transform: translate(20px, 20px) scale(1.05); }
 }
 
-/* Hero title overlay */
+/* Hero title overlay — z-index BELOW nodes so previews show on top */
 .constellation-hero {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    z-index: 10;
+    z-index: 2;
     text-align: center;
-    padding-top: clamp(4rem, 10vh, 7rem);
+    padding-top: clamp(2rem, 5vh, 3.5rem);
     pointer-events: none;
 }
 
@@ -2381,11 +2366,11 @@ h1, h2, h3, h4, h5, h6 {
     to { stroke-dashoffset: -16; }
 }
 
-/* Constellation nodes */
+/* Constellation nodes — ABOVE hero title so previews are visible */
 .constellation-nodes {
     position: absolute;
     inset: 0;
-    z-index: 5;
+    z-index: 10;
 }
 
 .constellation-node {
@@ -2619,9 +2604,8 @@ h1, h2, h3, h4, h5, h6 {
 
 .vr-radial-item {
     position: absolute;
-    top: 0;
-    left: 0;
-    transform: translate(0, 0) scale(0.3);
+    top: 50%;
+    left: 50%;
     opacity: 0;
     display: flex;
     flex-direction: column;
@@ -2631,8 +2615,6 @@ h1, h2, h3, h4, h5, h6 {
     cursor: pointer;
     transition: transform 0.4s var(--ease-spring), opacity 0.3s ease;
     z-index: 2;
-    margin-left: -20px;
-    margin-top: -20px;
 }
 
 /* Cursor line from center toward mouse */
@@ -2699,16 +2681,12 @@ h1, h2, h3, h4, h5, h6 {
     text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
 }
 
-/* Constellation return item — more prominent */
+/* Constellation return item — same size as others, subtle gold pulse */
 .vr-radial-constellation .vr-radial-item-icon {
-    width: 48px;
-    height: 48px;
-    border-width: 2px;
     animation: constellationPulse 2s ease-in-out infinite;
 }
 
 .vr-radial-constellation .vr-radial-item-label {
-    font-size: 0.625rem;
     color: #ffd700;
 }
 
