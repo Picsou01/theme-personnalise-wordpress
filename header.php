@@ -25,7 +25,7 @@
     </a>
 </div>
 
-<!-- Predictive Adaptive Dock -->
+<!-- Navigation Dock -->
 <nav class="vr-dock" id="vr-dock" aria-label="<?php esc_attr_e( 'Navigation adaptative', 'virealys' ); ?>">
     <div class="vr-dock-track" id="vr-dock-track">
         <?php
@@ -38,14 +38,14 @@
         );
         foreach ( $dock_items as $slug => $item ) :
             $page = get_page_by_path( $slug );
-            $url  = $page ? get_permalink( $page ) : home_url( '/#' . $slug );
+            $url  = $page ? get_permalink( $page ) : home_url( '/' . $slug . '/' );
         ?>
-            <a href="<?php echo esc_url( $url ); ?>" class="vr-dock-btn" data-section="<?php echo esc_attr( $slug ); ?>" data-priority="0">
+            <a href="<?php echo esc_url( $url ); ?>" class="vr-dock-btn" data-section="<?php echo esc_attr( $slug ); ?>">
                 <span class="vr-dock-btn-icon"><?php echo $item['icon']; ?></span>
                 <span class="vr-dock-btn-label"><?php echo esc_html( $item['label'] ); ?></span>
             </a>
         <?php endforeach; ?>
-        <a href="<?php echo esc_url( get_theme_mod( 'reservation_url', '#reservation' ) ); ?>" class="vr-dock-btn vr-dock-btn-cta" data-section="reservation" data-priority="0">
+        <a href="<?php echo esc_url( get_theme_mod( 'reservation_url', '#reservation' ) ); ?>" class="vr-dock-btn vr-dock-btn-cta" data-section="reservation">
             <span class="vr-dock-btn-label">R&eacute;server</span>
         </a>
         <button class="vr-dock-btn vr-dock-btn-menu" id="nav-dock-menu-btn" aria-label="<?php esc_attr_e( 'Menu', 'virealys' ); ?>" aria-expanded="false">
@@ -54,16 +54,6 @@
     </div>
     <div class="vr-dock-progress" id="vr-dock-progress"></div>
 </nav>
-
-<!-- Panel Navigation Dots (front page) -->
-<?php if ( is_front_page() ) : ?>
-<div class="vr-panel-nav" id="vr-panel-nav" aria-label="Sections"></div>
-<!-- Edge Navigation Indicators (all 4 directions) -->
-<div class="vr-edge vr-edge-top" id="vr-edge-top"></div>
-<div class="vr-edge vr-edge-bottom" id="vr-edge-bottom"></div>
-<div class="vr-edge vr-edge-left" id="vr-edge-left"></div>
-<div class="vr-edge vr-edge-right" id="vr-edge-right"></div>
-<?php endif; ?>
 
 <!-- Full Screen Menu Overlay -->
 <div class="menu-overlay" id="menu-overlay" aria-hidden="true">

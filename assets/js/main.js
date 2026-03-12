@@ -1,12 +1,18 @@
 /**
- * Virealys - Constellation Adaptive Engine v5.0
- * 2D spatial navigation — panels arrive from any direction.
- * Gravitational prediction — the site anticipates where you want to go.
- * Every interaction reshapes the experience.
+ * Virealys - Constellation Engine v6.0
+ *
+ * Right-click hold = radial menu around cursor
+ * Mouse wheel = normal page scroll (smooth)
+ * Constellation hub = bird's-eye page selection
+ * Bottom bar = always-visible return to constellation
+ * Addictive micro-interactions throughout
  */
 (function () {
     'use strict';
 
+    /* =========================================
+       CONFIGURATION
+       ========================================= */
     var CFG = {
         CURSOR_SIZE: 600,
         MAGNETIC_RADIUS: 100,
@@ -14,10 +20,8 @@
         TILT_MAX: 6,
         IDLE_TIMEOUT: 4000,
         LERP: 0.12,
-        PANEL_TRANSITION: 700,
-        DOCK_REORDER_INTERVAL: 5000,
-        EDGE_PEEK_ZONE: 80,        // px from edge to trigger peek
-        EDGE_PEEK_STRENGTH: 0.08,  // how much the next panel peeks in
+        RADIAL_RADIUS: 140,
+        RADIAL_HOLD_DELAY: 200,
     };
 
     var S = {
@@ -26,24 +30,18 @@
         idle: false, idleTimer: null,
         mobile: window.matchMedia('(max-width: 768px)').matches,
         reduced: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-        // Constellation
-        currentPanel: null, panels: [], panelMap: {}, transitioning: false, spatialActive: false,
-        // Dock
-        dockHidden: false, lastScrollY: window.scrollY, scrollDelta: 0,
-        // Edge peek
-        peekDirection: null, peekTarget: null,
-        // Mouse direction tracking for prediction
-        mouseHistory: [], mouseDir: { x: 0, y: 0 },
+        radialOpen: false, radialTimer: null, radialX: 0, radialY: 0,
     };
 
-    // ========== USER PROFILE (localStorage) ==========
+    /* =========================================
+       USER PROFILE (localStorage)
+       ========================================= */
     var PROFILE_KEY = 'vr_user_profile';
     var profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || 'null') || {
-        visits: 0, sections: {}, lastSections: [], transitions: {}, lastVisitTime: 0,
+        visits: 0, sections: {}, lastSections: [], lastVisitTime: 0,
     };
     profile.visits++;
     profile.lastVisitTime = Date.now();
-    if (!profile.transitions) profile.transitions = {};
 
     function saveProfile() {
         localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
@@ -53,12 +51,6 @@
         profile.sections[id] = (profile.sections[id] || 0) + 1;
         profile.lastSections.unshift(id);
         if (profile.lastSections.length > 30) profile.lastSections.length = 30;
-        saveProfile();
-    }
-
-    function trackTransition(fromId, toId) {
-        var key = fromId + '>' + toId;
-        profile.transitions[key] = (profile.transitions[key] || 0) + 1;
         saveProfile();
     }
 
@@ -76,53 +68,26 @@
         return freq * 2 + recency + timeBonus;
     }
 
-    // Predict most likely next panel from current panel
-    function predictNextPanel(currentId) {
-        var best = null, bestScore = -1;
-        var neighbors = getNeighbors(currentId);
-        for (var i = 0; i < neighbors.length; i++) {
-            var n = neighbors[i];
-            var key = currentId + '>' + n.id;
-            var transFreq = profile.transitions[key] || 0;
-            var sectionPri = getSectionPriority(n.id);
-            // Factor in mouse direction
-            var dirScore = 0;
-            if (S.mouseDir.x !== 0 || S.mouseDir.y !== 0) {
-                var dx = n.col - S.panelMap[currentId].col;
-                var dy = n.row - S.panelMap[currentId].row;
-                dirScore = (dx * S.mouseDir.x + dy * S.mouseDir.y) * 10;
-            }
-            var score = transFreq * 3 + sectionPri + dirScore;
-            if (score > bestScore) { bestScore = score; best = n; }
-        }
-        return best;
-    }
-
-    function getNeighbors(panelId) {
-        var p = S.panelMap[panelId];
-        if (!p) return [];
-        var result = [];
-        for (var id in S.panelMap) {
-            if (id === panelId) continue;
-            var o = S.panelMap[id];
-            var dc = Math.abs(o.col - p.col);
-            var dr = Math.abs(o.row - p.row);
-            if (dc <= 1 && dr <= 1 && (dc + dr > 0)) {
-                result.push(o);
-            }
-        }
-        return result;
-    }
-
     saveProfile();
 
-    // Early bailout for reduced motion
+    // Track current page
+    var currentSlug = document.body.getAttribute('data-page-slug');
+    if (currentSlug) trackSection(currentSlug);
+
+    /* =========================================
+       EARLY BAILOUT FOR REDUCED MOTION
+       ========================================= */
     if (S.reduced) {
-        initReveals(); initNavDock(); initMenuOverlay(); initSmoothScroll();
-        initConstellationCanvas(); return;
+        initReveals();
+        initMenuOverlay();
+        initConstellationHub();
+        initRadialMenu();
+        return;
     }
 
-    // ========== 1. CURSOR LIGHT ==========
+    /* =========================================
+       1. CURSOR LIGHT
+       ========================================= */
     var cursorLight = null;
     if (!S.mobile) {
         cursorLight = document.createElement('div');
@@ -131,11 +96,13 @@
         document.body.appendChild(cursorLight);
     }
 
-    // ========== 2. MAGNETIC UI ==========
+    /* =========================================
+       2. MAGNETIC UI
+       ========================================= */
     function initMagnetics() {
         if (S.mobile) return;
         document.querySelectorAll(
-            '.btn, .vr-dock-btn, .overlay-social-link, .footer-social a, .ambiance-card-cta'
+            '.btn, .vr-dock-btn, .overlay-social-link, .footer-social a, .constellation-node'
         ).forEach(function (el) { el.setAttribute('data-magnetic', ''); });
     }
 
@@ -155,7 +122,9 @@
         }
     }
 
-    // ========== 3. CARD TILT ==========
+    /* =========================================
+       3. CARD TILT
+       ========================================= */
     function initTilt() {
         if (S.mobile) return;
         document.querySelectorAll(
@@ -176,9 +145,11 @@
         });
     }
 
-    // ========== 4. CLICK RIPPLE ==========
+    /* =========================================
+       4. CLICK RIPPLE
+       ========================================= */
     document.addEventListener('click', function (e) {
-        if (S.mobile) return;
+        if (S.mobile || S.radialOpen) return;
         var r = document.createElement('div');
         r.className = 'vr-ripple';
         r.style.left = e.clientX + 'px';
@@ -187,492 +158,282 @@
         setTimeout(function () { if (r.parentNode) r.remove(); }, 800);
     });
 
-    // ========== 5. CONSTELLATION CANVAS (Front Page) ==========
-    function initConstellationCanvas() {
-        var spatial = document.getElementById('vr-spatial');
-        if (!spatial) return;
+    /* =========================================
+       5. RADIAL MENU (right-click hold)
+       ========================================= */
+    var radialMenuEl = null;
 
-        S.spatialActive = true;
-        var panelEls = Array.from(spatial.querySelectorAll('.vr-panel'));
-        if (panelEls.length === 0) return;
+    function initRadialMenu() {
+        // Create radial menu container
+        radialMenuEl = document.createElement('div');
+        radialMenuEl.className = 'vr-radial-menu';
+        radialMenuEl.id = 'vr-radial-menu';
+        radialMenuEl.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(radialMenuEl);
 
-        // Build panel map with 2D coordinates
-        panelEls.forEach(function (el) {
-            var id = el.getAttribute('data-panel');
-            var col = parseInt(el.getAttribute('data-grid-col')) || 0;
-            var row = parseInt(el.getAttribute('data-grid-row')) || 0;
-            var entry = { el: el, id: id, col: col, row: row };
-            S.panels.push(entry);
-            S.panelMap[id] = entry;
-        });
+        // Pages for the radial menu
+        var pages = [
+            { slug: 'concept', label: 'Concept', icon: 'layers', color: '#00e5ff' },
+            { slug: 'menus', label: 'Formules', icon: 'utensils', color: '#4d7cff' },
+            { slug: 'ambiances', label: 'Ambiances', icon: 'globe', color: '#a855f7' },
+            { slug: 'zones', label: 'Zones', icon: 'grid', color: '#e040fb' },
+            { slug: 'passeport', label: 'Passeport', icon: 'passport', color: '#f97316' },
+            { slug: 'reservation', label: 'Réserver', icon: 'calendar', color: '#10b981' },
+        ];
 
-        S.currentPanel = S.panels[0];
-        document.body.classList.add('vr-spatial-active');
+        // Bottom special: return to constellation
+        var constellationItem = {
+            slug: '__constellation__',
+            label: 'Constellation',
+            icon: 'star',
+            color: '#ffd700',
+            isConstellation: true,
+        };
 
-        // Build constellation mini-map
-        buildConstellationNav();
+        var allItems = pages.concat([constellationItem]);
+        var angleStep = (2 * Math.PI) / allItems.length;
+        // Place constellation at the bottom (adjust start angle)
+        var startAngle = -Math.PI / 2 + angleStep; // Start from top-right, constellation ends at bottom
 
-        // Panel goto buttons (by panel name)
-        document.querySelectorAll('.vr-panel-goto').forEach(function (btn) {
-            btn.addEventListener('click', function (e) {
-                e.preventDefault();
-                var target = this.getAttribute('data-goto-panel');
-                if (target && S.panelMap[target]) navigateTo(target);
-            });
-        });
-
-        // Wheel navigation: determine direction from scroll
-        spatial.addEventListener('wheel', function (e) {
-            if (S.transitioning) return;
-            var panel = S.currentPanel.el;
-            var scroller = panel.querySelector('.vr-panel-scroll');
-
-            // Check if internal scroll should handle this
-            if (scroller) {
-                var atBottom = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 5;
-                var atTop = scroller.scrollTop <= 5;
-                if (e.deltaY > 0 && !atBottom) return;
-                if (e.deltaY < 0 && !atTop) return;
-            }
-
-            e.preventDefault();
-
-            // Determine navigation direction from wheel
-            var absDX = Math.abs(e.deltaX);
-            var absDY = Math.abs(e.deltaY);
-
-            var dirCol = 0, dirRow = 0;
-            if (absDX > absDY) {
-                dirCol = e.deltaX > 0 ? 1 : -1;
+        // Build items
+        allItems.forEach(function (item, i) {
+            // Place constellation at bottom center
+            var angle;
+            if (item.isConstellation) {
+                angle = Math.PI / 2; // Bottom
             } else {
-                dirRow = e.deltaY > 0 ? 1 : -1;
+                // Distribute other items around, leaving bottom for constellation
+                var otherStep = (2 * Math.PI - angleStep) / pages.length;
+                angle = -Math.PI / 2 + otherStep * i;
             }
 
-            // Find panel in that direction
-            var target = findPanelInDirection(dirCol, dirRow);
-            if (target) navigateTo(target.id);
-        }, { passive: false });
-
-        // Touch support — swipe in any direction
-        var touchStart = { x: 0, y: 0 };
-        spatial.addEventListener('touchstart', function (e) {
-            touchStart.x = e.touches[0].clientX;
-            touchStart.y = e.touches[0].clientY;
-        }, { passive: true });
-
-        spatial.addEventListener('touchend', function (e) {
-            var dx = touchStart.x - e.changedTouches[0].clientX;
-            var dy = touchStart.y - e.changedTouches[0].clientY;
-            var absDX = Math.abs(dx), absDY = Math.abs(dy);
-            if (absDX < 40 && absDY < 40) return; // too small
-
-            var dirCol = 0, dirRow = 0;
-            // Allow diagonal swipes
-            if (absDX > 30) dirCol = dx > 0 ? 1 : -1;
-            if (absDY > 30) dirRow = dy > 0 ? 1 : -1;
-
-            var target = findPanelInDirection(dirCol, dirRow);
-            if (target) navigateTo(target.id);
-        });
-
-        // Keyboard — all 4 arrows
-        document.addEventListener('keydown', function (e) {
-            if (!S.spatialActive || S.transitioning) return;
-            var dirCol = 0, dirRow = 0;
-            if (e.key === 'ArrowRight') dirCol = 1;
-            else if (e.key === 'ArrowLeft') dirCol = -1;
-            else if (e.key === 'ArrowDown') dirRow = 1;
-            else if (e.key === 'ArrowUp') dirRow = -1;
-            else return;
-
-            e.preventDefault();
-            var target = findPanelInDirection(dirCol, dirRow);
-            if (target) navigateTo(target.id);
-        });
-
-        // Edge peek on mouse near viewport edges
-        if (!S.mobile) {
-            document.addEventListener('mousemove', updateEdgePeek);
-        }
-
-        // Update edge indicators
-        updateEdgeIndicators();
-
-        // Reveal first panel
-        S.currentPanel.el.querySelectorAll('[data-reveal]').forEach(function (el) {
-            el.classList.add('revealed');
-        });
-    }
-
-    function findPanelInDirection(dirCol, dirRow) {
-        if (!S.currentPanel) return null;
-        var cc = S.currentPanel.col, cr = S.currentPanel.row;
-        var targetCol = cc + dirCol, targetRow = cr + dirRow;
-
-        // Exact match first
-        for (var i = 0; i < S.panels.length; i++) {
-            if (S.panels[i].col === targetCol && S.panels[i].row === targetRow) {
-                return S.panels[i];
+            var el = document.createElement('a');
+            if (item.isConstellation) {
+                el.href = typeof virealys !== 'undefined' ? virealys.home_url || '/' : '/';
+                el.className = 'vr-radial-item vr-radial-constellation';
+            } else {
+                el.href = '/' + item.slug + '/';
+                el.className = 'vr-radial-item';
             }
-        }
+            el.setAttribute('data-slug', item.slug);
+            el.setAttribute('data-angle', angle.toFixed(4));
+            el.style.setProperty('--item-color', item.color);
+            el.style.setProperty('--item-angle', angle + 'rad');
 
-        // If diagonal didn't match, try nearest in that general direction
-        var best = null, bestDist = Infinity;
-        for (var j = 0; j < S.panels.length; j++) {
-            var p = S.panels[j];
-            if (p.id === S.currentPanel.id) continue;
-            var dc = p.col - cc, dr = p.row - cr;
-            // Must be in the right general direction
-            if (dirCol !== 0 && Math.sign(dc) !== Math.sign(dirCol)) continue;
-            if (dirRow !== 0 && Math.sign(dr) !== Math.sign(dirRow)) continue;
-            if (dirCol === 0 && dc !== 0) continue;
-            if (dirRow === 0 && dr !== 0) continue;
-            var dist = Math.abs(dc) + Math.abs(dr);
-            if (dist < bestDist) { bestDist = dist; best = p; }
-        }
-        return best;
-    }
+            el.innerHTML =
+                '<span class="vr-radial-item-icon">' + getRadialIcon(item.icon) + '</span>' +
+                '<span class="vr-radial-item-label">' + item.label + '</span>';
 
-    // ========== NAVIGATE TO PANEL ==========
-    function navigateTo(targetId) {
-        if (!S.panelMap[targetId] || S.transitioning) return;
-        var target = S.panelMap[targetId];
-        if (target === S.currentPanel) return;
-        S.transitioning = true;
+            radialMenuEl.appendChild(el);
 
-        var fromId = S.currentPanel.id;
-        var current = S.currentPanel;
-
-        // Calculate direction vector
-        var dc = target.col - current.col;
-        var dr = target.row - current.row;
-
-        // Determine transition class based on direction
-        var exitClass = getExitClass(dc, dr);
-        var enterClass = getEnterClass(dc, dr);
-
-        // Clear any peek
-        clearPeek();
-
-        // Exit current panel
-        current.el.classList.remove('vr-panel-active');
-        current.el.classList.add(exitClass);
-
-        // Enter new panel
-        target.el.classList.add(enterClass);
-        void target.el.offsetHeight; // force reflow
-        target.el.classList.add('vr-panel-active');
-        target.el.classList.remove(enterClass);
-
-        // Track
-        trackSection(targetId);
-        trackTransition(fromId, targetId);
-
-        // Trigger reveals
-        target.el.querySelectorAll('[data-reveal]:not(.revealed)').forEach(function (el) {
-            el.classList.add('revealed');
-        });
-
-        // Section color morph
-        var color = target.el.getAttribute('data-section-color');
-        if (color) document.documentElement.style.setProperty('--section-accent', color);
-
-        setTimeout(function () {
-            current.el.classList.remove(exitClass);
-            S.currentPanel = target;
-            S.transitioning = false;
-            updateConstellationNav();
-            updateEdgeIndicators();
-            updateDockFromPanel();
-            updatePredictiveGlow();
-        }, CFG.PANEL_TRANSITION);
-    }
-
-    function getExitClass(dc, dr) {
-        // Panel exits in the OPPOSITE direction of navigation
-        if (dc > 0 && dr === 0) return 'vr-panel-exit-left';
-        if (dc < 0 && dr === 0) return 'vr-panel-exit-right';
-        if (dr > 0 && dc === 0) return 'vr-panel-exit-up';
-        if (dr < 0 && dc === 0) return 'vr-panel-exit-down';
-        // Diagonals
-        if (dc > 0 && dr > 0) return 'vr-panel-exit-topleft';
-        if (dc < 0 && dr > 0) return 'vr-panel-exit-topright';
-        if (dc > 0 && dr < 0) return 'vr-panel-exit-bottomleft';
-        if (dc < 0 && dr < 0) return 'vr-panel-exit-bottomright';
-        return 'vr-panel-exit-up';
-    }
-
-    function getEnterClass(dc, dr) {
-        // Panel enters FROM the direction of navigation
-        if (dc > 0 && dr === 0) return 'vr-panel-enter-right';
-        if (dc < 0 && dr === 0) return 'vr-panel-enter-left';
-        if (dr > 0 && dc === 0) return 'vr-panel-enter-bottom';
-        if (dr < 0 && dc === 0) return 'vr-panel-enter-top';
-        // Diagonals
-        if (dc > 0 && dr > 0) return 'vr-panel-enter-bottomright';
-        if (dc < 0 && dr > 0) return 'vr-panel-enter-bottomleft';
-        if (dc > 0 && dr < 0) return 'vr-panel-enter-topright';
-        if (dc < 0 && dr < 0) return 'vr-panel-enter-topleft';
-        return 'vr-panel-enter-bottom';
-    }
-
-    // ========== CONSTELLATION MINI-MAP ==========
-    function buildConstellationNav() {
-        var nav = document.getElementById('vr-panel-nav');
-        if (!nav) return;
-        nav.innerHTML = '';
-        nav.classList.add('vr-constellation-map');
-
-        // Find grid bounds
-        var minC = Infinity, maxC = -Infinity, minR = Infinity, maxR = -Infinity;
-        S.panels.forEach(function (p) {
-            if (p.col < minC) minC = p.col;
-            if (p.col > maxC) maxC = p.col;
-            if (p.row < minR) minR = p.row;
-            if (p.row > maxR) maxR = p.row;
-        });
-
-        var cols = maxC - minC + 1;
-        var rows = maxR - minR + 1;
-        nav.style.setProperty('--map-cols', cols);
-        nav.style.setProperty('--map-rows', rows);
-
-        S.panels.forEach(function (p) {
-            var dot = document.createElement('button');
-            dot.className = 'vr-constellation-dot' + (p === S.currentPanel ? ' active' : '');
-            dot.setAttribute('data-panel-id', p.id);
-            dot.setAttribute('aria-label', p.id);
-            dot.style.setProperty('--dot-col', p.col - minC);
-            dot.style.setProperty('--dot-row', p.row - minR);
-            dot.addEventListener('click', function () { navigateTo(p.id); });
-
-            // Tooltip
-            var label = document.createElement('span');
-            label.className = 'vr-constellation-label';
-            label.textContent = p.id.charAt(0).toUpperCase() + p.id.slice(1);
-            dot.appendChild(label);
-
-            nav.appendChild(dot);
-        });
-
-        // Draw connection lines
-        S.panels.forEach(function (p) {
-            var neighbors = getNeighbors(p.id);
-            neighbors.forEach(function (n) {
-                // Only draw line once (from lower id to higher id)
-                if (p.id < n.id) {
-                    var line = document.createElement('div');
-                    line.className = 'vr-constellation-line';
-                    var x1 = p.col - minC, y1 = p.row - minR;
-                    var x2 = n.col - minC, y2 = n.row - minR;
-                    var midX = (x1 + x2) / 2, midY = (y1 + y2) / 2;
-                    var dx = x2 - x1, dy = y2 - y1;
-                    var length = Math.sqrt(dx * dx + dy * dy);
-                    var angle = Math.atan2(dy, dx) * 180 / Math.PI;
-                    line.style.setProperty('--line-x', midX);
-                    line.style.setProperty('--line-y', midY);
-                    line.style.setProperty('--line-len', length);
-                    line.style.setProperty('--line-angle', angle + 'deg');
-                    nav.appendChild(line);
+            // Navigate on click
+            el.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                closeRadialMenu();
+                if (item.isConstellation) {
+                    window.location.href = '/';
+                } else {
+                    window.location.href = '/' + item.slug + '/';
                 }
             });
         });
-    }
 
-    function updateConstellationNav() {
-        document.querySelectorAll('.vr-constellation-dot').forEach(function (dot) {
-            var id = dot.getAttribute('data-panel-id');
-            dot.classList.toggle('active', id === S.currentPanel.id);
+        // Right-click hold to open
+        document.addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousedown', function (e) {
+            if (e.button === 2) { // Right click
+                S.radialX = e.clientX;
+                S.radialY = e.clientY;
+                S.radialTimer = setTimeout(function () {
+                    openRadialMenu(S.radialX, S.radialY);
+                }, CFG.RADIAL_HOLD_DELAY);
+            }
+        });
+
+        document.addEventListener('mouseup', function (e) {
+            if (e.button === 2) {
+                if (S.radialTimer) {
+                    clearTimeout(S.radialTimer);
+                    S.radialTimer = null;
+                }
+                // If menu is open, keep it open — user can click items
+                // Close on next left click outside
+            }
+        });
+
+        // Close on left click outside radial menu
+        document.addEventListener('mousedown', function (e) {
+            if (e.button === 0 && S.radialOpen) {
+                if (!radialMenuEl.contains(e.target)) {
+                    closeRadialMenu();
+                }
+            }
+        });
+
+        // Close on Escape
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && S.radialOpen) closeRadialMenu();
         });
     }
 
-    // ========== EDGE PEEK (mouse near viewport edge previews neighbor) ==========
-    function updateEdgePeek() {
-        if (S.transitioning || !S.spatialActive || !S.currentPanel) return;
+    function openRadialMenu(x, y) {
+        if (!radialMenuEl) return;
+        S.radialOpen = true;
 
-        var w = window.innerWidth, h = window.innerHeight;
-        var zone = CFG.EDGE_PEEK_ZONE;
-        var dirCol = 0, dirRow = 0;
+        // Clamp position to keep menu on screen
+        var r = CFG.RADIAL_RADIUS + 60;
+        x = Math.max(r, Math.min(window.innerWidth - r, x));
+        y = Math.max(r, Math.min(window.innerHeight - r, y));
 
-        if (S.mx < zone) dirCol = -1;
-        else if (S.mx > w - zone) dirCol = 1;
-        if (S.my < zone) dirRow = -1;
-        else if (S.my > h - zone) dirRow = 1;
+        radialMenuEl.style.left = x + 'px';
+        radialMenuEl.style.top = y + 'px';
+        radialMenuEl.classList.add('open');
+        radialMenuEl.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('vr-radial-active');
 
-        if (dirCol === 0 && dirRow === 0) {
-            clearPeek();
-            return;
-        }
-
-        var target = findPanelInDirection(dirCol, dirRow);
-        if (!target || target === S.peekTarget) return;
-
-        clearPeek();
-        S.peekTarget = target;
-        S.peekDirection = { col: dirCol, row: dirRow };
-
-        // Show a subtle peek of the target panel
-        target.el.classList.add('vr-panel-peeking');
-        target.el.style.setProperty('--peek-x', (dirCol * -100) + '%');
-        target.el.style.setProperty('--peek-y', (dirRow * -100) + '%');
-        target.el.style.setProperty('--peek-offset', CFG.EDGE_PEEK_STRENGTH * 100 + '%');
+        // Animate items outward
+        var items = radialMenuEl.querySelectorAll('.vr-radial-item');
+        items.forEach(function (item, i) {
+            var angle = parseFloat(item.getAttribute('data-angle'));
+            var tx = Math.cos(angle) * CFG.RADIAL_RADIUS;
+            var ty = Math.sin(angle) * CFG.RADIAL_RADIUS;
+            item.style.transitionDelay = (i * 0.04) + 's';
+            item.style.transform = 'translate(' + tx.toFixed(1) + 'px, ' + ty.toFixed(1) + 'px) scale(1)';
+            item.style.opacity = '1';
+        });
     }
 
-    function clearPeek() {
-        if (S.peekTarget) {
-            S.peekTarget.el.classList.remove('vr-panel-peeking');
-            S.peekTarget = null;
-            S.peekDirection = null;
-        }
+    function closeRadialMenu() {
+        if (!radialMenuEl) return;
+        S.radialOpen = false;
+        radialMenuEl.classList.remove('open');
+        radialMenuEl.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('vr-radial-active');
+
+        var items = radialMenuEl.querySelectorAll('.vr-radial-item');
+        items.forEach(function (item) {
+            item.style.transitionDelay = '0s';
+            item.style.transform = 'translate(0, 0) scale(0.3)';
+            item.style.opacity = '0';
+        });
     }
 
-    // ========== EDGE INDICATORS ==========
-    function updateEdgeIndicators() {
-        if (!S.currentPanel) return;
-        var cc = S.currentPanel.col, cr = S.currentPanel.row;
-        var edges = {
-            top: false, bottom: false, left: false, right: false
+    function getRadialIcon(name) {
+        var icons = {
+            layers: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>',
+            utensils: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3m0 0v7"/></svg>',
+            globe: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20"/></svg>',
+            grid: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',
+            passport: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+            calendar: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+            star: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
         };
-
-        S.panels.forEach(function (p) {
-            if (p.id === S.currentPanel.id) return;
-            var dc = p.col - cc, dr = p.row - cr;
-            if (dr < 0) edges.top = true;
-            if (dr > 0) edges.bottom = true;
-            if (dc < 0) edges.left = true;
-            if (dc > 0) edges.right = true;
-        });
-
-        ['top', 'bottom', 'left', 'right'].forEach(function (dir) {
-            var el = document.getElementById('vr-edge-' + dir);
-            if (el) el.classList.toggle('visible', edges[dir]);
-        });
+        return icons[name] || icons.star;
     }
 
-    // ========== PREDICTIVE GLOW ==========
-    function updatePredictiveGlow() {
-        if (!S.currentPanel) return;
-        var predicted = predictNextPanel(S.currentPanel.id);
+    /* =========================================
+       6. CONSTELLATION HUB (Front Page)
+       ========================================= */
+    function initConstellationHub() {
+        var hub = document.getElementById('vr-constellation-hub');
+        if (!hub) return;
 
-        // Update edge glow intensity for predicted direction
-        if (predicted) {
-            var dc = predicted.col - S.currentPanel.col;
-            var dr = predicted.row - S.currentPanel.row;
+        // Generate floating stars
+        var starsContainer = document.getElementById('constellation-stars');
+        if (starsContainer) {
+            for (var i = 0; i < 80; i++) {
+                var star = document.createElement('div');
+                star.className = 'constellation-star';
+                star.style.left = (Math.random() * 100) + '%';
+                star.style.top = (Math.random() * 100) + '%';
+                star.style.animationDelay = (Math.random() * 5) + 's';
+                star.style.animationDuration = (3 + Math.random() * 4) + 's';
+                var size = 1 + Math.random() * 2;
+                star.style.width = size + 'px';
+                star.style.height = size + 'px';
+                starsContainer.appendChild(star);
+            }
+        }
 
-            ['top', 'bottom', 'left', 'right'].forEach(function (dir) {
-                var el = document.getElementById('vr-edge-' + dir);
-                if (el) el.classList.remove('vr-edge-predicted');
+        // Node hover parallax
+        var nodes = hub.querySelectorAll('.constellation-node');
+        nodes.forEach(function (node) {
+            node.addEventListener('mouseenter', function () {
+                node.classList.add('hovered');
+                // Dim other nodes
+                nodes.forEach(function (n) {
+                    if (n !== node) n.classList.add('dimmed');
+                });
+                // Highlight connected lines
+                var slug = node.getAttribute('data-page');
+                highlightConnectedLines(slug, true);
             });
 
-            if (dr < 0) addPredictedClass('top');
-            if (dr > 0) addPredictedClass('bottom');
-            if (dc < 0) addPredictedClass('left');
-            if (dc > 0) addPredictedClass('right');
-        }
-    }
-
-    function addPredictedClass(dir) {
-        var el = document.getElementById('vr-edge-' + dir);
-        if (el) el.classList.add('vr-edge-predicted');
-    }
-
-    // ========== MOUSE DIRECTION TRACKING ==========
-    function trackMouseDirection() {
-        S.mouseHistory.push({ x: S.mx, y: S.my, t: Date.now() });
-        if (S.mouseHistory.length > 10) S.mouseHistory.shift();
-
-        if (S.mouseHistory.length >= 3) {
-            var first = S.mouseHistory[0];
-            var last = S.mouseHistory[S.mouseHistory.length - 1];
-            var dx = last.x - first.x, dy = last.y - first.y;
-            var mag = Math.sqrt(dx * dx + dy * dy);
-            if (mag > 20) {
-                S.mouseDir.x = dx / mag;
-                S.mouseDir.y = dy / mag;
-            }
-        }
-    }
-
-    // ========== 6. PREDICTIVE DOCK ==========
-    var dock = document.getElementById('vr-dock');
-    var dockTrack = document.getElementById('vr-dock-track');
-    var dockProgress = document.getElementById('vr-dock-progress');
-
-    function initNavDock() {
-        if (!dock) return;
-        if (!S.spatialActive) {
-            window.addEventListener('scroll', onPageScroll, { passive: true });
-        }
-        reorderDock();
-        setInterval(reorderDock, CFG.DOCK_REORDER_INTERVAL);
-    }
-
-    function onPageScroll() {
-        var y = window.scrollY;
-        var diff = y - S.lastScrollY;
-        if (dockProgress) {
-            var h = document.documentElement.scrollHeight - window.innerHeight;
-            dockProgress.style.width = (h > 0 ? (y / h) * 100 : 0) + '%';
-        }
-        if (y < 100) { showDock(); S.lastScrollY = y; S.scrollDelta = 0; return; }
-        if (diff > 0) {
-            S.scrollDelta += diff;
-            if (S.scrollDelta > 80 && !S.dockHidden) hideDock();
-        } else {
-            S.scrollDelta = 0;
-            if (S.dockHidden) showDock();
-        }
-        S.lastScrollY = y;
-    }
-
-    function hideDock() { if (dock) { dock.classList.add('dock-hidden'); S.dockHidden = true; } }
-    function showDock() { if (dock) { dock.classList.remove('dock-hidden'); S.dockHidden = false; } }
-
-    function updateDockFromPanel() {
-        if (dockProgress && S.spatialActive && S.panels.length > 1) {
-            var idx = S.panels.indexOf(S.currentPanel);
-            var pct = (idx / (S.panels.length - 1)) * 100;
-            dockProgress.style.width = pct + '%';
-        }
-        if (!S.currentPanel) return;
-        document.querySelectorAll('.vr-dock-btn[data-section]').forEach(function (btn) {
-            btn.classList.toggle('active', btn.getAttribute('data-section') === S.currentPanel.id);
-        });
-    }
-
-    // ========== 7. PREDICTIVE REORDERING ==========
-    function reorderDock() {
-        if (!dockTrack) return;
-        var buttons = Array.from(dockTrack.querySelectorAll('.vr-dock-btn[data-section]'));
-        if (buttons.length === 0) return;
-
-        var prioritized = buttons.map(function (btn) {
-            var id = btn.getAttribute('data-section');
-            return { btn: btn, id: id, priority: getSectionPriority(id) };
+            node.addEventListener('mouseleave', function () {
+                node.classList.remove('hovered');
+                nodes.forEach(function (n) { n.classList.remove('dimmed'); });
+                highlightConnectedLines(null, false);
+            });
         });
 
-        prioritized.sort(function (a, b) { return b.priority - a.priority; });
-
-        prioritized.forEach(function (item, i) {
-            item.btn.style.order = i;
-            item.btn.classList.toggle('vr-dock-btn-hot', i === 0 && item.priority > 5);
-        });
+        // Reorder constellation based on user profile
+        reorderConstellation(nodes);
     }
 
-    // Dock buttons navigate constellation
-    if (dock) {
-        dock.addEventListener('click', function (e) {
-            var btn = e.target.closest('.vr-dock-btn[data-section]');
-            if (!btn || !S.spatialActive) return;
-            var targetId = btn.getAttribute('data-section');
-            if (S.panelMap[targetId]) {
-                e.preventDefault();
-                navigateTo(targetId);
+    function highlightConnectedLines(slug, highlight) {
+        var lines = document.querySelectorAll('.constellation-link-line');
+        lines.forEach(function (line) {
+            if (highlight) {
+                var from = line.getAttribute('data-from');
+                var to = line.getAttribute('data-to');
+                if (from === slug || to === slug) {
+                    line.classList.add('highlighted');
+                } else {
+                    line.classList.add('dimmed');
+                }
+            } else {
+                line.classList.remove('highlighted', 'dimmed');
             }
         });
     }
 
-    // ========== 8. IDLE BREATHING ==========
+    function reorderConstellation(nodes) {
+        // Apply priority-based visual emphasis
+        nodes.forEach(function (node) {
+            var slug = node.getAttribute('data-page');
+            var priority = getSectionPriority(slug);
+            // Higher priority = slightly larger, brighter
+            var scale = 1 + Math.min(priority * 0.005, 0.15);
+            var brightness = 1 + Math.min(priority * 0.01, 0.3);
+            node.style.setProperty('--priority-scale', scale.toFixed(3));
+            node.style.setProperty('--priority-brightness', brightness.toFixed(3));
+        });
+    }
+
+    /* =========================================
+       7. CONSTELLATION RETURN BAR
+       ========================================= */
+    function initConstellationReturn() {
+        var returnBar = document.getElementById('vr-constellation-return');
+        if (!returnBar) return;
+
+        // Subtle pulse animation
+        var pulse = returnBar.querySelector('.constellation-return-pulse');
+        if (pulse) {
+            setInterval(function () {
+                pulse.classList.add('pulse-active');
+                setTimeout(function () { pulse.classList.remove('pulse-active'); }, 1500);
+            }, 4000);
+        }
+    }
+
+    /* =========================================
+       8. IDLE BREATHING
+       ========================================= */
     function resetIdle() {
         if (S.idle) { S.idle = false; document.body.classList.remove('vr-idle'); }
         clearTimeout(S.idleTimer);
@@ -682,14 +443,13 @@
         }, CFG.IDLE_TIMEOUT);
     }
 
-    // ========== 9. PARALLAX ==========
+    /* =========================================
+       9. PARALLAX
+       ========================================= */
     function initParallax() {
         if (S.mobile) return;
-        document.querySelectorAll('.hero-orb').forEach(function (o, i) {
-            o.setAttribute('data-parallax', ((i + 1) * 0.8).toFixed(1));
-        });
-        document.querySelectorAll('.hero-grid-bg').forEach(function (el) {
-            el.setAttribute('data-parallax', '0.3');
+        document.querySelectorAll('.hero-orb, .constellation-nebula').forEach(function (o, i) {
+            o.setAttribute('data-parallax', ((i + 1) * 0.6).toFixed(1));
         });
     }
 
@@ -703,7 +463,9 @@
         }
     }
 
-    // ========== 10. REVEALS ==========
+    /* =========================================
+       10. REVEALS
+       ========================================= */
     function initReveals() {
         var els = document.querySelectorAll('[data-reveal]');
         if (els.length > 0 && 'IntersectionObserver' in window) {
@@ -718,7 +480,9 @@
         }
     }
 
-    // ========== MENU OVERLAY ==========
+    /* =========================================
+       MENU OVERLAY
+       ========================================= */
     function initMenuOverlay() {
         var btn = document.getElementById('nav-dock-menu-btn');
         var overlay = document.getElementById('menu-overlay');
@@ -747,21 +511,38 @@
         });
     }
 
-    // ========== SMOOTH SCROLL ==========
-    function initSmoothScroll() {
-        document.querySelectorAll('a[href^="#"]').forEach(function (a) {
-            a.addEventListener('click', function (e) {
-                var id = this.getAttribute('href');
-                if (id === '#' || id === '#reservation') return;
-                var target = document.querySelector(id);
-                if (!target) return;
-                e.preventDefault();
-                window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - 20, behavior: 'smooth' });
-            });
-        });
+    /* =========================================
+       NAV DOCK
+       ========================================= */
+    var dock = document.getElementById('vr-dock');
+    var dockProgress = document.getElementById('vr-dock-progress');
+
+    function initNavDock() {
+        if (!dock) return;
+        // Scroll-based dock show/hide
+        var lastScrollY = 0, scrollDelta = 0, dockHidden = false;
+        window.addEventListener('scroll', function () {
+            var y = window.scrollY;
+            if (dockProgress) {
+                var h = document.documentElement.scrollHeight - window.innerHeight;
+                dockProgress.style.width = (h > 0 ? (y / h) * 100 : 0) + '%';
+            }
+            if (y < 100) { dock.classList.remove('dock-hidden'); dockHidden = false; lastScrollY = y; scrollDelta = 0; return; }
+            var diff = y - lastScrollY;
+            if (diff > 0) {
+                scrollDelta += diff;
+                if (scrollDelta > 80 && !dockHidden) { dock.classList.add('dock-hidden'); dockHidden = true; }
+            } else {
+                scrollDelta = 0;
+                if (dockHidden) { dock.classList.remove('dock-hidden'); dockHidden = false; }
+            }
+            lastScrollY = y;
+        }, { passive: true });
     }
 
-    // ========== PARTICLES ==========
+    /* =========================================
+       PARTICLES
+       ========================================= */
     function initParticles() {
         var c = document.getElementById('hero-particles');
         if (!c) return;
@@ -777,7 +558,9 @@
         }
     }
 
-    // ========== CARD GLOW ==========
+    /* =========================================
+       CARD GLOW
+       ========================================= */
     function initCardGlow() {
         document.querySelectorAll('.menu-card').forEach(function (card) {
             card.addEventListener('mousemove', function (e) {
@@ -794,7 +577,48 @@
         });
     }
 
-    // ========== MAIN LOOP ==========
+    /* =========================================
+       SMOOTH SCROLL (native)
+       ========================================= */
+    function initSmoothScroll() {
+        document.querySelectorAll('a[href^="#"]').forEach(function (a) {
+            a.addEventListener('click', function (e) {
+                var id = this.getAttribute('href');
+                if (id === '#' || id.length <= 1) return;
+                var target = document.querySelector(id);
+                if (!target) return;
+                e.preventDefault();
+                window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - 20, behavior: 'smooth' });
+            });
+        });
+    }
+
+    /* =========================================
+       HYPNOTIC SCROLL EFFECTS
+       ========================================= */
+    function initHypnoticScroll() {
+        if (S.mobile) return;
+
+        // Parallax sections on scroll
+        var sections = document.querySelectorAll('.page-section');
+        if (sections.length === 0) return;
+
+        window.addEventListener('scroll', function () {
+            var scrollY = window.scrollY;
+            var vh = window.innerHeight;
+
+            sections.forEach(function (section) {
+                var rect = section.getBoundingClientRect();
+                var progress = 1 - (rect.top / vh);
+                progress = Math.max(0, Math.min(1, progress));
+                section.style.setProperty('--scroll-progress', progress.toFixed(3));
+            });
+        }, { passive: true });
+    }
+
+    /* =========================================
+       MAIN ANIMATION LOOP
+       ========================================= */
     function lerp(a, b, t) { return a + (b - a) * t; }
 
     function animate() {
@@ -808,12 +632,13 @@
 
         updateMagnetics();
         updateParallax();
-        trackMouseDirection();
 
         requestAnimationFrame(animate);
     }
 
-    // ========== EVENTS ==========
+    /* =========================================
+       EVENTS
+       ========================================= */
     document.addEventListener('mousemove', function (e) { S.mx = e.clientX; S.my = e.clientY; resetIdle(); });
     document.addEventListener('touchmove', function (e) {
         if (e.touches.length) { S.mx = e.touches[0].clientX; S.my = e.touches[0].clientY; }
@@ -823,8 +648,12 @@
     document.addEventListener('keydown', resetIdle);
     document.addEventListener('click', resetIdle);
 
-    // ========== INIT ==========
-    initConstellationCanvas();
+    /* =========================================
+       INIT
+       ========================================= */
+    initConstellationHub();
+    initRadialMenu();
+    initConstellationReturn();
     initMagnetics();
     initTilt();
     initNavDock();
@@ -834,6 +663,7 @@
     initSmoothScroll();
     initParticles();
     initCardGlow();
+    initHypnoticScroll();
     resetIdle();
 
     if (!S.mobile) animate();
