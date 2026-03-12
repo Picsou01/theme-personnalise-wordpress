@@ -118,6 +118,26 @@ function virealys_fallback_menu() {
 }
 
 /**
+ * Overlay nav fallback
+ */
+function virealys_overlay_fallback_menu() {
+    $pages = array(
+        'concept'    => 'Le Concept',
+        'menus'      => 'Nos Menus',
+        'ambiances'  => 'Ambiances',
+        'zones'      => 'Les Zones',
+        'passeport'  => 'Passeport',
+    );
+    echo '<ul class="overlay-nav-list">';
+    foreach ( $pages as $slug => $label ) {
+        $page = get_page_by_path( $slug );
+        $url = $page ? get_permalink( $page ) : home_url( '/#' . $slug );
+        echo '<li><a href="' . esc_url( $url ) . '" class="nav-link overlay-nav-link">' . esc_html( $label ) . '</a></li>';
+    }
+    echo '</ul>';
+}
+
+/**
  * Footer nav fallback
  */
 function virealys_footer_fallback() {
@@ -187,7 +207,7 @@ function virealys_customize_register( $wp_customize ) {
         'img_logo'        => 'Logo Virealys',
         'img_ambiance_japon'   => 'Ambiance Japon',
         'img_ambiance_paris'   => 'Ambiance Paris',
-        'img_ambiance_classic' => 'Ambiance Classique Française',
+        'img_ambiance_italie'  => 'Ambiance Italie',
         'img_ambiance_cosmos'  => 'Ambiance Cosmos / Spatial',
     );
 

@@ -15,7 +15,7 @@ $reservation   = get_theme_mod( 'reservation_url', '#reservation' );
 
 $img_amb_japon   = virealys_get_image( 'img_ambiance_japon' );
 $img_amb_paris   = virealys_get_image( 'img_ambiance_paris' );
-$img_amb_classic = virealys_get_image( 'img_ambiance_classic' );
+$img_amb_italie  = virealys_get_image( 'img_ambiance_italie' );
 $img_amb_cosmos  = virealys_get_image( 'img_ambiance_cosmos' );
 ?>
 
@@ -150,16 +150,16 @@ $img_amb_cosmos  = virealys_get_image( 'img_ambiance_cosmos' );
                 </div>
             </a>
 
-            <a href="<?php echo esc_url( home_url( '/ambiance-classique/' ) ); ?>" class="ambiance-card" data-reveal style="--amb-color: #4caf50; --amb-color-rgb: 76, 175, 80;">
-                <?php if ( $img_amb_classic ) : ?>
-                    <div class="ambiance-card-bg" style="background-image: url(<?php echo esc_url( $img_amb_classic ); ?>)"></div>
+            <a href="<?php echo esc_url( home_url( '/ambiance-italie/' ) ); ?>" class="ambiance-card" data-reveal style="--amb-color: #4caf50; --amb-color-rgb: 76, 175, 80;">
+                <?php if ( $img_amb_italie ) : ?>
+                    <div class="ambiance-card-bg" style="background-image: url(<?php echo esc_url( $img_amb_italie ); ?>)"></div>
                 <?php endif; ?>
                 <div class="ambiance-card-overlay"></div>
                 <div class="ambiance-card-content">
-                    <span class="ambiance-card-emoji">&#127860;</span>
-                    <h3 class="ambiance-card-title">Classique Française</h3>
-                    <p class="ambiance-card-subtitle">Tradition & Excellence</p>
-                    <p class="ambiance-card-desc">L'élégance intemporelle de la gastronomie française. Nappes blanches, chandelles, et savoir-faire ancestral.</p>
+                    <span class="ambiance-card-emoji">&#127470;&#127481;</span>
+                    <h3 class="ambiance-card-title">Italie</h3>
+                    <p class="ambiance-card-subtitle">Dolce Vita & Saveurs</p>
+                    <p class="ambiance-card-desc">Paysages toscans, saveurs méditerranéennes, vins italiens d'exception. La cuisine italienne sublimée par la technologie.</p>
                     <span class="ambiance-card-cta">
                         Découvrir
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -283,7 +283,7 @@ $img_amb_cosmos  = virealys_get_image( 'img_ambiance_cosmos' );
 
         <?php if ( $img_ambiances ) : ?>
         <div class="zones-showcase" data-reveal>
-            <img src="<?php echo esc_url( $img_ambiances ); ?>" alt="Les 4 ambiances Virealys - Japon, Paris, Classique, Cosmos" loading="lazy">
+            <img src="<?php echo esc_url( $img_ambiances ); ?>" alt="Les 4 ambiances Virealys - Japon, Paris, Classique, Italie" loading="lazy">
             <div class="zones-showcase-glow"></div>
         </div>
         <?php endif; ?>

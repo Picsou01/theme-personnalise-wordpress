@@ -1,51 +1,172 @@
 /**
  * Virealys - Main JavaScript
- * Smooth, minimal, immersive interactions
+ * Floating adaptive navigation + immersive interactions
  */
 
 (function () {
     'use strict';
 
-    // --- Header scroll effect ---
-    const header = document.getElementById('site-header');
-    let lastScroll = 0;
+    // --- Floating Nav Dock: scroll hide/show ---
+    var navDock = document.getElementById('nav-dock');
+    var lastScrollY = window.scrollY;
+    var scrollDelta = 0;
+    var dockHidden = false;
+    var scrollTimeout = null;
+    var SCROLL_THRESHOLD = 60;
 
-    function onScroll() {
-        const scrollY = window.scrollY;
+    function updateDockVisibility() {
+        var currentScrollY = window.scrollY;
+        var diff = currentScrollY - lastScrollY;
 
-        if (scrollY > 60) {
-            header.classList.add('scrolled');
-        } else {
-            header.classList.remove('scrolled');
+        // At top of page, always show
+        if (currentScrollY < 100) {
+            showDock();
+            lastScrollY = currentScrollY;
+            scrollDelta = 0;
+            return;
         }
 
-        lastScroll = scrollY;
+        if (diff > 0) {
+            // Scrolling down
+            scrollDelta += diff;
+            if (scrollDelta > SCROLL_THRESHOLD && !dockHidden) {
+                hideDock();
+            }
+        } else {
+            // Scrolling up
+            scrollDelta = 0;
+            if (dockHidden) {
+                showDock();
+            }
+        }
+
+        lastScrollY = currentScrollY;
+
+        // Show dock on scroll pause
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(function () {
+            if (dockHidden) {
+                showDock();
+            }
+        }, 1200);
     }
 
-    window.addEventListener('scroll', onScroll, { passive: true });
+    function hideDock() {
+        if (navDock) {
+            navDock.classList.add('dock-hidden');
+            dockHidden = true;
+        }
+    }
 
-    // --- Mobile nav toggle ---
-    const navToggle = document.getElementById('nav-toggle');
-    const mainNav = document.getElementById('main-nav');
+    function showDock() {
+        if (navDock) {
+            navDock.classList.remove('dock-hidden');
+            dockHidden = false;
+        }
+    }
 
-    if (navToggle && mainNav) {
-        navToggle.addEventListener('click', function () {
-            const isOpen = mainNav.classList.toggle('open');
-            navToggle.classList.toggle('active');
-            navToggle.setAttribute('aria-expanded', isOpen);
-            document.body.style.overflow = isOpen ? 'hidden' : '';
+    window.addEventListener('scroll', updateDockVisibility, { passive: true });
+
+    // --- Active section tracking via IntersectionObserver ---
+    var dockLinks = document.querySelectorAll('.nav-dock-link[data-section]');
+    var sections = [];
+
+    dockLinks.forEach(function (link) {
+        var sectionId = link.getAttribute('data-section');
+        var section = document.getElementById(sectionId);
+        if (section) {
+            sections.push({ id: sectionId, el: section, link: link });
+        }
+    });
+
+    if (sections.length > 0 && 'IntersectionObserver' in window) {
+        var sectionObserver = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                var sectionId = entry.target.id;
+                var matchingLink = null;
+                for (var i = 0; i < sections.length; i++) {
+                    if (sections[i].id === sectionId) {
+                        matchingLink = sections[i].link;
+                        break;
+                    }
+                }
+                if (matchingLink) {
+                    if (entry.isIntersecting) {
+                        // Remove active from all, set on current
+                        dockLinks.forEach(function (l) { l.classList.remove('active'); });
+                        matchingLink.classList.add('active');
+                    }
+                }
+            });
+        }, {
+            threshold: 0.3,
+            rootMargin: '-10% 0px -40% 0px'
         });
 
-        // Close nav on link click
-        mainNav.querySelectorAll('.nav-link').forEach(function (link) {
+        sections.forEach(function (s) {
+            sectionObserver.observe(s.el);
+        });
+    }
+
+    // --- Menu Overlay open/close ---
+    var menuBtn = document.getElementById('nav-dock-menu-btn');
+    var menuOverlay = document.getElementById('menu-overlay');
+    var menuCloseBtn = document.getElementById('menu-overlay-close');
+
+    function openOverlay() {
+        if (menuOverlay) {
+            menuOverlay.classList.add('open');
+            menuOverlay.setAttribute('aria-hidden', 'false');
+        }
+        if (menuBtn) {
+            menuBtn.classList.add('active');
+            menuBtn.setAttribute('aria-expanded', 'true');
+        }
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeOverlay() {
+        if (menuOverlay) {
+            menuOverlay.classList.remove('open');
+            menuOverlay.setAttribute('aria-hidden', 'true');
+        }
+        if (menuBtn) {
+            menuBtn.classList.remove('active');
+            menuBtn.setAttribute('aria-expanded', 'false');
+        }
+        document.body.style.overflow = '';
+    }
+
+    if (menuBtn) {
+        menuBtn.addEventListener('click', function () {
+            var isOpen = menuOverlay && menuOverlay.classList.contains('open');
+            if (isOpen) {
+                closeOverlay();
+            } else {
+                openOverlay();
+            }
+        });
+    }
+
+    if (menuCloseBtn) {
+        menuCloseBtn.addEventListener('click', closeOverlay);
+    }
+
+    // Close overlay on nav link click
+    if (menuOverlay) {
+        menuOverlay.querySelectorAll('.nav-link, .overlay-nav-link').forEach(function (link) {
             link.addEventListener('click', function () {
-                mainNav.classList.remove('open');
-                navToggle.classList.remove('active');
-                navToggle.setAttribute('aria-expanded', 'false');
-                document.body.style.overflow = '';
+                closeOverlay();
             });
         });
     }
+
+    // Close overlay on Escape key
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && menuOverlay && menuOverlay.classList.contains('open')) {
+            closeOverlay();
+        }
+    });
 
     // --- Smooth scroll for anchor links ---
     document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
@@ -57,8 +178,7 @@
             if (!target) return;
 
             e.preventDefault();
-            var headerHeight = header ? header.offsetHeight : 0;
-            var targetTop = target.getBoundingClientRect().top + window.scrollY - headerHeight;
+            var targetTop = target.getBoundingClientRect().top + window.scrollY - 20;
 
             window.scrollTo({
                 top: targetTop,
