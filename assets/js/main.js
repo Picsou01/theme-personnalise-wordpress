@@ -1,9 +1,10 @@
 /**
- * Virealys - Living Canvas Engine v6.0
- * Revolutionary fluid navigation — no fixed positions, everything flows.
- * Mouse direction drives continuous drift. Wheel accelerates movement.
- * Autonomous floating dock buttons with individual physics/AI.
- * Predictive anticipation & dopamine engagement mechanics.
+ * Virealys - Nexus Engine v7.0
+ * Revolutionary web-graph navigation with radial context menu.
+ * Pages form a living web — connections evolve, directions shift.
+ * Left-click opens radial menu. Hold & release to navigate.
+ * Mouse direction + wheel drive seamless spatial drift.
+ * Dopamine mechanics & predictive anticipation.
  */
 (function () {
     'use strict';
@@ -17,19 +18,16 @@
         DRIFT_WHEEL_BOOST: 2.5,
         DRIFT_DECAY: 0.94,
         DRIFT_WHEEL_DECAY: 0.97,
-        CANVAS_FRICTION: 0.02,
-        // Autonomous dock
-        DOCK_FLOAT_SPEED: 0.008,
-        DOCK_REPULSION: 80,
-        DOCK_REPULSION_FORCE: 0.5,
-        DOCK_GRAVITY: 0.015,
-        DOCK_DAMPING: 0.92,
-        DOCK_BOUNDARY_MARGIN: 20,
-        DOCK_MOUSE_ATTRACT: 0.04,
-        DOCK_MOUSE_RADIUS: 200,
+        // Radial menu
+        RADIAL_RADIUS: 100,
+        RADIAL_INNER: 30,
+        RADIAL_HOLD_DELAY: 80,
+        RADIAL_ANIM_DURATION: 250,
+        // Navigation graph
+        NAV_TRANSITION_DURATION: 600,
+        CONNECTION_EVOLUTION_INTERVAL: 30000,
         // Engagement
         REWARD_INTERVAL: 15000,
-        STREAK_TIMEOUT: 86400000,
         DISCOVERY_PARTICLE_COUNT: 12,
         // UI
         CURSOR_SIZE: 600,
@@ -38,8 +36,54 @@
         TILT_MAX: 8,
         IDLE_TIMEOUT: 5000,
         LERP: 0.1,
-        PANEL_TRANSITION: 600,
         PREDICTION_UPDATE: 3000,
+    };
+
+    // =============================================
+    // NAVIGATION GRAPH DEFINITION
+    // Configurable web topology with hierarchy
+    // =============================================
+    // Graph structure: each node has connections to other nodes.
+    // "required" connections = must visit this node to unlock neighbors.
+    // Directions are evolutionary — they change over time.
+    var DEFAULT_GRAPH = {
+        hero: {
+            connections: ['concept', 'menus', 'ambiances'],
+            required: false, // hero is always accessible
+            tier: 0,
+        },
+        concept: {
+            connections: ['hero', 'ambiances', 'zones', 'menus'],
+            required: false,
+            tier: 1,
+        },
+        ambiances: {
+            connections: ['hero', 'concept', 'zones', 'menus'],
+            required: false,
+            tier: 1,
+        },
+        menus: {
+            connections: ['hero', 'concept', 'ambiances', 'reservation'],
+            required: false,
+            tier: 1,
+        },
+        zones: {
+            connections: ['concept', 'ambiances', 'passeport'],
+            required: true, // must visit concept or ambiances first
+            requiredFrom: ['concept', 'ambiances'],
+            tier: 2,
+        },
+        passeport: {
+            connections: ['zones', 'reservation', 'menus'],
+            required: true,
+            requiredFrom: ['zones'],
+            tier: 2,
+        },
+        reservation: {
+            connections: ['menus', 'passeport', 'hero'],
+            required: false,
+            tier: 3,
+        },
     };
 
     // =============================================
@@ -54,7 +98,7 @@
         idleTimer: null,
         mobile: window.matchMedia('(max-width: 768px)').matches,
         reduced: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-        // Living canvas
+        // Canvas drift
         canvasX: 0,
         canvasY: 0,
         driftVX: 0,
@@ -63,27 +107,36 @@
         mouseAngle: 0,
         mouseMagnitude: 0,
         mouseHistory: [],
-        // Panel system
+        // Navigation
         currentPanel: null,
         panels: [],
         panelMap: {},
         transitioning: false,
         spatialActive: false,
-        // Autonomous dock buttons
-        dockButtons: [],
-        dockVisible: true,
-        // Engagement state
+        graph: null,
+        visitedPanels: [],
+        unlockedPanels: ['hero'],
+        // Radial menu
+        radialOpen: false,
+        radialEl: null,
+        radialItems: [],
+        radialHovered: -1,
+        radialOriginX: 0,
+        radialOriginY: 0,
+        mouseDownTime: 0,
+        mouseDownButton: -1,
+        // Direction assignments (evolutionary)
+        directionMap: {},
+        // Engagement
         discoveryCount: 0,
         lastRewardTime: 0,
         sessionStartTime: Date.now(),
         interactionCount: 0,
-        // Prediction
         predictedPanel: null,
-        predictionGlowEl: null,
     };
 
     // =============================================
-    // USER PROFILE (localStorage)
+    // USER PROFILE
     // =============================================
     var PROFILE_KEY = 'vr_user_profile';
     var profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || 'null') || {
@@ -96,11 +149,11 @@
         lastStreakDate: '',
         discoveries: [],
         totalInteractions: 0,
-        contentOrder: {},
+        directionHistory: {},
         sessionDurations: [],
+        graphOverrides: null,
     };
 
-    // Update streak
     var today = new Date().toDateString();
     if (profile.lastStreakDate === new Date(Date.now() - 86400000).toDateString()) {
         profile.streak++;
@@ -112,13 +165,10 @@
     profile.lastVisitTime = Date.now();
     if (!profile.transitions) profile.transitions = {};
     if (!profile.discoveries) profile.discoveries = [];
-    if (!profile.contentOrder) profile.contentOrder = {};
-    if (!profile.sessionDurations) profile.sessionDurations = [];
+    if (!profile.directionHistory) profile.directionHistory = {};
 
     function saveProfile() {
-        try {
-            localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
-        } catch (e) { /* quota exceeded — silent */ }
+        try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch (e) {}
     }
 
     function trackSection(id) {
@@ -126,6 +176,27 @@
         profile.lastSections.unshift(id);
         if (profile.lastSections.length > 50) profile.lastSections.length = 50;
         profile.totalInteractions = (profile.totalInteractions || 0) + 1;
+
+        // Unlock connected panels
+        if (S.graph[id]) {
+            S.graph[id].connections.forEach(function (conn) {
+                if (S.unlockedPanels.indexOf(conn) === -1) {
+                    var node = S.graph[conn];
+                    if (!node || !node.required) {
+                        S.unlockedPanels.push(conn);
+                    } else if (node.requiredFrom) {
+                        // Check if we've visited any required predecessor
+                        var hasAccess = node.requiredFrom.some(function (req) {
+                            return S.visitedPanels.indexOf(req) !== -1;
+                        });
+                        if (hasAccess) S.unlockedPanels.push(conn);
+                    }
+                }
+            });
+        }
+        if (S.visitedPanels.indexOf(id) === -1) {
+            S.visitedPanels.push(id);
+        }
         saveProfile();
     }
 
@@ -145,35 +216,21 @@
             if (id === 'reservation') timeBonus = 25;
             else if (id === 'menus') timeBonus = 15;
         }
-        if (hour >= 10 && hour < 18 && id === 'concept') timeBonus = 5;
-        // Streak bonus — returning users get boosted priority on their favorites
         var streakBonus = Math.min(profile.streak, 10) * (freq > 3 ? 2 : 0);
         return freq * 2 + recency + timeBonus + streakBonus;
     }
 
     function predictNextPanel(currentId) {
-        if (!currentId) return null;
+        if (!currentId || !S.graph[currentId]) return null;
         var best = null, bestScore = -1;
-        for (var i = 0; i < S.panels.length; i++) {
-            var p = S.panels[i];
-            if (p.id === currentId) continue;
-            var key = currentId + '>' + p.id;
+        var conns = getAvailableConnections(currentId);
+        for (var i = 0; i < conns.length; i++) {
+            var cid = conns[i];
+            var key = currentId + '>' + cid;
             var transFreq = profile.transitions[key] || 0;
-            var sectionPri = getSectionPriority(p.id);
-            // Factor in current mouse direction toward this panel
-            var dirScore = 0;
-            if (S.mouseMagnitude > 0.1 && S.panelMap[currentId]) {
-                var cur = S.panelMap[currentId];
-                var dx = p.col - cur.col;
-                var dy = p.row - cur.row;
-                var mag = Math.sqrt(dx * dx + dy * dy);
-                if (mag > 0) {
-                    var dot = (dx / mag) * Math.cos(S.mouseAngle) + (dy / mag) * Math.sin(S.mouseAngle);
-                    dirScore = dot * S.mouseMagnitude * 15;
-                }
-            }
-            var score = transFreq * 4 + sectionPri + dirScore;
-            if (score > bestScore) { bestScore = score; best = p; }
+            var sectionPri = getSectionPriority(cid);
+            var score = transFreq * 4 + sectionPri;
+            if (score > bestScore) { bestScore = score; best = cid; }
         }
         return best;
     }
@@ -181,29 +238,381 @@
     saveProfile();
 
     // =============================================
-    // REDUCED MOTION BAILOUT
+    // NAVIGATION GRAPH
     // =============================================
-    if (S.reduced) {
-        document.addEventListener('DOMContentLoaded', function () {
-            initReveals(); initMenuOverlay(); initSmoothScroll();
-            initStaticDock(); initConstellationCanvas();
+    function initGraph() {
+        S.graph = profile.graphOverrides || JSON.parse(JSON.stringify(DEFAULT_GRAPH));
+
+        // Assign evolutionary directions to connections
+        assignDirections();
+
+        // Periodically evolve directions
+        setInterval(evolveDirections, CFG.CONNECTION_EVOLUTION_INTERVAL);
+    }
+
+    function getAvailableConnections(panelId) {
+        if (!S.graph[panelId]) return [];
+        return S.graph[panelId].connections.filter(function (conn) {
+            return S.unlockedPanels.indexOf(conn) !== -1 && S.panelMap[conn];
         });
-        return;
+    }
+
+    function isLocked(panelId) {
+        return S.unlockedPanels.indexOf(panelId) === -1;
+    }
+
+    // Assign an angle to each connection from a panel
+    // Directions evolve over time and based on user behavior
+    function assignDirections() {
+        S.directionMap = {};
+        for (var panelId in S.graph) {
+            if (!S.graph.hasOwnProperty(panelId)) continue;
+            var conns = S.graph[panelId].connections;
+            S.directionMap[panelId] = {};
+
+            // Check if we have history for this panel
+            var history = profile.directionHistory[panelId];
+            if (history && Object.keys(history).length === conns.length) {
+                // Use stored directions
+                for (var conn in history) {
+                    S.directionMap[panelId][conn] = history[conn];
+                }
+            } else {
+                // Distribute evenly around the circle
+                for (var i = 0; i < conns.length; i++) {
+                    var angle = (i / conns.length) * Math.PI * 2 - Math.PI / 2;
+                    S.directionMap[panelId][conns[i]] = angle;
+                }
+                // Store initial assignment
+                profile.directionHistory[panelId] = {};
+                for (var j = 0; j < conns.length; j++) {
+                    profile.directionHistory[panelId][conns[j]] = S.directionMap[panelId][conns[j]];
+                }
+                saveProfile();
+            }
+        }
+    }
+
+    // Evolve: shuffle directions slightly based on usage patterns
+    function evolveDirections() {
+        for (var panelId in S.directionMap) {
+            if (!S.directionMap.hasOwnProperty(panelId)) continue;
+            var conns = Object.keys(S.directionMap[panelId]);
+            if (conns.length < 2) continue;
+
+            // Score connections by usage
+            var scored = conns.map(function (conn) {
+                var key = panelId + '>' + conn;
+                return { conn: conn, score: (profile.transitions[key] || 0) + getSectionPriority(conn) };
+            });
+            scored.sort(function (a, b) { return b.score - a.score; });
+
+            // Redistribute: most used gets top position, others flow around
+            for (var i = 0; i < scored.length; i++) {
+                var targetAngle = (i / scored.length) * Math.PI * 2 - Math.PI / 2;
+                var currentAngle = S.directionMap[panelId][scored[i].conn];
+                // Smooth evolution — only shift 15% toward target
+                var diff = targetAngle - currentAngle;
+                // Normalize to -PI..PI
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                S.directionMap[panelId][scored[i].conn] = currentAngle + diff * 0.15;
+            }
+
+            // Save evolved directions
+            profile.directionHistory[panelId] = {};
+            conns.forEach(function (conn) {
+                profile.directionHistory[panelId][conn] = S.directionMap[panelId][conn];
+            });
+        }
+        saveProfile();
     }
 
     // =============================================
-    // CURSOR LIGHT
+    // RADIAL CONTEXT MENU
     // =============================================
-    var cursorLight = null;
-    if (!S.mobile) {
-        cursorLight = document.createElement('div');
-        cursorLight.className = 'vr-cursor-light';
-        cursorLight.setAttribute('aria-hidden', 'true');
-        document.body.appendChild(cursorLight);
+    function createRadialMenu() {
+        var el = document.createElement('div');
+        el.className = 'vr-radial';
+        el.id = 'vr-radial';
+        el.setAttribute('aria-hidden', 'true');
+
+        // Center indicator
+        var center = document.createElement('div');
+        center.className = 'vr-radial-center';
+        el.appendChild(center);
+
+        // SVG for segments
+        var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'vr-radial-svg');
+        svg.setAttribute('viewBox', '-150 -150 300 300');
+        svg.setAttribute('width', '300');
+        svg.setAttribute('height', '300');
+        el.appendChild(svg);
+
+        // Label container
+        var labels = document.createElement('div');
+        labels.className = 'vr-radial-labels';
+        el.appendChild(labels);
+
+        document.body.appendChild(el);
+        S.radialEl = el;
+    }
+
+    function openRadialMenu(x, y) {
+        if (S.radialOpen || S.transitioning || !S.currentPanel) return;
+        S.radialOpen = true;
+        S.radialOriginX = x;
+        S.radialOriginY = y;
+        S.radialHovered = -1;
+
+        var el = S.radialEl;
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+
+        // Get available connections
+        var currentId = S.currentPanel.id;
+        var conns = getAvailableConnections(currentId);
+
+        // Also add locked connections (shown as locked)
+        var allConns = S.graph[currentId] ? S.graph[currentId].connections : [];
+        var lockedConns = allConns.filter(function (c) { return conns.indexOf(c) === -1 && S.panelMap[c]; });
+
+        S.radialItems = [];
+
+        // Build segments
+        var totalItems = conns.length + lockedConns.length;
+        if (totalItems === 0) return;
+
+        var svg = el.querySelector('.vr-radial-svg');
+        svg.innerHTML = '';
+        var labelsContainer = el.querySelector('.vr-radial-labels');
+        labelsContainer.innerHTML = '';
+
+        var angleStep = (Math.PI * 2) / totalItems;
+        var radius = CFG.RADIAL_RADIUS;
+        var innerR = CFG.RADIAL_INNER;
+
+        // Determine the starting angle based on evolutionary direction map
+        var directions = S.directionMap[currentId] || {};
+
+        // Combine all items
+        var allItems = conns.map(function (c) { return { id: c, locked: false }; })
+            .concat(lockedConns.map(function (c) { return { id: c, locked: true }; }));
+
+        // Sort by their assigned direction angle
+        allItems.sort(function (a, b) {
+            var angleA = directions[a.id] !== undefined ? directions[a.id] : 0;
+            var angleB = directions[b.id] !== undefined ? directions[b.id] : 0;
+            return angleA - angleB;
+        });
+
+        allItems.forEach(function (item, i) {
+            var startAngle = (i / totalItems) * Math.PI * 2 - Math.PI / 2 - angleStep / 2;
+            var endAngle = startAngle + angleStep;
+            var midAngle = startAngle + angleStep / 2;
+
+            // Create SVG arc segment
+            var path = createArcPath(innerR, radius, startAngle, endAngle);
+            var segment = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            segment.setAttribute('d', path);
+            segment.setAttribute('class', 'vr-radial-segment' + (item.locked ? ' locked' : ''));
+            segment.setAttribute('data-index', i);
+            svg.appendChild(segment);
+
+            // Label
+            var labelR = radius + 25;
+            var lx = Math.cos(midAngle) * labelR;
+            var ly = Math.sin(midAngle) * labelR;
+
+            var label = document.createElement('div');
+            label.className = 'vr-radial-label' + (item.locked ? ' locked' : '');
+            label.style.left = (150 + lx) + 'px';
+            label.style.top = (150 + ly) + 'px';
+            var displayName = item.id.charAt(0).toUpperCase() + item.id.slice(1);
+            label.innerHTML = (item.locked ? '<span class="vr-radial-lock">&#128274;</span>' : '') + displayName;
+            labelsContainer.appendChild(label);
+
+            // Icon inside the segment
+            var iconR = (innerR + radius) / 2;
+            var ix = Math.cos(midAngle) * iconR;
+            var iy = Math.sin(midAngle) * iconR;
+            var iconEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            iconEl.setAttribute('x', ix);
+            iconEl.setAttribute('y', iy + 4);
+            iconEl.setAttribute('class', 'vr-radial-icon' + (item.locked ? ' locked' : ''));
+            iconEl.setAttribute('text-anchor', 'middle');
+            iconEl.textContent = getIconChar(item.id);
+            svg.appendChild(iconEl);
+
+            S.radialItems.push({
+                id: item.id,
+                locked: item.locked,
+                startAngle: startAngle,
+                endAngle: endAngle,
+                midAngle: midAngle,
+                segment: segment,
+                label: label,
+            });
+        });
+
+        // Animate open
+        el.classList.add('open');
+        el.setAttribute('aria-hidden', 'false');
+
+        // Adaptive radius based on item count
+        var adaptedRadius = Math.max(80, 60 + totalItems * 15);
+        el.style.setProperty('--radial-radius', adaptedRadius + 'px');
+    }
+
+    function getIconChar(sectionId) {
+        var icons = {
+            hero: '\u2302',       // ⌂
+            concept: '\u2B21',    // ⬡
+            ambiances: '\u2734',  // ✴
+            menus: '\u2442',      // ⑂
+            zones: '\u25CE',      // ◎
+            passeport: '\u2637',  // ☷
+            reservation: '\u2611' // ☑
+        };
+        return icons[sectionId] || '\u25CF';
+    }
+
+    function closeRadialMenu() {
+        if (!S.radialOpen) return;
+        S.radialOpen = false;
+        S.radialHovered = -1;
+        if (S.radialEl) {
+            S.radialEl.classList.remove('open');
+            S.radialEl.setAttribute('aria-hidden', 'true');
+        }
+    }
+
+    function updateRadialHover(mx, my) {
+        if (!S.radialOpen || S.radialItems.length === 0) return;
+
+        var dx = mx - S.radialOriginX;
+        var dy = my - S.radialOriginY;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        var angle = Math.atan2(dy, dx);
+
+        // Must be within inner/outer radius
+        if (dist < CFG.RADIAL_INNER * 0.5 || dist > CFG.RADIAL_RADIUS * 2) {
+            setRadialHover(-1);
+            return;
+        }
+
+        // Find which segment the angle falls in
+        var found = -1;
+        for (var i = 0; i < S.radialItems.length; i++) {
+            var item = S.radialItems[i];
+            var a = normalizeAngle(angle);
+            var start = normalizeAngle(item.startAngle);
+            var end = normalizeAngle(item.endAngle);
+
+            if (start < end) {
+                if (a >= start && a < end) { found = i; break; }
+            } else {
+                // Wraps around
+                if (a >= start || a < end) { found = i; break; }
+            }
+        }
+
+        setRadialHover(found);
+    }
+
+    function normalizeAngle(a) {
+        while (a < 0) a += Math.PI * 2;
+        while (a >= Math.PI * 2) a -= Math.PI * 2;
+        return a;
+    }
+
+    function setRadialHover(index) {
+        if (index === S.radialHovered) return;
+        S.radialHovered = index;
+
+        S.radialItems.forEach(function (item, i) {
+            item.segment.classList.toggle('hovered', i === index && !item.locked);
+            item.label.classList.toggle('hovered', i === index && !item.locked);
+            if (i === index && item.locked) {
+                item.segment.classList.add('locked-hover');
+                item.label.classList.add('locked-hover');
+            } else {
+                item.segment.classList.remove('locked-hover');
+                item.label.classList.remove('locked-hover');
+            }
+        });
+    }
+
+    function selectRadialItem() {
+        if (S.radialHovered < 0 || S.radialHovered >= S.radialItems.length) {
+            closeRadialMenu();
+            return;
+        }
+
+        var item = S.radialItems[S.radialHovered];
+        if (item.locked) {
+            // Show locked feedback
+            showLockedFeedback(item);
+            closeRadialMenu();
+            return;
+        }
+
+        var targetId = item.id;
+        closeRadialMenu();
+
+        // Navigate using the direction from the radial
+        if (S.panelMap[targetId]) {
+            navigateTo(targetId, item.midAngle);
+        }
+    }
+
+    function showLockedFeedback(item) {
+        var el = document.createElement('div');
+        el.className = 'vr-locked-feedback';
+        el.style.left = S.radialOriginX + 'px';
+        el.style.top = S.radialOriginY + 'px';
+
+        var node = S.graph[item.id];
+        var reqNames = node && node.requiredFrom
+            ? node.requiredFrom.map(function (r) { return r.charAt(0).toUpperCase() + r.slice(1); }).join(' ou ')
+            : '?';
+        el.innerHTML = '<span class="vr-locked-icon">&#128274;</span> Visitez d\'abord : ' + reqNames;
+        document.body.appendChild(el);
+        void el.offsetHeight;
+        el.classList.add('show');
+        setTimeout(function () {
+            el.classList.remove('show');
+            el.classList.add('hide');
+            setTimeout(function () { if (el.parentNode) el.remove(); }, 500);
+        }, 2500);
+    }
+
+    function createArcPath(innerR, outerR, startAngle, endAngle) {
+        var gap = 0.02; // Small gap between segments
+        var s = startAngle + gap;
+        var e = endAngle - gap;
+
+        var x1 = Math.cos(s) * outerR;
+        var y1 = Math.sin(s) * outerR;
+        var x2 = Math.cos(e) * outerR;
+        var y2 = Math.sin(e) * outerR;
+        var x3 = Math.cos(e) * innerR;
+        var y3 = Math.sin(e) * innerR;
+        var x4 = Math.cos(s) * innerR;
+        var y4 = Math.sin(s) * innerR;
+
+        var largeArc = (e - s > Math.PI) ? 1 : 0;
+
+        return 'M ' + x1.toFixed(2) + ' ' + y1.toFixed(2) +
+            ' A ' + outerR + ' ' + outerR + ' 0 ' + largeArc + ' 1 ' + x2.toFixed(2) + ' ' + y2.toFixed(2) +
+            ' L ' + x3.toFixed(2) + ' ' + y3.toFixed(2) +
+            ' A ' + innerR + ' ' + innerR + ' 0 ' + largeArc + ' 0 ' + x4.toFixed(2) + ' ' + y4.toFixed(2) +
+            ' Z';
     }
 
     // =============================================
-    // MOUSE DIRECTION & MAGNITUDE TRACKING
+    // MOUSE TRACKING
     // =============================================
     function trackMouseDirection() {
         S.mouseHistory.push({ x: S.mx, y: S.my, t: Date.now() });
@@ -225,23 +634,19 @@
     }
 
     // =============================================
-    // LIVING CANVAS — CONTINUOUS DRIFT
+    // LIVING CANVAS DRIFT
     // =============================================
-    // The canvas has no fixed grid. Panels float in a 2D space.
-    // Mouse direction creates a gentle continuous drift.
-    // Mouse wheel accelerates/decelerates in the current direction.
-
     function updateCanvasDrift() {
-        if (!S.spatialActive || S.transitioning) return;
+        if (!S.spatialActive || S.transitioning || S.radialOpen) return;
 
-        // Mouse direction applies gentle drift force
+        // Mouse direction drift (gentle)
         if (S.mouseMagnitude > 0.15 && !S.idle) {
             var force = CFG.DRIFT_BASE_SPEED * S.mouseMagnitude;
             S.driftVX += Math.cos(S.mouseAngle) * force;
             S.driftVY += Math.sin(S.mouseAngle) * force;
         }
 
-        // Apply wheel boost in the current drift direction or mouse direction
+        // Wheel boost
         if (S.wheelBoost !== 0) {
             var angle = (Math.abs(S.driftVX) > 0.01 || Math.abs(S.driftVY) > 0.01)
                 ? Math.atan2(S.driftVY, S.driftVX)
@@ -252,78 +657,76 @@
             if (Math.abs(S.wheelBoost) < 0.01) S.wheelBoost = 0;
         }
 
-        // Apply friction/decay
+        // Decay
         S.driftVX *= CFG.DRIFT_DECAY;
         S.driftVY *= CFG.DRIFT_DECAY;
 
-        // Clamp max speed
+        // Clamp speed
         var speed = Math.sqrt(S.driftVX * S.driftVX + S.driftVY * S.driftVY);
-        var maxSpeed = 12;
-        if (speed > maxSpeed) {
-            S.driftVX = (S.driftVX / speed) * maxSpeed;
-            S.driftVY = (S.driftVY / speed) * maxSpeed;
+        if (speed > 12) {
+            S.driftVX = (S.driftVX / speed) * 12;
+            S.driftVY = (S.driftVY / speed) * 12;
         }
 
-        // Update canvas position
         S.canvasX += S.driftVX;
         S.canvasY += S.driftVY;
 
-        // Check if we should transition to a new panel
-        checkPanelProximity();
+        // Boundary — keep within current panel's connections
+        var maxDrift = 200;
+        var driftDist = Math.sqrt(S.canvasX * S.canvasX + S.canvasY * S.canvasY);
+        if (driftDist > maxDrift) {
+            // Elastic pullback
+            var pullback = 0.05;
+            S.canvasX *= (1 - pullback);
+            S.canvasY *= (1 - pullback);
+            S.driftVX *= 0.8;
+            S.driftVY *= 0.8;
+        }
 
-        // Apply transform to the spatial container
+        // Check proximity to connected panels — auto-navigate
+        checkDriftNavigation();
+
+        // Apply subtle parallax to active panel
         var spatial = document.getElementById('vr-spatial');
         if (spatial) {
-            spatial.style.transform = 'translate(' + (-S.canvasX * 0.5).toFixed(1) + 'px, ' + (-S.canvasY * 0.5).toFixed(1) + 'px)';
+            spatial.style.transform = 'translate(' + (-S.canvasX * 0.3).toFixed(1) + 'px, ' + (-S.canvasY * 0.3).toFixed(1) + 'px)';
         }
     }
 
-    function checkPanelProximity() {
+    function checkDriftNavigation() {
         if (!S.currentPanel || S.transitioning) return;
+        var threshold = 160;
+        var driftDist = Math.sqrt(S.canvasX * S.canvasX + S.canvasY * S.canvasY);
+        if (driftDist < threshold) return;
 
-        var threshold = 150; // px of canvas travel to trigger panel switch
-        var cur = S.currentPanel;
-        var best = null, bestDist = Infinity;
+        var driftAngle = Math.atan2(S.canvasY, S.canvasX);
+        var currentId = S.currentPanel.id;
+        var conns = getAvailableConnections(currentId);
+        var directions = S.directionMap[currentId] || {};
 
-        for (var i = 0; i < S.panels.length; i++) {
-            var p = S.panels[i];
-            if (p.id === cur.id) continue;
-
-            // Virtual position based on grid coords and canvas offset
-            var dx = (p.col - cur.col) * 100 - S.canvasX;
-            var dy = (p.row - cur.row) * 100 - S.canvasY;
-            var dist = Math.sqrt(dx * dx + dy * dy);
-
-            // Check if canvas has drifted enough toward this panel
-            var canvasDist = Math.sqrt(S.canvasX * S.canvasX + S.canvasY * S.canvasY);
-            if (canvasDist > threshold) {
-                // Find which panel we're drifting toward
-                var dirX = S.canvasX / canvasDist;
-                var dirY = S.canvasY / canvasDist;
-                var panelDirX = p.col - cur.col;
-                var panelDirY = p.row - cur.row;
-                var panelMag = Math.sqrt(panelDirX * panelDirX + panelDirY * panelDirY);
-                if (panelMag > 0) {
-                    var dot = (panelDirX / panelMag) * dirX + (panelDirY / panelMag) * dirY;
-                    if (dot > 0.5 && panelMag < bestDist) {
-                        bestDist = panelMag;
-                        best = p;
-                    }
-                }
+        // Find which connection aligns with drift direction
+        var best = null, bestDot = -Infinity;
+        conns.forEach(function (conn) {
+            var connAngle = directions[conn] !== undefined ? directions[conn] : 0;
+            var dot = Math.cos(driftAngle - connAngle);
+            if (dot > 0.5 && dot > bestDot) {
+                bestDot = dot;
+                best = conn;
             }
-        }
+        });
 
         if (best) {
-            navigateTo(best.id);
+            var connAngle = directions[best];
+            navigateTo(best, connAngle);
             S.canvasX = 0;
             S.canvasY = 0;
-            S.driftVX *= 0.3;
-            S.driftVY *= 0.3;
+            S.driftVX *= 0.2;
+            S.driftVY *= 0.2;
         }
     }
 
     // =============================================
-    // CONSTELLATION CANVAS (Front Page)
+    // CONSTELLATION CANVAS
     // =============================================
     function initConstellationCanvas() {
         var spatial = document.getElementById('vr-spatial');
@@ -333,39 +736,45 @@
         var panelEls = Array.from(spatial.querySelectorAll('.vr-panel'));
         if (panelEls.length === 0) return;
 
-        // Build panel map — positions will be dynamically reshuffled
         panelEls.forEach(function (el) {
             var id = el.getAttribute('data-panel');
             var col = parseInt(el.getAttribute('data-grid-col')) || 0;
             var row = parseInt(el.getAttribute('data-grid-row')) || 0;
-            var entry = { el: el, id: id, col: col, row: row, baseCol: col, baseRow: row };
+            var entry = { el: el, id: id, col: col, row: row };
             S.panels.push(entry);
             S.panelMap[id] = entry;
         });
 
-        // Dynamically reorder panels based on user profile
-        reshufflePanelPositions();
+        // Initialize graph
+        initGraph();
 
-        S.currentPanel = S.panels[0];
+        // Unlock panels that don't require prerequisites
+        for (var pid in S.graph) {
+            if (S.graph.hasOwnProperty(pid) && !S.graph[pid].required) {
+                if (S.unlockedPanels.indexOf(pid) === -1) {
+                    S.unlockedPanels.push(pid);
+                }
+            }
+        }
+
+        S.currentPanel = S.panelMap['hero'] || S.panels[0];
         document.body.classList.add('vr-spatial-active');
 
-        // Build constellation mini-map
-        buildConstellationNav();
+        // Build web-map
+        buildWebMap();
 
-        // Panel goto buttons
+        // Panel goto
         document.querySelectorAll('.vr-panel-goto').forEach(function (btn) {
             btn.addEventListener('click', function (e) {
                 e.preventDefault();
                 var target = this.getAttribute('data-goto-panel');
-                if (target && S.panelMap[target]) navigateTo(target);
+                if (target && S.panelMap[target] && !isLocked(target)) navigateTo(target);
             });
         });
 
-        // Mouse wheel — accelerates drift in current direction
+        // Wheel — acceleration
         spatial.addEventListener('wheel', function (e) {
-            if (S.transitioning) return;
-
-            // Check internal scroll first
+            if (S.transitioning || S.radialOpen) return;
             var panel = S.currentPanel.el;
             var scroller = panel.querySelector('.vr-panel-scroll');
             if (scroller) {
@@ -374,16 +783,9 @@
                 if (e.deltaY > 0 && !atBottom) return;
                 if (e.deltaY < 0 && !atTop) return;
             }
-
             e.preventDefault();
-
-            // Wheel adds boost in current mouse direction
-            var wheelForce = Math.sign(e.deltaY) * CFG.DRIFT_WHEEL_BOOST;
-            S.wheelBoost += wheelForce;
-
-            // Track interaction
+            S.wheelBoost += Math.sign(e.deltaY) * CFG.DRIFT_WHEEL_BOOST;
             S.interactionCount++;
-            checkEngagementReward();
         }, { passive: false });
 
         // Touch swipe
@@ -392,18 +794,15 @@
             touchStart.x = e.touches[0].clientX;
             touchStart.y = e.touches[0].clientY;
         }, { passive: true });
-
         spatial.addEventListener('touchend', function (e) {
             var dx = touchStart.x - e.changedTouches[0].clientX;
             var dy = touchStart.y - e.changedTouches[0].clientY;
             if (Math.abs(dx) < 40 && Math.abs(dy) < 40) return;
-
-            // Apply impulse in swipe direction
             S.driftVX += dx * 0.05;
             S.driftVY += dy * 0.05;
         });
 
-        // Keyboard arrows
+        // Keyboard
         document.addEventListener('keydown', function (e) {
             if (!S.spatialActive || S.transitioning) return;
             var impulse = 5;
@@ -415,84 +814,24 @@
             e.preventDefault();
         });
 
-        // Reveal first panel
+        // First panel reveals
         S.currentPanel.el.querySelectorAll('[data-reveal]').forEach(function (el) {
             el.classList.add('revealed');
         });
 
-        // Start prediction cycle
+        // Prediction cycle
         setInterval(function () {
-            updatePrediction();
-            updateDockAI();
+            S.predictedPanel = predictNextPanel(S.currentPanel.id);
         }, CFG.PREDICTION_UPDATE);
-    }
 
-    // =============================================
-    // DYNAMIC PANEL RESHUFFLING
-    // =============================================
-    function reshufflePanelPositions() {
-        if (S.panels.length < 2) return;
-
-        // Score each panel and place highest-priority ones closer to current position
-        var scored = S.panels.map(function (p) {
-            return { panel: p, score: getSectionPriority(p.id) };
-        });
-        scored.sort(function (a, b) { return b.score - a.score; });
-
-        // Spiral placement: highest priority at center, others spiral outward
-        var spiralPositions = generateSpiral(scored.length);
-        scored.forEach(function (item, i) {
-            item.panel.col = spiralPositions[i].col;
-            item.panel.row = spiralPositions[i].row;
-        });
-    }
-
-    function generateSpiral(count) {
-        var positions = [{ col: 0, row: 0 }];
-        var directions = [
-            { col: 1, row: 0 }, { col: 0, row: 1 },
-            { col: -1, row: 0 }, { col: 0, row: -1 }
-        ];
-        var x = 0, y = 0, dir = 0, steps = 1, stepCount = 0, turnCount = 0;
-
-        while (positions.length < count) {
-            x += directions[dir].col;
-            y += directions[dir].row;
-            positions.push({ col: x, row: y });
-            stepCount++;
-            if (stepCount === steps) {
-                stepCount = 0;
-                dir = (dir + 1) % 4;
-                turnCount++;
-                if (turnCount === 2) {
-                    turnCount = 0;
-                    steps++;
-                }
-            }
-        }
-        return positions;
-    }
-
-    // Reorder content within a panel based on engagement
-    function reorderPanelContent(panelId) {
-        var panel = S.panelMap[panelId];
-        if (!panel) return;
-
-        var contentEls = Array.from(panel.el.querySelectorAll('[data-content-priority]'));
-        if (contentEls.length < 2) return;
-
-        var order = profile.contentOrder[panelId] || {};
-        contentEls.forEach(function (el) {
-            var key = el.getAttribute('data-content-priority');
-            var score = order[key] || 0;
-            el.style.order = -score;
-        });
+        // Edge indicators
+        updateEdgeIndicators();
     }
 
     // =============================================
     // NAVIGATE TO PANEL
     // =============================================
-    function navigateTo(targetId) {
+    function navigateTo(targetId, fromAngle) {
         if (!S.panelMap[targetId] || S.transitioning) return;
         var target = S.panelMap[targetId];
         if (target === S.currentPanel) return;
@@ -501,54 +840,46 @@
         var fromId = S.currentPanel.id;
         var current = S.currentPanel;
 
-        // Direction vector
-        var dc = target.col - current.col;
-        var dr = target.row - current.row;
+        // Use the angle to determine enter/exit direction
+        var dirAngle = fromAngle !== undefined ? fromAngle : 0;
+        var dc = Math.round(Math.cos(dirAngle));
+        var dr = Math.round(Math.sin(dirAngle));
+        if (dc === 0 && dr === 0) dr = 1;
 
         var exitClass = getExitClass(dc, dr);
         var enterClass = getEnterClass(dc, dr);
 
-        // Exit current
         current.el.classList.remove('vr-panel-active');
         current.el.classList.add(exitClass);
 
-        // Enter new
         target.el.classList.add(enterClass);
         void target.el.offsetHeight;
         target.el.classList.add('vr-panel-active');
         target.el.classList.remove(enterClass);
 
-        // Track
         trackSection(targetId);
         trackTransition(fromId, targetId);
-
-        // Check discovery
         checkDiscovery(targetId);
 
-        // Reveals
         target.el.querySelectorAll('[data-reveal]:not(.revealed)').forEach(function (el) {
             el.classList.add('revealed');
         });
 
-        // Section color
         var color = target.el.getAttribute('data-section-color');
         if (color) document.documentElement.style.setProperty('--section-accent', color);
 
-        // Reorder content within the new panel
-        reorderPanelContent(targetId);
-
-        // Interaction tracking
         S.interactionCount++;
+
+        // Emit particles
+        emitNavigationParticles(dc, dr);
 
         setTimeout(function () {
             current.el.classList.remove(exitClass);
             S.currentPanel = target;
             S.transitioning = false;
-            updateConstellationNav();
-            updateDockButtonStates();
-            updatePrediction();
-            emitNavigationParticles(dc, dr);
-        }, CFG.PANEL_TRANSITION);
+            updateWebMap();
+            updateEdgeIndicators();
+        }, CFG.NAV_TRANSITION_DURATION);
     }
 
     function getExitClass(dc, dr) {
@@ -576,7 +907,7 @@
     }
 
     // =============================================
-    // NAVIGATION PARTICLES (micro-reward)
+    // NAVIGATION PARTICLES
     // =============================================
     function emitNavigationParticles(dc, dr) {
         var count = 8 + Math.floor(Math.random() * 6);
@@ -590,348 +921,174 @@
             var spread = (Math.random() - 0.5) * 1.2;
             var a = angle + spread;
             var dist = 80 + Math.random() * 200;
-            var tx = cx + Math.cos(a) * dist;
-            var ty = cy + Math.sin(a) * dist;
             p.style.left = cx + 'px';
             p.style.top = cy + 'px';
-            p.style.setProperty('--tx', tx.toFixed(0) + 'px');
-            p.style.setProperty('--ty', ty.toFixed(0) + 'px');
+            p.style.setProperty('--tx', (cx + Math.cos(a) * dist).toFixed(0) + 'px');
+            p.style.setProperty('--ty', (cy + Math.sin(a) * dist).toFixed(0) + 'px');
             p.style.setProperty('--delay', (Math.random() * 0.15) + 's');
             p.style.setProperty('--hue', Math.floor(180 + Math.random() * 60));
             document.body.appendChild(p);
-            setTimeout(function (el) { return function () { if (el.parentNode) el.remove(); }; }(p), 1200);
+            setTimeout((function (el) { return function () { if (el.parentNode) el.remove(); }; })(p), 1200);
         }
     }
 
     // =============================================
-    // CONSTELLATION MINI-MAP
+    // WEB MAP (replaces constellation)
     // =============================================
-    function buildConstellationNav() {
+    function buildWebMap() {
         var nav = document.getElementById('vr-panel-nav');
         if (!nav) return;
         nav.innerHTML = '';
-        nav.classList.add('vr-constellation-map');
+        nav.classList.add('vr-web-map');
 
-        var minC = Infinity, maxC = -Infinity, minR = Infinity, maxR = -Infinity;
+        // Create a force-directed layout of the graph
+        var nodes = {};
+        var nodeList = [];
+
+        // Position nodes using a simple force layout
         S.panels.forEach(function (p) {
-            if (p.col < minC) minC = p.col;
-            if (p.col > maxC) maxC = p.col;
-            if (p.row < minR) minR = p.row;
-            if (p.row > maxR) maxR = p.row;
+            var tier = (S.graph[p.id] && S.graph[p.id].tier) || 0;
+            nodes[p.id] = {
+                id: p.id,
+                x: 50 + Math.cos(Math.random() * Math.PI * 2) * 30,
+                y: 20 + tier * 25,
+                locked: isLocked(p.id),
+            };
+            nodeList.push(nodes[p.id]);
         });
 
-        var cols = maxC - minC + 1;
-        var rows = maxR - minR + 1;
-        nav.style.setProperty('--map-cols', cols);
-        nav.style.setProperty('--map-rows', rows);
+        // Simple spring layout iterations
+        for (var iter = 0; iter < 50; iter++) {
+            // Repulsion
+            for (var i = 0; i < nodeList.length; i++) {
+                for (var j = i + 1; j < nodeList.length; j++) {
+                    var dx = nodeList[i].x - nodeList[j].x;
+                    var dy = nodeList[i].y - nodeList[j].y;
+                    var dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                    var force = 200 / (dist * dist);
+                    nodeList[i].x += (dx / dist) * force;
+                    nodeList[i].y += (dy / dist) * force;
+                    nodeList[j].x -= (dx / dist) * force;
+                    nodeList[j].y -= (dy / dist) * force;
+                }
+            }
+            // Attraction along edges
+            for (var pid in S.graph) {
+                if (!S.graph.hasOwnProperty(pid) || !nodes[pid]) continue;
+                S.graph[pid].connections.forEach(function (conn) {
+                    if (!nodes[conn]) return;
+                    var dx = nodes[conn].x - nodes[pid].x;
+                    var dy = nodes[conn].y - nodes[pid].y;
+                    var dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                    var force = (dist - 25) * 0.05;
+                    nodes[pid].x += (dx / dist) * force;
+                    nodes[pid].y += (dy / dist) * force;
+                    nodes[conn].x -= (dx / dist) * force;
+                    nodes[conn].y -= (dy / dist) * force;
+                });
+            }
+            // Center constraint
+            nodeList.forEach(function (n) {
+                n.x = Math.max(10, Math.min(90, n.x));
+                n.y = Math.max(10, Math.min(90, n.y));
+            });
+        }
 
-        S.panels.forEach(function (p) {
+        // Draw edges
+        for (var eid in S.graph) {
+            if (!S.graph.hasOwnProperty(eid) || !nodes[eid]) continue;
+            S.graph[eid].connections.forEach(function (conn) {
+                if (!nodes[conn] || eid >= conn) return;
+                var line = document.createElement('div');
+                line.className = 'vr-web-edge';
+                var n1 = nodes[eid], n2 = nodes[conn];
+                var x1 = n1.x, y1 = n1.y, x2 = n2.x, y2 = n2.y;
+                var dx = x2 - x1, dy = y2 - y1;
+                var len = Math.sqrt(dx * dx + dy * dy);
+                var angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                line.style.width = len + '%';
+                line.style.left = x1 + '%';
+                line.style.top = y1 + '%';
+                line.style.transform = 'rotate(' + angle + 'deg)';
+                line.style.transformOrigin = '0 0';
+                var isLocked2 = isLocked(eid) || isLocked(conn);
+                if (isLocked2) line.classList.add('locked');
+                nav.appendChild(line);
+            });
+        }
+
+        // Draw nodes
+        nodeList.forEach(function (n) {
             var dot = document.createElement('button');
-            dot.className = 'vr-constellation-dot' + (p === S.currentPanel ? ' active' : '');
-            dot.setAttribute('data-panel-id', p.id);
-            dot.setAttribute('aria-label', p.id);
-            dot.style.setProperty('--dot-col', p.col - minC);
-            dot.style.setProperty('--dot-row', p.row - minR);
-            dot.addEventListener('click', function () { navigateTo(p.id); });
+            dot.className = 'vr-web-node';
+            if (n.id === S.currentPanel.id) dot.classList.add('active');
+            if (n.locked) dot.classList.add('locked');
+            if (S.visitedPanels.indexOf(n.id) !== -1) dot.classList.add('visited');
+            dot.setAttribute('data-panel-id', n.id);
+            dot.setAttribute('aria-label', n.id);
+            dot.style.left = n.x + '%';
+            dot.style.top = n.y + '%';
+            dot.addEventListener('click', function () {
+                if (!n.locked) navigateTo(n.id);
+            });
 
             var label = document.createElement('span');
-            label.className = 'vr-constellation-label';
-            label.textContent = p.id.charAt(0).toUpperCase() + p.id.slice(1);
+            label.className = 'vr-web-node-label';
+            label.textContent = n.id.charAt(0).toUpperCase() + n.id.slice(1);
             dot.appendChild(label);
+
             nav.appendChild(dot);
         });
-
-        // Connection lines
-        S.panels.forEach(function (p) {
-            for (var j = 0; j < S.panels.length; j++) {
-                var n = S.panels[j];
-                if (p.id >= n.id) continue;
-                var dc = Math.abs(n.col - p.col);
-                var dr = Math.abs(n.row - p.row);
-                if (dc <= 1 && dr <= 1 && (dc + dr > 0)) {
-                    var line = document.createElement('div');
-                    line.className = 'vr-constellation-line';
-                    var x1 = p.col - minC, y1 = p.row - minR;
-                    var x2 = n.col - minC, y2 = n.row - minR;
-                    var mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
-                    var ddx = x2 - x1, ddy = y2 - y1;
-                    var length = Math.sqrt(ddx * ddx + ddy * ddy);
-                    var ang = Math.atan2(ddy, ddx) * 180 / Math.PI;
-                    line.style.setProperty('--line-x', mx);
-                    line.style.setProperty('--line-y', my);
-                    line.style.setProperty('--line-len', length);
-                    line.style.setProperty('--line-angle', ang + 'deg');
-                    nav.appendChild(line);
-                }
-            }
-        });
     }
 
-    function updateConstellationNav() {
-        document.querySelectorAll('.vr-constellation-dot').forEach(function (dot) {
+    function updateWebMap() {
+        document.querySelectorAll('.vr-web-node').forEach(function (dot) {
             var id = dot.getAttribute('data-panel-id');
             dot.classList.toggle('active', id === S.currentPanel.id);
+            dot.classList.toggle('locked', isLocked(id));
+            dot.classList.toggle('visited', S.visitedPanels.indexOf(id) !== -1);
         });
     }
 
     // =============================================
-    // AUTONOMOUS FLOATING DOCK
+    // EDGE INDICATORS
     // =============================================
-    function initAutonomousDock() {
-        var dockContainer = document.getElementById('vr-dock');
-        if (!dockContainer) return;
-
-        var track = document.getElementById('vr-dock-track');
-        if (!track) return;
-
-        // Transform dock into autonomous floating system
-        dockContainer.classList.add('vr-dock-autonomous');
-        var buttons = Array.from(track.querySelectorAll('.vr-dock-btn'));
-
-        // Set up physics for each button
-        buttons.forEach(function (btn, i) {
-            var angle = (i / buttons.length) * Math.PI * 2;
-            var radius = 120 + Math.random() * 60;
-            var centerX = window.innerWidth / 2;
-            var centerY = window.innerHeight - 100;
-
-            var dockBtn = {
-                el: btn,
-                section: btn.getAttribute('data-section'),
-                // Physics
-                x: centerX + Math.cos(angle) * radius,
-                y: centerY + Math.sin(angle) * 30,
-                vx: 0,
-                vy: 0,
-                targetX: centerX + Math.cos(angle) * radius,
-                targetY: centerY + Math.sin(angle) * 30,
-                // Personality
-                wanderPhase: Math.random() * Math.PI * 2,
-                wanderSpeed: 0.005 + Math.random() * 0.01,
-                wanderRadius: 8 + Math.random() * 15,
-                attractionStrength: 0.02 + Math.random() * 0.02,
-                // AI state
-                priority: 0,
-                glowing: false,
-                pulsePhase: Math.random() * Math.PI * 2,
-                // Size/scale
-                baseScale: 1,
-                scale: 1,
-            };
-
-            S.dockButtons.push(dockBtn);
-
-            // Click handler
-            btn.addEventListener('click', function (e) {
-                if (S.spatialActive && S.panelMap[dockBtn.section]) {
-                    e.preventDefault();
-                    navigateTo(dockBtn.section);
-                    emitButtonClickParticles(dockBtn);
-                }
-            });
-
-            // Mouse interaction — buttons react to cursor proximity
-            btn.addEventListener('mouseenter', function () {
-                dockBtn.scale = 1.2;
-                dockBtn.glowing = true;
-            });
-            btn.addEventListener('mouseleave', function () {
-                dockBtn.scale = 1;
-                dockBtn.glowing = false;
-            });
-        });
-
-        // Position buttons initially
-        updateDockPositions();
-    }
-
-    function initStaticDock() {
-        // Fallback dock for reduced motion
-        var dock = document.getElementById('vr-dock');
-        if (!dock) return;
-        dock.addEventListener('click', function (e) {
-            var btn = e.target.closest('.vr-dock-btn[data-section]');
-            if (!btn || !S.spatialActive) return;
-            var targetId = btn.getAttribute('data-section');
-            if (S.panelMap[targetId]) {
-                e.preventDefault();
-                navigateTo(targetId);
-            }
-        });
-    }
-
-    function updateDockPhysics() {
-        if (S.dockButtons.length === 0) return;
-
-        var now = Date.now() * 0.001;
-        var w = window.innerWidth;
-        var h = window.innerHeight;
-        var margin = CFG.DOCK_BOUNDARY_MARGIN;
-
-        for (var i = 0; i < S.dockButtons.length; i++) {
-            var btn = S.dockButtons[i];
-
-            // Wander — each button has autonomous floating behavior
-            btn.wanderPhase += btn.wanderSpeed;
-            var wanderX = Math.cos(btn.wanderPhase) * btn.wanderRadius;
-            var wanderY = Math.sin(btn.wanderPhase * 0.7) * btn.wanderRadius * 0.5;
-
-            // Gravity toward base position + wander
-            var tx = btn.targetX + wanderX;
-            var ty = btn.targetY + wanderY;
-            btn.vx += (tx - btn.x) * CFG.DOCK_GRAVITY;
-            btn.vy += (ty - btn.y) * CFG.DOCK_GRAVITY;
-
-            // Mouse attraction — buttons gently drift toward cursor
-            if (!S.mobile && !S.idle) {
-                var dxm = S.mx - btn.x;
-                var dym = S.my - btn.y;
-                var distM = Math.sqrt(dxm * dxm + dym * dym);
-                if (distM < CFG.DOCK_MOUSE_RADIUS && distM > 30) {
-                    var pull = CFG.DOCK_MOUSE_ATTRACT * (1 - distM / CFG.DOCK_MOUSE_RADIUS);
-                    btn.vx += (dxm / distM) * pull * btn.priority;
-                    btn.vy += (dym / distM) * pull * btn.priority;
-                }
-            }
-
-            // Repulsion between buttons
-            for (var j = i + 1; j < S.dockButtons.length; j++) {
-                var other = S.dockButtons[j];
-                var dx = btn.x - other.x;
-                var dy = btn.y - other.y;
-                var dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < CFG.DOCK_REPULSION && dist > 1) {
-                    var force = CFG.DOCK_REPULSION_FORCE * (1 - dist / CFG.DOCK_REPULSION);
-                    var fx = (dx / dist) * force;
-                    var fy = (dy / dist) * force;
-                    btn.vx += fx;
-                    btn.vy += fy;
-                    other.vx -= fx;
-                    other.vy -= fy;
-                }
-            }
-
-            // Damping
-            btn.vx *= CFG.DOCK_DAMPING;
-            btn.vy *= CFG.DOCK_DAMPING;
-
-            // Integrate
-            btn.x += btn.vx;
-            btn.y += btn.vy;
-
-            // Boundary constraints
-            btn.x = Math.max(margin, Math.min(w - margin, btn.x));
-            btn.y = Math.max(margin, Math.min(h - margin, btn.y));
-
-            // Pulse animation for high-priority buttons
-            var pulse = btn.priority > 5 ? 1 + Math.sin(now * 2 + btn.pulsePhase) * 0.03 : 1;
-            var finalScale = btn.scale * pulse;
-
-            // Apply transform
-            btn.el.style.transform = 'translate(' + btn.x.toFixed(1) + 'px, ' + btn.y.toFixed(1) + 'px) scale(' + finalScale.toFixed(3) + ')';
-
-            // Glow intensity based on priority
-            if (btn.priority > 3) {
-                var glowIntensity = Math.min(btn.priority / 20, 1);
-                btn.el.style.setProperty('--btn-glow', glowIntensity.toFixed(2));
-                btn.el.classList.add('vr-dock-btn-alive');
-            } else {
-                btn.el.classList.remove('vr-dock-btn-alive');
-            }
-        }
-    }
-
-    function updateDockPositions() {
-        // Recalculate ideal positions based on priorities
-        var scored = S.dockButtons.map(function (btn) {
-            btn.priority = getSectionPriority(btn.section);
-            return btn;
-        });
-        scored.sort(function (a, b) { return b.priority - a.priority; });
-
-        var w = window.innerWidth;
-        var h = window.innerHeight;
-
-        // Arrange in a flowing arc at the bottom — highest priority in center
-        var arcCenterX = w / 2;
-        var arcCenterY = h - 80;
-        var arcSpread = Math.min(w * 0.6, 500);
-
-        scored.forEach(function (btn, i) {
-            var t = scored.length > 1 ? (i / (scored.length - 1)) - 0.5 : 0;
-            btn.targetX = arcCenterX + t * arcSpread;
-            btn.targetY = arcCenterY + Math.abs(t) * 40; // slight arc curve
-        });
-    }
-
-    function updateDockButtonStates() {
+    function updateEdgeIndicators() {
         if (!S.currentPanel) return;
-        S.dockButtons.forEach(function (btn) {
-            btn.el.classList.toggle('active', btn.section === S.currentPanel.id);
+        var currentId = S.currentPanel.id;
+        var conns = getAvailableConnections(currentId);
+        var directions = S.directionMap[currentId] || {};
+
+        var edges = { top: false, bottom: false, left: false, right: false };
+
+        conns.forEach(function (conn) {
+            var angle = directions[conn] !== undefined ? directions[conn] : 0;
+            var dx = Math.cos(angle);
+            var dy = Math.sin(angle);
+            if (dy < -0.3) edges.top = true;
+            if (dy > 0.3) edges.bottom = true;
+            if (dx < -0.3) edges.left = true;
+            if (dx > 0.3) edges.right = true;
         });
-    }
 
-    function updateDockAI() {
-        // Update priorities and reposition targets
-        updateDockPositions();
+        ['top', 'bottom', 'left', 'right'].forEach(function (dir) {
+            var el = document.getElementById('vr-edge-' + dir);
+            if (el) el.classList.toggle('visible', edges[dir]);
+        });
 
-        // The predicted panel's dock button should glow more
-        if (S.predictedPanel) {
-            S.dockButtons.forEach(function (btn) {
-                btn.el.classList.toggle('vr-dock-btn-predicted', btn.section === S.predictedPanel.id);
-            });
-        }
-    }
-
-    function emitButtonClickParticles(dockBtn) {
-        for (var i = 0; i < 6; i++) {
-            var p = document.createElement('div');
-            p.className = 'vr-btn-particle';
-            var angle = (i / 6) * Math.PI * 2;
-            var dist = 30 + Math.random() * 50;
-            p.style.left = dockBtn.x + 'px';
-            p.style.top = dockBtn.y + 'px';
-            p.style.setProperty('--tx', (dockBtn.x + Math.cos(angle) * dist).toFixed(0) + 'px');
-            p.style.setProperty('--ty', (dockBtn.y + Math.sin(angle) * dist).toFixed(0) + 'px');
-            document.body.appendChild(p);
-            setTimeout(function (el) { return function () { if (el.parentNode) el.remove(); }; }(p), 800);
-        }
-    }
-
-    // =============================================
-    // PREDICTION ENGINE
-    // =============================================
-    function updatePrediction() {
-        if (!S.currentPanel) return;
-        var predicted = predictNextPanel(S.currentPanel.id);
-        S.predictedPanel = predicted;
-
-        // Update edge glow for predicted direction
-        if (predicted) {
-            var dc = predicted.col - S.currentPanel.col;
-            var dr = predicted.row - S.currentPanel.row;
-
+        // Predicted edge
+        if (S.predictedPanel && directions[S.predictedPanel]) {
+            var pAngle = directions[S.predictedPanel];
+            var pdx = Math.cos(pAngle);
+            var pdy = Math.sin(pAngle);
             ['top', 'bottom', 'left', 'right'].forEach(function (dir) {
                 var el = document.getElementById('vr-edge-' + dir);
                 if (el) el.classList.remove('vr-edge-predicted');
             });
-
-            if (dr < 0) setPredictedEdge('top');
-            if (dr > 0) setPredictedEdge('bottom');
-            if (dc < 0) setPredictedEdge('left');
-            if (dc > 0) setPredictedEdge('right');
-        }
-
-        // Update edge indicators for available directions
-        updateEdgeIndicators();
-
-        // Anticipatory content loading for predicted panel
-        if (predicted) {
-            predicted.el.querySelectorAll('img[data-src]').forEach(function (img) {
-                if (!img.src || img.src === '') {
-                    img.src = img.getAttribute('data-src');
-                }
-            });
+            if (pdy < -0.3) setPredictedEdge('top');
+            if (pdy > 0.3) setPredictedEdge('bottom');
+            if (pdx < -0.3) setPredictedEdge('left');
+            if (pdx > 0.3) setPredictedEdge('right');
         }
     }
 
@@ -940,36 +1097,14 @@
         if (el) el.classList.add('vr-edge-predicted');
     }
 
-    function updateEdgeIndicators() {
-        if (!S.currentPanel) return;
-        var cc = S.currentPanel.col, cr = S.currentPanel.row;
-        var edges = { top: false, bottom: false, left: false, right: false };
-
-        S.panels.forEach(function (p) {
-            if (p.id === S.currentPanel.id) return;
-            var dc = p.col - cc, dr = p.row - cr;
-            if (dr < 0) edges.top = true;
-            if (dr > 0) edges.bottom = true;
-            if (dc < 0) edges.left = true;
-            if (dc > 0) edges.right = true;
-        });
-
-        ['top', 'bottom', 'left', 'right'].forEach(function (dir) {
-            var el = document.getElementById('vr-edge-' + dir);
-            if (el) el.classList.toggle('visible', edges[dir]);
-        });
-    }
-
     // =============================================
-    // DOPAMINE & ENGAGEMENT MECHANICS
+    // DOPAMINE & ENGAGEMENT
     // =============================================
     function checkDiscovery(sectionId) {
         if (profile.discoveries.indexOf(sectionId) === -1) {
             profile.discoveries.push(sectionId);
             S.discoveryCount++;
             saveProfile();
-
-            // Discovery reward!
             showDiscoveryReward(sectionId);
         }
     }
@@ -977,24 +1112,21 @@
     function showDiscoveryReward(sectionId) {
         var reward = document.createElement('div');
         reward.className = 'vr-discovery-reward';
-
         var label = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
-        var discoveredCount = profile.discoveries.length;
-        var totalSections = S.panels.length;
+        var count = profile.discoveries.length;
+        var total = Object.keys(S.graph).length;
 
         reward.innerHTML =
             '<div class="vr-discovery-icon">&#10024;</div>' +
             '<div class="vr-discovery-text">' +
             '<span class="vr-discovery-title">D\u00e9couverte !</span>' +
             '<span class="vr-discovery-label">' + label + '</span>' +
-            '<span class="vr-discovery-progress">' + discoveredCount + '/' + totalSections + '</span>' +
+            '<span class="vr-discovery-progress">' + count + '/' + total + '</span>' +
             '</div>';
 
         document.body.appendChild(reward);
         void reward.offsetHeight;
         reward.classList.add('vr-discovery-show');
-
-        // Discovery particles
         emitDiscoveryParticles(reward);
 
         setTimeout(function () {
@@ -1004,8 +1136,8 @@
         }, 3000);
     }
 
-    function emitDiscoveryParticles(rewardEl) {
-        var rect = rewardEl.getBoundingClientRect();
+    function emitDiscoveryParticles(el) {
+        var rect = el.getBoundingClientRect();
         var cx = rect.left + rect.width / 2;
         var cy = rect.top + rect.height / 2;
 
@@ -1020,29 +1152,10 @@
             p.style.setProperty('--ty', (cy + Math.sin(angle) * dist).toFixed(0) + 'px');
             p.style.setProperty('--hue', Math.floor(160 + Math.random() * 80));
             document.body.appendChild(p);
-            setTimeout(function (el) { return function () { if (el.parentNode) el.remove(); }; }(p), 1000);
+            setTimeout((function (el) { return function () { if (el.parentNode) el.remove(); }; })(p), 1000);
         }
     }
 
-    function checkEngagementReward() {
-        var now = Date.now();
-        if (now - S.lastRewardTime < CFG.REWARD_INTERVAL) return;
-
-        // Micro-reward for sustained engagement
-        if (S.interactionCount > 5) {
-            S.lastRewardTime = now;
-            showEngagementPulse();
-        }
-    }
-
-    function showEngagementPulse() {
-        var pulse = document.createElement('div');
-        pulse.className = 'vr-engagement-pulse';
-        document.body.appendChild(pulse);
-        setTimeout(function () { if (pulse.parentNode) pulse.remove(); }, 2000);
-    }
-
-    // Streak display on first visit of session
     function showStreakBanner() {
         if (profile.streak <= 1) return;
         var banner = document.createElement('div');
@@ -1059,6 +1172,30 @@
             banner.classList.add('vr-streak-hide');
             setTimeout(function () { if (banner.parentNode) banner.remove(); }, 600);
         }, 3500);
+    }
+
+    // =============================================
+    // SPEED INDICATOR
+    // =============================================
+    function updateSpeedIndicator() {
+        var speed = Math.sqrt(S.driftVX * S.driftVX + S.driftVY * S.driftVY);
+        var indicator = document.getElementById('vr-speed-indicator');
+        if (!indicator) {
+            indicator = document.createElement('div');
+            indicator.id = 'vr-speed-indicator';
+            indicator.className = 'vr-speed-indicator';
+            indicator.setAttribute('aria-hidden', 'true');
+            document.body.appendChild(indicator);
+        }
+
+        if (speed > 1) {
+            indicator.style.opacity = Math.min(speed / 8, 0.8);
+            indicator.classList.add('visible');
+            var angle = Math.atan2(S.driftVY, S.driftVX) * 180 / Math.PI;
+            indicator.style.setProperty('--speed-angle', angle + 'deg');
+        } else {
+            indicator.classList.remove('visible');
+        }
     }
 
     // =============================================
@@ -1114,7 +1251,7 @@
     // CLICK RIPPLE
     // =============================================
     document.addEventListener('click', function (e) {
-        if (S.mobile) return;
+        if (S.mobile || S.radialOpen) return;
         var r = document.createElement('div');
         r.className = 'vr-ripple';
         r.style.left = e.clientX + 'px';
@@ -1190,7 +1327,10 @@
             l.addEventListener('click', close);
         });
         document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && overlay && overlay.classList.contains('open')) close();
+            if (e.key === 'Escape') {
+                if (S.radialOpen) { closeRadialMenu(); return; }
+                if (overlay && overlay.classList.contains('open')) close();
+            }
         });
     }
 
@@ -1248,7 +1388,7 @@
     }
 
     // =============================================
-    // IDLE BREATHING
+    // IDLE
     // =============================================
     function resetIdle() {
         if (S.idle) { S.idle = false; document.body.classList.remove('vr-idle'); }
@@ -1256,43 +1396,22 @@
         S.idleTimer = setTimeout(function () {
             S.idle = true;
             document.body.classList.add('vr-idle');
-            // Idle triggers: autonomous dock buttons start wandering more
-            S.dockButtons.forEach(function (btn) {
-                btn.wanderRadius = 15 + Math.random() * 25;
-            });
         }, CFG.IDLE_TIMEOUT);
     }
 
     // =============================================
-    // SPEED INDICATOR
+    // CURSOR LIGHT
     // =============================================
-    function updateSpeedIndicator() {
-        var speed = Math.sqrt(S.driftVX * S.driftVX + S.driftVY * S.driftVY);
-        var indicator = document.getElementById('vr-speed-indicator');
-        if (!indicator) {
-            indicator = document.createElement('div');
-            indicator.id = 'vr-speed-indicator';
-            indicator.className = 'vr-speed-indicator';
-            indicator.setAttribute('aria-hidden', 'true');
-            document.body.appendChild(indicator);
-        }
-
-        if (speed > 1) {
-            var level = Math.min(Math.floor(speed / 2), 5);
-            indicator.style.opacity = Math.min(speed / 8, 0.8);
-            indicator.setAttribute('data-level', level);
-            indicator.classList.add('visible');
-
-            // Direction arrow
-            var angle = Math.atan2(S.driftVY, S.driftVX) * 180 / Math.PI;
-            indicator.style.setProperty('--speed-angle', angle + 'deg');
-        } else {
-            indicator.classList.remove('visible');
-        }
+    var cursorLight = null;
+    if (!S.mobile && !S.reduced) {
+        cursorLight = document.createElement('div');
+        cursorLight.className = 'vr-cursor-light';
+        cursorLight.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(cursorLight);
     }
 
     // =============================================
-    // MAIN ANIMATION LOOP
+    // MAIN LOOP
     // =============================================
     function lerp(a, b, t) { return a + (b - a) * t; }
 
@@ -1309,8 +1428,11 @@
         updateParallax();
         trackMouseDirection();
         updateCanvasDrift();
-        updateDockPhysics();
         updateSpeedIndicator();
+
+        if (S.radialOpen) {
+            updateRadialHover(S.mx, S.my);
+        }
 
         requestAnimationFrame(animate);
     }
@@ -1318,6 +1440,53 @@
     // =============================================
     // EVENTS
     // =============================================
+
+    // Left click — radial menu (hold & release)
+    document.addEventListener('mousedown', function (e) {
+        if (e.button !== 0) return; // left button only
+        if (S.mobile) return;
+        // Don't open radial on interactive elements
+        var tag = e.target.tagName.toLowerCase();
+        var isInteractive = tag === 'a' || tag === 'button' || tag === 'input' || tag === 'textarea' || tag === 'select';
+        var closest = e.target.closest('a, button, input, textarea, select, .menu-overlay, .vr-radial, .vr-web-map');
+        if (isInteractive || closest) return;
+
+        S.mouseDownTime = Date.now();
+        S.mouseDownButton = 0;
+    });
+
+    document.addEventListener('mouseup', function (e) {
+        if (e.button !== 0 || S.mobile) return;
+
+        if (S.radialOpen) {
+            // Release on a segment = navigate
+            selectRadialItem();
+            return;
+        }
+
+        // If held long enough, open radial
+        var holdDuration = Date.now() - S.mouseDownTime;
+        if (S.mouseDownButton === 0 && holdDuration >= CFG.RADIAL_HOLD_DELAY) {
+            // Don't open if on interactive
+            var tag = e.target.tagName.toLowerCase();
+            var isInteractive = tag === 'a' || tag === 'button' || tag === 'input';
+            var closest = e.target.closest('a, button, input, textarea, select, .menu-overlay');
+            if (!isInteractive && !closest && S.spatialActive) {
+                openRadialMenu(e.clientX, e.clientY);
+            }
+        }
+
+        S.mouseDownButton = -1;
+    });
+
+    // Context menu prevention on right-click (keep default)
+    // We use LEFT click for the radial menu
+
+    // Close radial on right-click or Escape
+    document.addEventListener('contextmenu', function () {
+        if (S.radialOpen) closeRadialMenu();
+    });
+
     document.addEventListener('mousemove', function (e) {
         S.mx = e.clientX;
         S.my = e.clientY;
@@ -1333,18 +1502,38 @@
         resetIdle();
     }, { passive: true });
 
+    // Mobile: long press for radial menu
+    var mobileTouchTimer = null;
+    document.addEventListener('touchstart', function (e) {
+        if (!S.mobile || !S.spatialActive) return;
+        var tag = e.target.tagName.toLowerCase();
+        var closest = e.target.closest('a, button, input, .menu-overlay, .vr-radial');
+        if (tag === 'a' || tag === 'button' || closest) return;
+
+        var tx = e.touches[0].clientX;
+        var ty = e.touches[0].clientY;
+        mobileTouchTimer = setTimeout(function () {
+            openRadialMenu(tx, ty);
+        }, 400);
+    }, { passive: true });
+
+    document.addEventListener('touchend', function () {
+        clearTimeout(mobileTouchTimer);
+        if (S.radialOpen) {
+            selectRadialItem();
+        }
+    });
+
     window.addEventListener('resize', function () {
         S.mobile = window.matchMedia('(max-width: 768px)').matches;
-        // Recalculate dock positions on resize
-        updateDockPositions();
+        if (S.radialOpen) closeRadialMenu();
     });
 
     document.addEventListener('keydown', resetIdle);
-    document.addEventListener('click', resetIdle);
 
-    // Track session duration for profile
     window.addEventListener('beforeunload', function () {
         var duration = Date.now() - S.sessionStartTime;
+        profile.sessionDurations = profile.sessionDurations || [];
         profile.sessionDurations.push(duration);
         if (profile.sessionDurations.length > 20) profile.sessionDurations.shift();
         saveProfile();
@@ -1353,29 +1542,29 @@
     // =============================================
     // INIT
     // =============================================
-    document.addEventListener('DOMContentLoaded', function () {
-        initConstellationCanvas();
-        initAutonomousDock();
-        initMagnetics();
-        initTilt();
-        initParallax();
-        initReveals();
-        initMenuOverlay();
-        initSmoothScroll();
-        initParticles();
-        initCardGlow();
-        resetIdle();
+    if (S.reduced) {
+        document.addEventListener('DOMContentLoaded', function () {
+            initReveals(); initMenuOverlay(); initSmoothScroll();
+            initConstellationCanvas();
+        });
+    } else {
+        document.addEventListener('DOMContentLoaded', function () {
+            createRadialMenu();
+            initConstellationCanvas();
+            initMagnetics();
+            initTilt();
+            initParallax();
+            initReveals();
+            initMenuOverlay();
+            initSmoothScroll();
+            initParticles();
+            initCardGlow();
+            resetIdle();
 
-        if (!S.mobile) animate();
+            if (!S.mobile) animate();
 
-        // Show streak after a brief delay
-        setTimeout(showStreakBanner, 1500);
-
-        // Periodically reshuffle panel positions as user behavior evolves
-        setInterval(function () {
-            reshufflePanelPositions();
-            buildConstellationNav();
-        }, 60000);
-    });
+            setTimeout(showStreakBanner, 1500);
+        });
+    }
 
 })();

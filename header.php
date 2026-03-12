@@ -25,40 +25,23 @@
     </a>
 </div>
 
-<!-- Autonomous Living Dock -->
-<nav class="vr-dock vr-dock-autonomous" id="vr-dock" aria-label="<?php esc_attr_e( 'Navigation vivante', 'virealys' ); ?>">
-    <div class="vr-dock-track" id="vr-dock-track">
-        <?php
-        $dock_items = array(
-            'concept'    => array( 'label' => 'Concept', 'icon' => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5"/></svg>' ),
-            'ambiances'  => array( 'label' => 'Ambiances', 'icon' => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/></svg>' ),
-            'menus'      => array( 'label' => 'Menus', 'icon' => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20"/></svg>' ),
-            'zones'      => array( 'label' => 'Zones', 'icon' => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="10" rx="3"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/></svg>' ),
-            'passeport'  => array( 'label' => 'Passeport', 'icon' => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>' ),
-            'reservation' => array( 'label' => 'R&eacute;server', 'icon' => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>' ),
-        );
-        foreach ( $dock_items as $slug => $item ) :
-            $is_cta = ($slug === 'reservation');
-            if ( $is_cta ) {
-                $url = get_theme_mod( 'reservation_url', '#reservation' );
-            } else {
-                $page = get_page_by_path( $slug );
-                $url  = $page ? get_permalink( $page ) : home_url( '/#' . $slug );
-            }
-            $btn_class = 'vr-dock-btn vr-dock-btn-floating' . ($is_cta ? ' vr-dock-btn-cta' : '');
-        ?>
-            <a href="<?php echo esc_url( $url ); ?>" class="<?php echo esc_attr( $btn_class ); ?>" data-section="<?php echo esc_attr( $slug ); ?>" data-priority="0">
-                <span class="vr-dock-btn-aura"></span>
-                <span class="vr-dock-btn-icon"><?php echo $item['icon']; ?></span>
-                <span class="vr-dock-btn-label"><?php echo $item['label']; ?></span>
-            </a>
-        <?php endforeach; ?>
-        <button class="vr-dock-btn vr-dock-btn-floating vr-dock-btn-menu" id="nav-dock-menu-btn" aria-label="<?php esc_attr_e( 'Menu', 'virealys' ); ?>" aria-expanded="false">
-            <span class="vr-dock-btn-aura"></span>
-            <span class="dock-menu-icon"><span></span><span></span></span>
-        </button>
+<!-- Radial Navigation Hint (visible on front page) -->
+<?php if ( is_front_page() ) : ?>
+<div class="vr-radial-hint" id="vr-radial-hint" aria-hidden="true">
+    <div class="vr-radial-hint-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10" stroke-dasharray="4 3"/>
+            <circle cx="12" cy="12" r="3"/>
+        </svg>
     </div>
-</nav>
+    <span class="vr-radial-hint-text"><?php esc_html_e( 'Cliquez pour naviguer', 'virealys' ); ?></span>
+</div>
+<?php endif; ?>
+
+<!-- Menu Button (always accessible) -->
+<button class="vr-menu-toggle" id="nav-dock-menu-btn" aria-label="<?php esc_attr_e( 'Menu', 'virealys' ); ?>" aria-expanded="false">
+    <span class="dock-menu-icon"><span></span><span></span></span>
+</button>
 
 <!-- Panel Navigation Dots (front page) -->
 <?php if ( is_front_page() ) : ?>
