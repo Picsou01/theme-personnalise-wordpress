@@ -1,5 +1,5 @@
 /* ============================================
-   VIREALYS - Custom WordPress Theme v2.1
+   VIREALYS - Revolutionary Adaptive Theme v4.0
    User-Centric Immersive Restaurant
    ============================================ */
 
@@ -2291,6 +2291,292 @@ h1, h2, h3, h4, h5, h6 {
     .split-stats { grid-template-columns: 1fr; gap: 0.75rem; }
 }
 
+/* ==========================================
+   ADAPTIVE ENGINE - Cursor Light
+   A soft ambient radial glow that follows
+   the mouse like a flashlight in the dark.
+   ========================================== */
+.vr-cursor-light {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(
+        circle,
+        rgba(var(--neon-cyan-rgb), 0.045) 0%,
+        rgba(var(--neon-purple-rgb), 0.02) 30%,
+        transparent 70%
+    );
+    pointer-events: none;
+    z-index: 9999;
+    will-change: transform;
+    mix-blend-mode: screen;
+    transition: opacity 0.5s ease;
+}
+
+/* Dim cursor light when idle */
+.vr-idle .vr-cursor-light {
+    opacity: 0.3;
+}
+
+/* ==========================================
+   ADAPTIVE ENGINE - Click Ripple
+   Neon ripple wave from every click point.
+   ========================================== */
+.vr-ripple {
+    position: fixed;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    border: 1px solid rgba(var(--neon-cyan-rgb), 0.4);
+    box-shadow: 0 0 10px rgba(var(--neon-cyan-rgb), 0.15);
+    pointer-events: none;
+    z-index: 10000;
+    transform: translate(-50%, -50%);
+    animation: vr-ripple-expand 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes vr-ripple-expand {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 0.6;
+    }
+    100% {
+        width: 200px;
+        height: 200px;
+        opacity: 0;
+    }
+}
+
+/* ==========================================
+   ADAPTIVE ENGINE - Nav Dock Progress Bar
+   Thin gradient progress bar under the dock.
+   ========================================== */
+.nav-dock-progress {
+    position: absolute;
+    bottom: -3px;
+    left: 10%;
+    height: 2px;
+    width: 0%;
+    background: var(--gradient-primary);
+    border-radius: 2px;
+    transition: width 0.15s linear;
+    box-shadow: 0 0 8px rgba(var(--neon-cyan-rgb), 0.3);
+}
+
+/* ==========================================
+   ADAPTIVE ENGINE - Idle Breathing
+   Subtle pulsing when user is idle.
+   ========================================== */
+.vr-idle .hero-orb {
+    animation-duration: 6s !important;
+}
+
+.vr-idle .floating-logo {
+    animation: vr-breathe 3s ease-in-out infinite;
+}
+
+.vr-idle .hero-badge-dot {
+    animation-duration: 1.5s;
+}
+
+@keyframes vr-breathe {
+    0%, 100% { opacity: 0.85; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.02); }
+}
+
+/* ==========================================
+   ADAPTIVE ENGINE - Scroll Velocity
+   Elements react to scroll speed.
+   ========================================== */
+:root {
+    --scroll-velocity: 0;
+    --section-accent: var(--neon-cyan);
+}
+
+/* Subtle scale during fast scroll */
+.section {
+    transform: scaleY(calc(1 - var(--scroll-velocity) * 0.01));
+    transform-origin: center;
+}
+
+/* ==========================================
+   ADAPTIVE ENGINE - Magnetic elements
+   Smooth return transition when not hovered.
+   ========================================== */
+[data-magnetic] {
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
+}
+
+/* ==========================================
+   ADAPTIVE ENGINE - Enhanced Content Styles
+   Beautiful typography for the_content() output
+   from WordPress editor.
+   ========================================== */
+.page-content h2 {
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    margin: 3rem 0 1rem;
+    position: relative;
+    padding-bottom: 0.75rem;
+}
+
+.page-content h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background: var(--gradient-primary);
+}
+
+.page-content h3 {
+    font-size: clamp(1.125rem, 2vw, 1.5rem);
+    margin: 2rem 0 0.75rem;
+    color: var(--neon-cyan);
+}
+
+.page-content h4 {
+    font-size: 1.0625rem;
+    margin: 1.5rem 0 0.5rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.page-content p {
+    margin-bottom: 1.25rem;
+    line-height: 1.8;
+    font-size: 1rem;
+    color: var(--color-text);
+}
+
+.page-content ul,
+.page-content ol {
+    margin: 1.25rem 0;
+    padding-left: 0;
+    list-style: none;
+}
+
+.page-content ul li,
+.page-content ol li {
+    position: relative;
+    padding: 0.4rem 0 0.4rem 1.5rem;
+    color: var(--color-text);
+    line-height: 1.7;
+}
+
+.page-content ul li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.85rem;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--neon-cyan);
+    opacity: 0.5;
+}
+
+.page-content ol {
+    counter-reset: item;
+}
+
+.page-content ol li::before {
+    counter-increment: item;
+    content: counter(item);
+    position: absolute;
+    left: 0;
+    top: 0.4rem;
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--neon-cyan);
+    opacity: 0.6;
+}
+
+.page-content blockquote {
+    margin: 2rem 0;
+    padding: 1.5rem 2rem;
+    border-left: 3px solid var(--neon-cyan);
+    background: rgba(var(--neon-cyan-rgb), 0.03);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    font-style: italic;
+    color: var(--color-heading);
+}
+
+.page-content hr {
+    border: none;
+    height: 1px;
+    background: var(--color-border);
+    margin: 3rem 0;
+}
+
+.page-content strong {
+    color: var(--color-heading);
+    font-weight: 600;
+}
+
+.page-content em {
+    color: var(--neon-cyan);
+    font-style: italic;
+}
+
+.page-content img {
+    border-radius: var(--radius-lg);
+    margin: 2rem 0;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.page-content .wp-block-columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.page-content .wp-block-group {
+    padding: 2rem;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    margin: 2rem 0;
+}
+
+.page-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2rem 0;
+}
+
+.page-content th,
+.page-content td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+    text-align: left;
+    font-size: 0.9375rem;
+}
+
+.page-content th {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    color: var(--color-heading);
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+/* Contact info grid */
+.contact-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-top: 3rem;
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
@@ -2300,4 +2586,6 @@ h1, h2, h3, h4, h5, h6 {
     }
     html { scroll-behavior: auto; }
     [data-reveal] { opacity: 1; transform: none; }
+    .vr-cursor-light, .vr-ripple { display: none; }
+    .section { transform: none; }
 }

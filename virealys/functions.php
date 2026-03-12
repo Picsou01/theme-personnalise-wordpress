@@ -1,11 +1,11 @@
 <?php
 /**
  * Virealys - Functions and definitions
- * User-Centric Immersive Restaurant Theme v2.1
+ * Revolutionary Adaptive Restaurant Theme v4.0
  */
 
 if ( ! defined( 'VIREALYS_VERSION' ) ) {
-    define( 'VIREALYS_VERSION', '2.1.0' );
+    define( 'VIREALYS_VERSION', '4.0.0' );
 }
 
 /**
@@ -38,6 +38,26 @@ function virealys_setup() {
     add_image_size( 'virealys-hero', 1920, 1080, true );
     add_image_size( 'virealys-card', 600, 400, true );
     add_image_size( 'virealys-wide', 1200, 600, true );
+
+    // Enable excerpts on pages (for hero descriptions)
+    add_post_type_support( 'page', 'excerpt' );
+
+    // Editor styles
+    add_theme_support( 'editor-styles' );
+    add_editor_style( 'assets/css/main.css' );
+
+    // Wide/full alignment in block editor
+    add_theme_support( 'align-wide' );
+
+    // Block editor color palette
+    add_theme_support( 'editor-color-palette', array(
+        array( 'name' => 'Neon Cyan',   'slug' => 'neon-cyan',   'color' => '#00e5ff' ),
+        array( 'name' => 'Neon Blue',   'slug' => 'neon-blue',   'color' => '#4d7cff' ),
+        array( 'name' => 'Neon Purple', 'slug' => 'neon-purple', 'color' => '#a855f7' ),
+        array( 'name' => 'Neon Pink',   'slug' => 'neon-pink',   'color' => '#e040fb' ),
+        array( 'name' => 'Dark BG',     'slug' => 'dark-bg',     'color' => '#06060f' ),
+        array( 'name' => 'Light Text',  'slug' => 'light-text',  'color' => '#c8d6e5' ),
+    ) );
 }
 add_action( 'after_setup_theme', 'virealys_setup' );
 
