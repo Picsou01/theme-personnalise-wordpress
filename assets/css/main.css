@@ -2236,6 +2236,22 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: 0 0 4px rgba(var(--neon-blue-rgb), 0.3);
 }
 
+/* VR headset shape stars — brighter, more prominent */
+.constellation-star.vr-shape-star {
+    background: rgba(var(--neon-cyan-rgb), 0.85);
+    box-shadow: 0 0 8px rgba(var(--neon-cyan-rgb), 0.5), 0 0 16px rgba(var(--neon-cyan-rgb), 0.2);
+}
+
+.constellation-star.vr-shape-star:nth-child(3n) {
+    background: rgba(var(--neon-purple-rgb), 0.75);
+    box-shadow: 0 0 8px rgba(var(--neon-purple-rgb), 0.5), 0 0 16px rgba(var(--neon-purple-rgb), 0.2);
+}
+
+.constellation-star.vr-shape-star:nth-child(5n) {
+    background: rgba(var(--neon-blue-rgb), 0.75);
+    box-shadow: 0 0 8px rgba(var(--neon-blue-rgb), 0.5), 0 0 16px rgba(var(--neon-blue-rgb), 0.2);
+}
+
 @keyframes starTwinkle {
     0%, 100% { opacity: 0.2; transform: scale(0.8); }
     50% { opacity: 1; transform: scale(1.2); }
@@ -2390,7 +2406,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .constellation-node:hover,
 .constellation-node.hovered {
-    z-index: 10;
+    z-index: 20;
     transform: translate(-50%, -50%) scale(1.3);
     filter: brightness(1.3);
 }
@@ -2780,6 +2796,18 @@ h1, h2, h3, h4, h5, h6 {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.constellation-return-hint {
+    display: block;
+    font-family: var(--font-heading);
+    font-size: 0.5625rem;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(var(--neon-cyan-rgb), 0.4);
+    margin-top: 0.3rem;
+    animation: hintPulse 3s ease-in-out infinite;
 }
 
 /* ==========================================
@@ -3310,6 +3338,86 @@ html {
 .page-section[data-reveal].revealed {
     opacity: 1;
     transform: translateY(0);
+}
+
+/* ==========================================
+   DISCOVERY SYSTEM TOASTS
+   ========================================== */
+.vr-discovery-toast {
+    position: fixed;
+    bottom: 4rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    background: rgba(6, 6, 15, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(var(--neon-cyan-rgb), 0.2);
+    border-radius: 100px;
+    opacity: 0;
+    transition: all 0.5s var(--ease-out);
+    pointer-events: none;
+    white-space: nowrap;
+    max-width: 90vw;
+}
+
+.vr-discovery-toast.vr-discovery-visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.vr-discovery-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--neon-cyan);
+    flex-shrink: 0;
+}
+
+.vr-discovery-text {
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--color-text);
+}
+
+/* Celebration variant */
+.vr-discovery-celebration {
+    border-color: rgba(255, 215, 0, 0.3);
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.1), 0 0 60px rgba(255, 215, 0, 0.05);
+}
+
+.vr-discovery-celebration .vr-discovery-icon {
+    color: #ffd700;
+    animation: celebrationPulse 1s ease-in-out 3;
+}
+
+.vr-discovery-celebration .vr-discovery-text {
+    color: #ffd700;
+}
+
+@keyframes celebrationPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+}
+
+/* Progress variant */
+.vr-discovery-progress {
+    border-color: rgba(var(--neon-cyan-rgb), 0.2);
+}
+
+/* Intro variant */
+.vr-discovery-intro {
+    border-color: rgba(var(--neon-purple-rgb), 0.25);
+}
+
+.vr-discovery-intro .vr-discovery-icon {
+    color: var(--neon-purple);
 }
 
 /* Reduced motion */

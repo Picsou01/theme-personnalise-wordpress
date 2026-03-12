@@ -42,7 +42,7 @@ $reservation = get_theme_mod( 'reservation_url', '#reservation' );
     </div>
 </section>
 
-<!-- Constellation Return Bar -->
+<!-- Constellation Return Bar + Navigation Hint -->
 <div class="vr-constellation-return" id="vr-constellation-return">
     <a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="constellation-return-btn">
         <span class="constellation-return-icon">
@@ -51,6 +51,7 @@ $reservation = get_theme_mod( 'reservation_url', '#reservation' );
         Constellation
         <span class="constellation-return-pulse"></span>
     </a>
+    <span class="constellation-return-hint">Clic droit maintenu = naviguer</span>
 </div>
 
 <?php get_footer(); ?>
