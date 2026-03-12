@@ -1,5 +1,5 @@
 /**
- * Virealys - Constellation Engine v6.1
+ * Virealys - Constellation Engine v6.2
  *
  * Right-click HOLD = radial menu with cursor selector, release = navigate
  * Mouse wheel = normal page scroll (smooth)
@@ -394,17 +394,74 @@
         var hub = document.getElementById('vr-constellation-hub');
         if (!hub) return;
 
-        // Generate floating stars
+        // Generate floating stars forming a VR headset silhouette
         var starsContainer = document.getElementById('constellation-stars');
         if (starsContainer) {
-            for (var i = 0; i < 80; i++) {
+            // VR headset shape points (percentage coords)
+            // Main body: rounded rectangle ~30-70% x, ~30-65% y
+            // Strap curves on sides, lens circles inside
+            var vrShapePoints = [];
+
+            // Headset body outline (top edge)
+            for (var t = 0; t < 1; t += 0.02) {
+                vrShapePoints.push({ x: 25 + t * 50, y: 28 + Math.sin(t * Math.PI) * 3 });
+            }
+            // Bottom edge
+            for (var t = 0; t < 1; t += 0.02) {
+                vrShapePoints.push({ x: 25 + t * 50, y: 68 - Math.sin(t * Math.PI) * 3 });
+            }
+            // Left side curve (strap)
+            for (var t = 0; t < 1; t += 0.04) {
+                var angle = -Math.PI / 2 + t * Math.PI;
+                vrShapePoints.push({ x: 24 + Math.cos(angle) * 8, y: 48 + Math.sin(angle) * 20 });
+            }
+            // Right side curve (strap)
+            for (var t = 0; t < 1; t += 0.04) {
+                var angle = Math.PI / 2 + t * Math.PI;
+                vrShapePoints.push({ x: 76 + Math.cos(angle) * 8, y: 48 + Math.sin(angle) * 20 });
+            }
+            // Left lens circle
+            for (var t = 0; t < 1; t += 0.03) {
+                var angle = t * 2 * Math.PI;
+                vrShapePoints.push({ x: 40 + Math.cos(angle) * 10, y: 48 + Math.sin(angle) * 12 });
+            }
+            // Right lens circle
+            for (var t = 0; t < 1; t += 0.03) {
+                var angle = t * 2 * Math.PI;
+                vrShapePoints.push({ x: 60 + Math.cos(angle) * 10, y: 48 + Math.sin(angle) * 12 });
+            }
+            // Bridge between lenses
+            vrShapePoints.push({ x: 48, y: 46 }, { x: 49, y: 48 }, { x: 50, y: 47 }, { x: 51, y: 49 }, { x: 52, y: 46 });
+
+            // Place stars on the VR shape + scatter ambient stars
+            var totalStars = 120;
+            var shapeStars = Math.floor(totalStars * 0.6);
+            var ambientStars = totalStars - shapeStars;
+
+            // Shape stars (brighter, forming the headset outline)
+            for (var i = 0; i < shapeStars; i++) {
+                var pt = vrShapePoints[Math.floor(Math.random() * vrShapePoints.length)];
+                var star = document.createElement('div');
+                star.className = 'constellation-star vr-shape-star';
+                star.style.left = (pt.x + (Math.random() - 0.5) * 3) + '%';
+                star.style.top = (pt.y + (Math.random() - 0.5) * 3) + '%';
+                star.style.animationDelay = (Math.random() * 5) + 's';
+                star.style.animationDuration = (2 + Math.random() * 3) + 's';
+                var size = 1.5 + Math.random() * 2.5;
+                star.style.width = size + 'px';
+                star.style.height = size + 'px';
+                starsContainer.appendChild(star);
+            }
+
+            // Ambient scattered stars (dimmer background)
+            for (var i = 0; i < ambientStars; i++) {
                 var star = document.createElement('div');
                 star.className = 'constellation-star';
                 star.style.left = (Math.random() * 100) + '%';
                 star.style.top = (Math.random() * 100) + '%';
                 star.style.animationDelay = (Math.random() * 5) + 's';
                 star.style.animationDuration = (3 + Math.random() * 4) + 's';
-                var size = 1 + Math.random() * 2;
+                var size = 1 + Math.random() * 1.5;
                 star.style.width = size + 'px';
                 star.style.height = size + 'px';
                 starsContainer.appendChild(star);
@@ -483,7 +540,111 @@
     }
 
     /* =========================================
-       7. CONSTELLATION RETURN BAR
+       7. FIRST-VISIT DISCOVERY SYSTEM
+       Encourages first-time visitors to explore all pages.
+       Shows progress toast + completion celebration.
+       Only active if user hasn't visited all pages yet.
+       ========================================= */
+    function initDiscovery() {
+        var DISCOVERY_KEY = 'vr_discovery';
+        var discovery = JSON.parse(localStorage.getItem(DISCOVERY_KEY) || 'null') || {
+            visited: [],
+            completed: false,
+            dismissed: false,
+        };
+
+        // All discoverable pages
+        var allDiscoverablePages = ['concept', 'menus', 'ambiances', 'zones', 'passeport', 'reservation'];
+
+        // If already completed or dismissed, skip
+        if (discovery.completed || discovery.dismissed) return;
+
+        // Track current page visit
+        var slug = document.body.getAttribute('data-page-slug');
+        if (slug && allDiscoverablePages.indexOf(slug) >= 0 && discovery.visited.indexOf(slug) < 0) {
+            discovery.visited.push(slug);
+            localStorage.setItem(DISCOVERY_KEY, JSON.stringify(discovery));
+
+            // Show discovery toast
+            var visitCount = discovery.visited.length;
+            var totalPages = allDiscoverablePages.length;
+
+            if (visitCount >= totalPages) {
+                // All pages discovered!
+                discovery.completed = true;
+                localStorage.setItem(DISCOVERY_KEY, JSON.stringify(discovery));
+                showDiscoveryToast(
+                    'Bravo, explorateur ! Vous avez découvert tout l\'univers Virealys !',
+                    'celebration'
+                );
+            } else {
+                var messages = [
+                    'Bienvenue ! Première escale découverte.',
+                    'Continuez l\'exploration...',
+                    'Vous progressez dans la constellation !',
+                    'Encore quelques étoiles à découvrir...',
+                    'Presque tout exploré !',
+                ];
+                var msg = messages[Math.min(visitCount - 1, messages.length - 1)];
+                showDiscoveryToast(
+                    msg + ' (' + visitCount + '/' + totalPages + ')',
+                    'progress'
+                );
+            }
+        }
+
+        // Show discovery prompt on front-page for first-timers
+        if (!slug || slug === 'front-page' || slug === 'home') {
+            if (discovery.visited.length === 0) {
+                // First visit to site
+                setTimeout(function () {
+                    showDiscoveryToast(
+                        'Explorez chaque étoile de la constellation pour débloquer une surprise !',
+                        'intro'
+                    );
+                }, 2500);
+            } else if (discovery.visited.length > 0 && discovery.visited.length < allDiscoverablePages.length) {
+                // Returning visitor, not all pages visited
+                var remaining = allDiscoverablePages.length - discovery.visited.length;
+                setTimeout(function () {
+                    showDiscoveryToast(
+                        'Encore ' + remaining + ' page' + (remaining > 1 ? 's' : '') + ' à découvrir dans la constellation !',
+                        'progress'
+                    );
+                }, 2000);
+            }
+        }
+    }
+
+    function showDiscoveryToast(message, type) {
+        var toast = document.createElement('div');
+        toast.className = 'vr-discovery-toast vr-discovery-' + type;
+        toast.innerHTML =
+            '<span class="vr-discovery-icon">' +
+                (type === 'celebration'
+                    ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'
+                    : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20"/></svg>'
+                ) +
+            '</span>' +
+            '<span class="vr-discovery-text">' + message + '</span>';
+
+        document.body.appendChild(toast);
+
+        // Animate in
+        requestAnimationFrame(function () {
+            toast.classList.add('vr-discovery-visible');
+        });
+
+        // Auto dismiss
+        var duration = type === 'celebration' ? 6000 : 4000;
+        setTimeout(function () {
+            toast.classList.remove('vr-discovery-visible');
+            setTimeout(function () { if (toast.parentNode) toast.remove(); }, 500);
+        }, duration);
+    }
+
+    /* =========================================
+       8. CONSTELLATION RETURN BAR
        ========================================= */
     function initConstellationReturn() {
         var returnBar = document.getElementById('vr-constellation-return');
@@ -668,6 +829,7 @@
     initConstellationHub();
     initRadialMenu();
     initConstellationReturn();
+    initDiscovery();
     initMagnetics();
     initTilt();
     initParallax();

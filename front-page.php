@@ -97,7 +97,7 @@ $constellation_links = array(
         <div class="constellation-hero-content" data-reveal>
             <h1 class="constellation-title"><?php echo esc_html( $hero_title ); ?></h1>
             <p class="constellation-subtitle"><?php echo esc_html( $hero_subtitle ); ?></p>
-            <p class="constellation-hint">Explorez la constellation pour naviguer</p>
+            <p class="constellation-hint"><?php echo esc_html( get_theme_mod( 'constellation_hint', 'Explorez la constellation ou maintenez le clic droit pour naviguer' ) ); ?></p>
         </div>
     </div>
 

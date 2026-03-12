@@ -45,7 +45,7 @@ $page_slug   = $post->post_name;
     </div>
 </section>
 
-<!-- Constellation Return Bar (always visible at bottom) -->
+<!-- Constellation Return Bar + Navigation Hint -->
 <div class="vr-constellation-return" id="vr-constellation-return">
     <a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="constellation-return-btn">
         <span class="constellation-return-icon">
@@ -54,6 +54,7 @@ $page_slug   = $post->post_name;
         Constellation
         <span class="constellation-return-pulse"></span>
     </a>
+    <span class="constellation-return-hint">Clic droit maintenu = naviguer</span>
 </div>
 
 <?php get_footer(); ?>
