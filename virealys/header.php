@@ -52,22 +52,3 @@
 </header>
 
 <main class="site-main">
-
-<?php
-function virealys_fallback_menu() {
-    $pages = array(
-        'concept'    => 'Le Concept',
-        'experience' => 'Expérience',
-        'menus'      => 'Nos Menus',
-        'zones'      => 'Les Zones',
-        'passeport'  => 'Passeport',
-    );
-    echo '<ul class="nav-list">';
-    foreach ( $pages as $slug => $label ) {
-        $page = get_page_by_path( $slug );
-        $url = $page ? get_permalink( $page ) : home_url( '/#' . $slug );
-        echo '<li><a href="' . esc_url( $url ) . '" class="nav-link">' . esc_html( $label ) . '</a></li>';
-    }
-    echo '</ul>';
-}
-?>

@@ -1,5 +1,5 @@
 /* ============================================
-   VIREALYS - Custom WordPress Theme v2.0
+   VIREALYS - Custom WordPress Theme v2.1
    User-Centric Immersive Restaurant
    ============================================ */
 
@@ -422,6 +422,75 @@ h1, h2, h3, h4, h5, h6 {
     50% { opacity: 0.8; transform: scaleY(1); }
 }
 
+/* Hero Grid Background - visual without images */
+.hero-grid-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image:
+        linear-gradient(rgba(var(--neon-cyan-rgb), 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(var(--neon-cyan-rgb), 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse at 50% 50%, black 20%, transparent 70%);
+    -webkit-mask-image: radial-gradient(ellipse at 50% 50%, black 20%, transparent 70%);
+}
+
+/* Hero Orbs - animated ambient light */
+.hero-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    z-index: 1;
+    animation: orbFloat 12s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.hero-orb-1 {
+    width: 400px;
+    height: 400px;
+    background: rgba(var(--neon-cyan-rgb), 0.08);
+    top: 10%;
+    left: 10%;
+    animation-delay: 0s;
+}
+
+.hero-orb-2 {
+    width: 350px;
+    height: 350px;
+    background: rgba(var(--neon-purple-rgb), 0.07);
+    bottom: 15%;
+    right: 10%;
+    animation-delay: -4s;
+}
+
+.hero-orb-3 {
+    width: 300px;
+    height: 300px;
+    background: rgba(var(--neon-blue-rgb), 0.06);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation-delay: -8s;
+}
+
+@keyframes orbFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(30px, -20px) scale(1.05); }
+    50% { transform: translate(-20px, 30px) scale(0.95); }
+    75% { transform: translate(15px, 15px) scale(1.02); }
+}
+
+.hero-orb-3 {
+    animation-name: orbFloat3;
+}
+
+@keyframes orbFloat3 {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    25% { transform: translate(calc(-50% + 30px), calc(-50% - 20px)) scale(1.05); }
+    50% { transform: translate(calc(-50% - 20px), calc(-50% + 30px)) scale(0.95); }
+    75% { transform: translate(calc(-50% + 15px), calc(-50% + 15px)) scale(1.02); }
+}
+
 /* ==========================================
    PAGE HERO - Sub pages
    ========================================== */
@@ -433,6 +502,14 @@ h1, h2, h3, h4, h5, h6 {
     background: var(--page-hero-bg, none) center/cover no-repeat;
 }
 
+.page-hero-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    z-index: 0;
+}
+
 .page-hero-overlay {
     position: absolute;
     inset: 0;
@@ -440,6 +517,21 @@ h1, h2, h3, h4, h5, h6 {
         radial-gradient(ellipse at 30% 50%, rgba(var(--neon-cyan-rgb), 0.06), transparent 50%),
         radial-gradient(ellipse at 70% 50%, rgba(var(--neon-purple-rgb), 0.06), transparent 50%),
         linear-gradient(to bottom, var(--color-bg), rgba(6, 6, 15, 0.8), var(--color-bg));
+    z-index: 1;
+}
+
+.ambiance-hero-emoji {
+    display: block;
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    filter: drop-shadow(0 0 10px rgba(var(--amb-color-rgb, var(--neon-cyan-rgb)), 0.4));
+}
+
+.ambiance-hero .page-hero-overlay {
+    background:
+        radial-gradient(ellipse at 30% 50%, rgba(var(--amb-color-rgb, var(--neon-cyan-rgb)), 0.06), transparent 50%),
+        radial-gradient(ellipse at 70% 50%, rgba(var(--neon-purple-rgb), 0.06), transparent 50%),
+        linear-gradient(to bottom, var(--color-bg), rgba(6, 6, 15, 0.75), var(--color-bg));
 }
 
 .page-hero-content {
@@ -1227,6 +1319,172 @@ h1, h2, h3, h4, h5, h6 {
 .ambiance-feature p { font-size: 0.875rem; color: var(--color-text-muted); }
 
 /* ==========================================
+   AMBIANCES CHOICE SECTION (front-page)
+   ========================================== */
+.section-ambiances-choice {
+    background:
+        radial-gradient(ellipse at 20% 30%, rgba(var(--neon-cyan-rgb), 0.04), transparent 50%),
+        radial-gradient(ellipse at 80% 70%, rgba(var(--neon-purple-rgb), 0.04), transparent 50%);
+}
+
+.ambiances-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.ambiance-card {
+    position: relative;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    min-height: 320px;
+    display: flex;
+    align-items: flex-end;
+    text-decoration: none;
+    border: 1px solid var(--color-border);
+    transition: all var(--transition-medium);
+    background: var(--color-bg-card);
+}
+
+.ambiance-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(var(--amb-color-rgb, var(--neon-cyan-rgb)), 0.3);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(var(--amb-color-rgb, var(--neon-cyan-rgb)), 0.06);
+    color: var(--color-text);
+}
+
+.ambiance-card-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    transition: transform var(--transition-slow);
+}
+
+.ambiance-card:hover .ambiance-card-bg {
+    transform: scale(1.05);
+}
+
+.ambiance-card-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to top,
+        rgba(6, 6, 15, 0.95) 0%,
+        rgba(6, 6, 15, 0.6) 40%,
+        rgba(var(--amb-color-rgb, 0, 229, 255), 0.05) 100%
+    );
+    transition: background var(--transition-medium);
+}
+
+.ambiance-card:hover .ambiance-card-overlay {
+    background: linear-gradient(
+        to top,
+        rgba(6, 6, 15, 0.9) 0%,
+        rgba(6, 6, 15, 0.4) 40%,
+        rgba(var(--amb-color-rgb, 0, 229, 255), 0.08) 100%
+    );
+}
+
+.ambiance-card-content {
+    position: relative;
+    z-index: 1;
+    padding: 2rem;
+    width: 100%;
+}
+
+.ambiance-card-emoji {
+    display: block;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.ambiance-card-title {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-heading);
+    margin-bottom: 0.25rem;
+}
+
+.ambiance-card-subtitle {
+    font-family: var(--font-heading);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--amb-color, var(--neon-cyan));
+    margin-bottom: 0.5rem;
+}
+
+.ambiance-card-desc {
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.ambiance-card-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--amb-color, var(--neon-cyan));
+    transition: gap var(--transition-fast);
+}
+
+.ambiance-card:hover .ambiance-card-cta {
+    gap: 0.75rem;
+}
+
+/* ==========================================
+   AMBIANCE PAGE - MENU LIST
+   ========================================== */
+.ambiance-menu-list {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.ambiance-menu-item {
+    padding: 1.75rem 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.ambiance-menu-item:last-child { border-bottom: none; }
+
+.ambiance-menu-item .course-label {
+    font-family: var(--font-heading);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--neon-cyan);
+    opacity: 0.7;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.ambiance-menu-item h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.4rem;
+    color: var(--color-heading);
+}
+
+.ambiance-menu-item p {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+}
+
+.section-dark {
+    background: var(--color-bg-alt);
+}
+
+/* ==========================================
    CTA SECTION
    ========================================== */
 .section-cta {
@@ -1683,7 +1941,11 @@ h1, h2, h3, h4, h5, h6 {
 .menus-grid-detailed [data-reveal]:nth-child(4),
 .steps-grid [data-reveal]:nth-child(4),
 .levels-grid [data-reveal]:nth-child(4),
+.ambiances-grid [data-reveal]:nth-child(4),
 .contact-grid [data-reveal]:nth-child(4) { transition-delay: 0.24s; }
+
+.ambiances-grid [data-reveal]:nth-child(2) { transition-delay: 0.08s; }
+.ambiances-grid [data-reveal]:nth-child(3) { transition-delay: 0.16s; }
 
 /* Floating Particles */
 .particle {
@@ -1707,6 +1969,9 @@ h1, h2, h3, h4, h5, h6 {
    RESPONSIVE
    ========================================== */
 @media (max-width: 1024px) {
+    .ambiances-grid { grid-template-columns: 1fr; }
+    .ambiance-card { min-height: 260px; }
+
     .concept-grid,
     .ambiance-features { grid-template-columns: 1fr; gap: 1.25rem; }
 

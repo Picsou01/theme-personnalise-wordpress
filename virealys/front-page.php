@@ -1,6 +1,7 @@
 <?php
 /**
- * Front page template - User Journey: Onboarding > Concept > Menus > Zones > Passeport > Réserver
+ * Front page template - User Journey: Onboarding > Concept > Ambiances > Menus > Zones > Passeport > Réserver
+ * v2.1 - Enhanced hero with visual fallbacks + Ambiance choice section
  */
 get_header();
 
@@ -11,6 +12,11 @@ $img_menus     = virealys_get_image( 'img_menus' );
 $img_trace     = virealys_get_image( 'img_tracabilite' );
 $img_ambiances = virealys_get_image( 'img_ambiances' );
 $reservation   = get_theme_mod( 'reservation_url', '#reservation' );
+
+$img_amb_japon   = virealys_get_image( 'img_ambiance_japon' );
+$img_amb_paris   = virealys_get_image( 'img_ambiance_paris' );
+$img_amb_classic = virealys_get_image( 'img_ambiance_classic' );
+$img_amb_cosmos  = virealys_get_image( 'img_ambiance_cosmos' );
 ?>
 
 <!-- ========== HERO - ONBOARDING ========== -->
@@ -18,6 +24,10 @@ $reservation   = get_theme_mod( 'reservation_url', '#reservation' );
     <?php if ( $hero_bg ) : ?>
         <div class="hero-bg-image" style="background-image: url(<?php echo esc_url( $hero_bg ); ?>)"></div>
     <?php endif; ?>
+    <div class="hero-grid-bg"></div>
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+    <div class="hero-orb hero-orb-3"></div>
     <div class="hero-particles" id="hero-particles"></div>
     <div class="hero-overlay"></div>
     <div class="hero-content">
@@ -93,6 +103,87 @@ $reservation   = get_theme_mod( 'reservation_url', '#reservation' );
             </div>
         </div>
         <?php endif; ?>
+    </div>
+</section>
+
+<!-- ========== AMBIANCES - CHOIX UTILISATEUR ========== -->
+<section class="section section-ambiances-choice" id="ambiances">
+    <div class="container">
+        <div class="section-header" data-reveal>
+            <span class="section-label">Les Ambiances</span>
+            <h2 class="section-title">Choisissez votre univers</h2>
+            <p class="section-desc">Quatre ambiances uniques, quatre voyages sensoriels. Chaque mois, un pays évolue, un décor se transforme. Trouvez celle qui vous ressemble.</p>
+        </div>
+
+        <div class="ambiances-grid">
+            <a href="<?php echo esc_url( home_url( '/ambiance-japon/' ) ); ?>" class="ambiance-card" data-reveal style="--amb-color: #ff6b6b; --amb-color-rgb: 255, 107, 107;">
+                <?php if ( $img_amb_japon ) : ?>
+                    <div class="ambiance-card-bg" style="background-image: url(<?php echo esc_url( $img_amb_japon ); ?>)"></div>
+                <?php endif; ?>
+                <div class="ambiance-card-overlay"></div>
+                <div class="ambiance-card-content">
+                    <span class="ambiance-card-emoji">&#127471;&#127477;</span>
+                    <h3 class="ambiance-card-title">Japon</h3>
+                    <p class="ambiance-card-subtitle">Zen & Raffinement</p>
+                    <p class="ambiance-card-desc">Jardins zen, cerisiers en fleurs, sushis face au Mont Fuji. L'art de vivre japonais sublimé.</p>
+                    <span class="ambiance-card-cta">
+                        Découvrir
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </span>
+                </div>
+            </a>
+
+            <a href="<?php echo esc_url( home_url( '/ambiance-paris/' ) ); ?>" class="ambiance-card" data-reveal style="--amb-color: #ffd700; --amb-color-rgb: 255, 215, 0;">
+                <?php if ( $img_amb_paris ) : ?>
+                    <div class="ambiance-card-bg" style="background-image: url(<?php echo esc_url( $img_amb_paris ); ?>)"></div>
+                <?php endif; ?>
+                <div class="ambiance-card-overlay"></div>
+                <div class="ambiance-card-content">
+                    <span class="ambiance-card-emoji">&#127467;&#127479;</span>
+                    <h3 class="ambiance-card-title">Paris</h3>
+                    <p class="ambiance-card-subtitle">Romance & Lumière</p>
+                    <p class="ambiance-card-desc">Terrasses parisiennes, lumières de la Tour Eiffel, bistronomie créative dans un écrin de douceur.</p>
+                    <span class="ambiance-card-cta">
+                        Découvrir
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </span>
+                </div>
+            </a>
+
+            <a href="<?php echo esc_url( home_url( '/ambiance-classique/' ) ); ?>" class="ambiance-card" data-reveal style="--amb-color: #4caf50; --amb-color-rgb: 76, 175, 80;">
+                <?php if ( $img_amb_classic ) : ?>
+                    <div class="ambiance-card-bg" style="background-image: url(<?php echo esc_url( $img_amb_classic ); ?>)"></div>
+                <?php endif; ?>
+                <div class="ambiance-card-overlay"></div>
+                <div class="ambiance-card-content">
+                    <span class="ambiance-card-emoji">&#127860;</span>
+                    <h3 class="ambiance-card-title">Classique Française</h3>
+                    <p class="ambiance-card-subtitle">Tradition & Excellence</p>
+                    <p class="ambiance-card-desc">L'élégance intemporelle de la gastronomie française. Nappes blanches, chandelles, et savoir-faire ancestral.</p>
+                    <span class="ambiance-card-cta">
+                        Découvrir
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </span>
+                </div>
+            </a>
+
+            <a href="<?php echo esc_url( home_url( '/ambiance-cosmos/' ) ); ?>" class="ambiance-card" data-reveal style="--amb-color: #a855f7; --amb-color-rgb: 168, 85, 247;">
+                <?php if ( $img_amb_cosmos ) : ?>
+                    <div class="ambiance-card-bg" style="background-image: url(<?php echo esc_url( $img_amb_cosmos ); ?>)"></div>
+                <?php endif; ?>
+                <div class="ambiance-card-overlay"></div>
+                <div class="ambiance-card-content">
+                    <span class="ambiance-card-emoji">&#127756;</span>
+                    <h3 class="ambiance-card-title">Cosmos</h3>
+                    <p class="ambiance-card-subtitle">Futurisme & Évasion</p>
+                    <p class="ambiance-card-desc">Dînez parmi les étoiles. Station spatiale, apesanteur visuelle, gastronomie du futur.</p>
+                    <span class="ambiance-card-cta">
+                        Découvrir
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </span>
+                </div>
+            </a>
+        </div>
     </div>
 </section>
 
@@ -282,34 +373,6 @@ $reservation   = get_theme_mod( 'reservation_url', '#reservation' );
                         <div class="passport-level">Niveau : Explorateur</div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ========== AMBIANCE - IMMERSION ========== -->
-<section class="section section-ambiance" id="experience">
-    <div class="container">
-        <div class="section-header" data-reveal>
-            <span class="section-label">L'Ambiance</span>
-            <h2 class="section-title">Un restaurant qui ne se répète jamais</h2>
-            <p class="section-desc">Lumière tamisée, design futuriste mais chaleureux. Un mélange unique de bois naturel et de technologie invisible.</p>
-        </div>
-        <div class="ambiance-features">
-            <div class="ambiance-feature" data-reveal>
-                <div class="ambiance-number">01</div>
-                <h3>Chaque mois, un nouveau pays</h3>
-                <p>Décor, musique, parfums d'ambiance et tenues du personnel changent complètement.</p>
-            </div>
-            <div class="ambiance-feature" data-reveal>
-                <div class="ambiance-number">02</div>
-                <h3>Technologie invisible</h3>
-                <p>La tech sublime l'expérience sans jamais s'imposer. Tout est au service de vos sens.</p>
-            </div>
-            <div class="ambiance-feature" data-reveal>
-                <div class="ambiance-number">03</div>
-                <h3>Nourriture réelle, toujours</h3>
-                <p>La qualité des produits reste notre priorité absolue. Le virtuel complète, ne remplace jamais.</p>
             </div>
         </div>
     </div>
