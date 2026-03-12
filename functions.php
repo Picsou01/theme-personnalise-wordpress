@@ -1,11 +1,11 @@
 <?php
 /**
  * Virealys - Functions and definitions
- * Revolutionary Adaptive Restaurant Theme v4.0
+ * Constellation Navigation Theme v6.0
  */
 
 if ( ! defined( 'VIREALYS_VERSION' ) ) {
-    define( 'VIREALYS_VERSION', '4.0.0' );
+    define( 'VIREALYS_VERSION', '6.0.0' );
 }
 
 /**
@@ -39,17 +39,12 @@ function virealys_setup() {
     add_image_size( 'virealys-card', 600, 400, true );
     add_image_size( 'virealys-wide', 1200, 600, true );
 
-    // Enable excerpts on pages (for hero descriptions)
     add_post_type_support( 'page', 'excerpt' );
 
-    // Editor styles
     add_theme_support( 'editor-styles' );
     add_editor_style( 'assets/css/main.css' );
-
-    // Wide/full alignment in block editor
     add_theme_support( 'align-wide' );
 
-    // Block editor color palette
     add_theme_support( 'editor-color-palette', array(
         array( 'name' => 'Neon Cyan',   'slug' => 'neon-cyan',   'color' => '#00e5ff' ),
         array( 'name' => 'Neon Blue',   'slug' => 'neon-blue',   'color' => '#4d7cff' ),
@@ -81,9 +76,31 @@ function virealys_scripts() {
         'ajax_url'  => admin_url( 'admin-ajax.php' ),
         'nonce'     => wp_create_nonce( 'virealys_nonce' ),
         'theme_url' => get_template_directory_uri(),
+        'home_url'  => home_url( '/' ),
     ) );
 }
 add_action( 'wp_enqueue_scripts', 'virealys_scripts' );
+
+/**
+ * Add page slug to body tag for JS tracking
+ */
+function virealys_body_attributes() {
+    global $post;
+    if ( $post && ! is_front_page() ) {
+        echo ' data-page-slug="' . esc_attr( $post->post_name ) . '"';
+    }
+}
+
+/**
+ * Custom body class filter — add data attribute via wp_body_open
+ */
+function virealys_body_open_attributes() {
+    global $post;
+    if ( $post && ! is_front_page() ) {
+        echo '<script>document.body.setAttribute("data-page-slug", "' . esc_js( $post->post_name ) . '");</script>';
+    }
+}
+add_action( 'wp_body_open', 'virealys_body_open_attributes' );
 
 /**
  * Custom walker for the nav menu
@@ -131,7 +148,7 @@ function virealys_fallback_menu() {
     echo '<ul class="nav-list">';
     foreach ( $pages as $slug => $label ) {
         $page = get_page_by_path( $slug );
-        $url = $page ? get_permalink( $page ) : home_url( '/#' . $slug );
+        $url = $page ? get_permalink( $page ) : home_url( '/' . $slug . '/' );
         echo '<li><a href="' . esc_url( $url ) . '" class="nav-link">' . esc_html( $label ) . '</a></li>';
     }
     echo '</ul>';
@@ -151,7 +168,7 @@ function virealys_overlay_fallback_menu() {
     echo '<ul class="overlay-nav-list">';
     foreach ( $pages as $slug => $label ) {
         $page = get_page_by_path( $slug );
-        $url = $page ? get_permalink( $page ) : home_url( '/#' . $slug );
+        $url = $page ? get_permalink( $page ) : home_url( '/' . $slug . '/' );
         echo '<li><a href="' . esc_url( $url ) . '" class="nav-link overlay-nav-link">' . esc_html( $label ) . '</a></li>';
     }
     echo '</ul>';
@@ -171,7 +188,7 @@ function virealys_footer_fallback() {
     echo '<ul class="footer-links">';
     foreach ( $links as $slug => $label ) {
         $page = get_page_by_path( $slug );
-        $url = $page ? get_permalink( $page ) : home_url( '/#' . $slug );
+        $url = $page ? get_permalink( $page ) : home_url( '/' . $slug . '/' );
         echo '<li><a href="' . esc_url( $url ) . '">' . esc_html( $label ) . '</a></li>';
     }
     echo '</ul>';
@@ -182,7 +199,7 @@ function virealys_footer_fallback() {
  */
 function virealys_customize_register( $wp_customize ) {
 
-    // === HERO ===
+    // === HERO / ACCUEIL ===
     $wp_customize->add_section( 'virealys_hero', array(
         'title'    => __( 'Hero / Accueil', 'virealys' ),
         'priority' => 30,
@@ -193,7 +210,7 @@ function virealys_customize_register( $wp_customize ) {
         'sanitize_callback' => 'sanitize_text_field',
     ) );
     $wp_customize->add_control( 'hero_title', array(
-        'label'   => __( 'Titre Hero', 'virealys' ),
+        'label'   => __( 'Titre principal constellation', 'virealys' ),
         'section' => 'virealys_hero',
         'type'    => 'text',
     ) );
@@ -203,16 +220,80 @@ function virealys_customize_register( $wp_customize ) {
         'sanitize_callback' => 'sanitize_text_field',
     ) );
     $wp_customize->add_control( 'hero_subtitle', array(
-        'label'   => __( 'Sous-titre Hero', 'virealys' ),
+        'label'   => __( 'Sous-titre constellation', 'virealys' ),
         'section' => 'virealys_hero',
         'type'    => 'text',
     ) );
 
     $wp_customize->add_setting( 'hero_bg', array( 'sanitize_callback' => 'esc_url_raw' ) );
     $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, 'hero_bg', array(
-        'label'   => __( 'Image Hero (restaurant VR)', 'virealys' ),
+        'label'   => __( 'Image Hero (fond constellation)', 'virealys' ),
         'section' => 'virealys_hero',
     ) ) );
+
+    // === CONSTELLATION PAGES ===
+    $wp_customize->add_section( 'virealys_constellation', array(
+        'title'       => __( 'Constellation - Textes des pages', 'virealys' ),
+        'priority'    => 32,
+        'description' => __( 'Modifiez le titre et le résumé de chaque page tel qu\'il apparaît dans la constellation.', 'virealys' ),
+    ) );
+
+    $constellation_pages = array(
+        'concept'     => array( 'Concept', 'Découvrez comment Virealys fusionne gastronomie slow food et technologie immersive pour réinventer l\'expérience culinaire.' ),
+        'menus'       => array( 'Nos Formules', 'Du dîner classique à l\'immersion totale — quatre formules pour vivre l\'expérience à votre mesure.' ),
+        'ambiances'   => array( 'Les Ambiances', 'Quatre univers sensoriels uniques — Japon, Paris, Italie, Cosmos. Choisissez votre voyage.' ),
+        'zones'       => array( 'Les 4 Zones', 'Origine, Voyage, Immersion, Sensorielle — quatre niveaux d\'expérience pour personnaliser votre soirée.' ),
+        'passeport'   => array( 'Le Passeport', 'Votre passeport numérique vous accompagne. Collectionnez les tampons, débloquez des expériences exclusives.' ),
+        'reservation' => array( 'Réserver', 'Réservez votre table et choisissez votre niveau d\'immersion. L\'aventure commence ici.' ),
+    );
+
+    foreach ( $constellation_pages as $slug => $defaults ) {
+        $wp_customize->add_setting( 'page_' . $slug . '_title', array(
+            'default'           => $defaults[0],
+            'sanitize_callback' => 'sanitize_text_field',
+        ) );
+        $wp_customize->add_control( 'page_' . $slug . '_title', array(
+            'label'   => sprintf( __( 'Titre - %s', 'virealys' ), $defaults[0] ),
+            'section' => 'virealys_constellation',
+            'type'    => 'text',
+        ) );
+
+        $wp_customize->add_setting( 'page_' . $slug . '_summary', array(
+            'default'           => $defaults[1],
+            'sanitize_callback' => 'sanitize_text_field',
+        ) );
+        $wp_customize->add_control( 'page_' . $slug . '_summary', array(
+            'label'   => sprintf( __( 'Résumé - %s', 'virealys' ), $defaults[0] ),
+            'section' => 'virealys_constellation',
+            'type'    => 'textarea',
+        ) );
+    }
+
+    // === CTA SECTION ===
+    $wp_customize->add_section( 'virealys_cta', array(
+        'title'    => __( 'Section CTA (bas de page)', 'virealys' ),
+        'priority' => 33,
+    ) );
+
+    $wp_customize->add_setting( 'cta_title', array(
+        'default'           => 'Une question ?',
+        'sanitize_callback' => 'sanitize_text_field',
+    ) );
+    $wp_customize->add_control( 'cta_title', array(
+        'label'   => __( 'Titre CTA', 'virealys' ),
+        'section' => 'virealys_cta',
+        'type'    => 'text',
+    ) );
+
+    $wp_customize->add_setting( 'cta_subtitle', array(
+        'default'           => 'Réservez votre expérience immersive dès maintenant.',
+        'sanitize_callback' => 'sanitize_text_field',
+    ) );
+    $wp_customize->add_control( 'cta_subtitle', array(
+        'label'   => __( 'Sous-titre CTA', 'virealys' ),
+        'section' => 'virealys_cta',
+        'type'    => 'text',
+    ) );
 
     // === IMAGES ===
     $wp_customize->add_section( 'virealys_images', array(
@@ -225,10 +306,10 @@ function virealys_customize_register( $wp_customize ) {
         'img_tracabilite'      => 'Image Traçabilité (plat + hologramme)',
         'img_ambiances'        => 'Image 4 Ambiances',
         'img_logo'             => 'Logo Virealys',
-        'img_ambiance_japon'   => 'Aperçu Ambiance Japon (accueil)',
-        'img_ambiance_paris'   => 'Aperçu Ambiance Paris (accueil)',
-        'img_ambiance_italie'  => 'Aperçu Ambiance Italie (accueil)',
-        'img_ambiance_cosmos'  => 'Aperçu Ambiance Cosmos (accueil)',
+        'img_ambiance_japon'   => 'Aperçu Ambiance Japon',
+        'img_ambiance_paris'   => 'Aperçu Ambiance Paris',
+        'img_ambiance_italie'  => 'Aperçu Ambiance Italie',
+        'img_ambiance_cosmos'  => 'Aperçu Ambiance Cosmos',
     );
 
     foreach ( $images as $key => $label ) {
@@ -257,6 +338,32 @@ function virealys_customize_register( $wp_customize ) {
         $wp_customize->add_control( $key, array( 'label' => __( $data['label'], 'virealys' ), 'section' => 'virealys_reservation', 'type' => $data['type'] ) );
     }
 
+    // === FOOTER ===
+    $wp_customize->add_section( 'virealys_footer', array(
+        'title'    => __( 'Footer', 'virealys' ),
+        'priority' => 45,
+    ) );
+
+    $wp_customize->add_setting( 'footer_tagline', array(
+        'default'           => 'Voyagez sans quitter votre table.',
+        'sanitize_callback' => 'sanitize_text_field',
+    ) );
+    $wp_customize->add_control( 'footer_tagline', array(
+        'label'   => __( 'Slogan footer', 'virealys' ),
+        'section' => 'virealys_footer',
+        'type'    => 'text',
+    ) );
+
+    $wp_customize->add_setting( 'footer_hours', array(
+        'default'           => "Mar - Sam : 19h - 23h\nDim : 12h - 14h30\nLundi : Fermé",
+        'sanitize_callback' => 'sanitize_textarea_field',
+    ) );
+    $wp_customize->add_control( 'footer_hours', array(
+        'label'   => __( 'Horaires (une ligne par créneau)', 'virealys' ),
+        'section' => 'virealys_footer',
+        'type'    => 'textarea',
+    ) );
+
     // === SOCIAL ===
     $wp_customize->add_section( 'virealys_social', array(
         'title'    => __( 'Réseaux Sociaux', 'virealys' ),
@@ -276,6 +383,22 @@ add_action( 'customize_register', 'virealys_customize_register' );
 function virealys_get_image( $key, $fallback = '' ) {
     $url = get_theme_mod( $key );
     return $url ? $url : $fallback;
+}
+
+/**
+ * Helper: get constellation icon SVG by name
+ */
+function virealys_get_constellation_icon( $name ) {
+    $icons = array(
+        'layers'   => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>',
+        'utensils' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3m0 0v7"/></svg>',
+        'globe'    => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20"/></svg>',
+        'grid'     => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',
+        'passport' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+        'calendar' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+        'star'     => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+    );
+    return isset( $icons[ $name ] ) ? $icons[ $name ] : $icons['star'];
 }
 
 /**

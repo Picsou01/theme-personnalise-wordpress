@@ -6,7 +6,7 @@
         <div class="footer-grid">
             <div class="footer-col footer-brand">
                 <a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="logo-text">VIREALYS</a>
-                <p class="footer-tagline">Voyagez sans quitter votre table.</p>
+                <p class="footer-tagline"><?php echo esc_html( get_theme_mod( 'footer_tagline', 'Voyagez sans quitter votre table.' ) ); ?></p>
                 <div class="footer-social">
                     <?php if ( get_theme_mod( 'instagram_url' ) ) : ?>
                         <a href="<?php echo esc_url( get_theme_mod( 'instagram_url' ) ); ?>" target="_blank" rel="noopener" aria-label="Instagram">
@@ -42,9 +42,15 @@
             <div class="footer-col">
                 <h4>Horaires</h4>
                 <ul class="footer-links">
-                    <li>Mar - Sam : 19h - 23h</li>
-                    <li>Dim : 12h - 14h30</li>
-                    <li>Lundi : Fermé</li>
+                    <?php
+                    $hours = get_theme_mod( 'footer_hours', "Mar - Sam : 19h - 23h\nDim : 12h - 14h30\nLundi : Fermé" );
+                    $hours_lines = explode( "\n", $hours );
+                    foreach ( $hours_lines as $line ) :
+                        $line = trim( $line );
+                        if ( $line ) :
+                    ?>
+                        <li><?php echo esc_html( $line ); ?></li>
+                    <?php endif; endforeach; ?>
                 </ul>
             </div>
 
@@ -63,7 +69,7 @@
         </div>
 
         <div class="footer-bottom">
-            <p>&copy; <?php echo esc_html( date( 'Y' ) ); ?> Virealys. Tous droits réservés.</p>
+            <p>&copy; <?php echo esc_html( date( 'Y' ) ); ?> Virealys. Tous droits r&eacute;serv&eacute;s.</p>
         </div>
     </div>
 </footer>

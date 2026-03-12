@@ -25,33 +25,35 @@
     </a>
 </div>
 
-<!-- Radial Navigation Hint (visible on front page) -->
-<?php if ( is_front_page() ) : ?>
-<div class="vr-radial-hint" id="vr-radial-hint" aria-hidden="true">
-    <div class="vr-radial-hint-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <circle cx="12" cy="12" r="10" stroke-dasharray="4 3"/>
-            <circle cx="12" cy="12" r="3"/>
-        </svg>
+<!-- Navigation Dock -->
+<nav class="vr-dock" id="vr-dock" aria-label="<?php esc_attr_e( 'Navigation adaptative', 'virealys' ); ?>">
+    <div class="vr-dock-track" id="vr-dock-track">
+        <?php
+        $dock_items = array(
+            'concept'    => array( 'label' => 'Concept', 'icon' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5"/></svg>' ),
+            'ambiances'  => array( 'label' => 'Ambiances', 'icon' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/></svg>' ),
+            'menus'      => array( 'label' => 'Menus', 'icon' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20"/></svg>' ),
+            'zones'      => array( 'label' => 'Zones', 'icon' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="10" rx="3"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/></svg>' ),
+            'passeport'  => array( 'label' => 'Passeport', 'icon' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>' ),
+        );
+        foreach ( $dock_items as $slug => $item ) :
+            $page = get_page_by_path( $slug );
+            $url  = $page ? get_permalink( $page ) : home_url( '/' . $slug . '/' );
+        ?>
+            <a href="<?php echo esc_url( $url ); ?>" class="vr-dock-btn" data-section="<?php echo esc_attr( $slug ); ?>">
+                <span class="vr-dock-btn-icon"><?php echo $item['icon']; ?></span>
+                <span class="vr-dock-btn-label"><?php echo esc_html( $item['label'] ); ?></span>
+            </a>
+        <?php endforeach; ?>
+        <a href="<?php echo esc_url( get_theme_mod( 'reservation_url', '#reservation' ) ); ?>" class="vr-dock-btn vr-dock-btn-cta" data-section="reservation">
+            <span class="vr-dock-btn-label">R&eacute;server</span>
+        </a>
+        <button class="vr-dock-btn vr-dock-btn-menu" id="nav-dock-menu-btn" aria-label="<?php esc_attr_e( 'Menu', 'virealys' ); ?>" aria-expanded="false">
+            <span class="dock-menu-icon"><span></span><span></span></span>
+        </button>
     </div>
-    <span class="vr-radial-hint-text"><?php esc_html_e( 'Cliquez pour naviguer', 'virealys' ); ?></span>
-</div>
-<?php endif; ?>
-
-<!-- Menu Button (always accessible) -->
-<button class="vr-menu-toggle" id="nav-dock-menu-btn" aria-label="<?php esc_attr_e( 'Menu', 'virealys' ); ?>" aria-expanded="false">
-    <span class="dock-menu-icon"><span></span><span></span></span>
-</button>
-
-<!-- Panel Navigation Dots (front page) -->
-<?php if ( is_front_page() ) : ?>
-<div class="vr-panel-nav" id="vr-panel-nav" aria-label="Sections"></div>
-<!-- Edge Navigation Indicators (all 4 directions) -->
-<div class="vr-edge vr-edge-top" id="vr-edge-top"></div>
-<div class="vr-edge vr-edge-bottom" id="vr-edge-bottom"></div>
-<div class="vr-edge vr-edge-left" id="vr-edge-left"></div>
-<div class="vr-edge vr-edge-right" id="vr-edge-right"></div>
-<?php endif; ?>
+    <div class="vr-dock-progress" id="vr-dock-progress"></div>
+</nav>
 
 <!-- Full Screen Menu Overlay -->
 <div class="menu-overlay" id="menu-overlay" aria-hidden="true">
