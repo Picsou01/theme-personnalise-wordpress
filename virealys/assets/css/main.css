@@ -207,8 +207,8 @@ h1, h2, h3, h4, h5, h6 {
     object-fit: contain;
 }
 
-/* --- Floating Nav Dock (bottom-center pill) --- */
-.nav-dock {
+/* --- Predictive Adaptive Dock --- */
+.vr-dock {
     position: fixed;
     bottom: 1.25rem;
     left: 50%;
@@ -218,14 +218,14 @@ h1, h2, h3, h4, h5, h6 {
     transition: transform 0.5s var(--ease-out), opacity 0.5s var(--ease-out);
 }
 
-.nav-dock.dock-hidden {
+.vr-dock.dock-hidden {
     transform: translateX(-50%) translateY(calc(100% + 2rem));
     opacity: 0;
     pointer-events: none;
 }
 
 /* Spinning conic-gradient border on hover */
-.nav-dock::before {
+.vr-dock::before {
     content: '';
     position: absolute;
     inset: -1px;
@@ -245,7 +245,7 @@ h1, h2, h3, h4, h5, h6 {
     transition: opacity 0.4s ease;
 }
 
-.nav-dock:hover::before {
+.vr-dock:hover::before {
     opacity: 1;
     animation: dock-border-spin 3s linear infinite;
 }
@@ -260,29 +260,27 @@ h1, h2, h3, h4, h5, h6 {
     inherits: false;
 }
 
-.nav-dock-inner {
+.vr-dock-track {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
-    background: rgba(6, 6, 15, 0.75);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    gap: 0.15rem;
+    background: rgba(6, 6, 15, 0.78);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
     border: 1px solid rgba(0, 229, 255, 0.1);
     border-radius: 100px;
-    padding: 0.4rem 0.5rem 0.4rem 1rem;
+    padding: 0.35rem 0.5rem;
     box-shadow:
         0 4px 30px rgba(0, 0, 0, 0.4),
         0 0 40px rgba(0, 229, 255, 0.04),
         inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
-.nav-dock-links {
+/* Individual dock button — order is set dynamically by JS */
+.vr-dock-btn {
     display: flex;
     align-items: center;
-    gap: 0;
-}
-
-.nav-dock-link {
+    gap: 0.35rem;
     font-family: var(--font-heading);
     font-size: 0.6875rem;
     font-weight: 500;
@@ -292,48 +290,99 @@ h1, h2, h3, h4, h5, h6 {
     text-decoration: none;
     padding: 0.4rem 0.65rem;
     border-radius: 100px;
-    transition: color var(--transition-fast), background var(--transition-fast);
     white-space: nowrap;
     position: relative;
+    transition: color 0.3s var(--ease-out), background 0.3s var(--ease-out),
+                transform 0.4s var(--ease-spring), opacity 0.3s ease;
+    cursor: pointer;
+    background: none;
+    border: none;
 }
 
-.nav-dock-link:hover {
+.vr-dock-btn:hover {
     color: var(--neon-cyan);
     background: rgba(0, 229, 255, 0.06);
 }
 
-.nav-dock-link.active {
+.vr-dock-btn.active {
     color: var(--neon-cyan);
     background: rgba(0, 229, 255, 0.1);
     text-shadow: 0 0 12px rgba(0, 229, 255, 0.4);
 }
 
-/* Dock CTA */
-.nav-dock-cta {
-    font-size: 0.6875rem !important;
-    padding: 0.4rem 1rem !important;
-    border-radius: 100px !important;
-    margin-left: 0.25rem;
-    white-space: nowrap;
+.vr-dock-btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
 }
 
-/* Dock hamburger button */
-.nav-dock-menu-btn {
+.vr-dock-btn:hover .vr-dock-btn-icon,
+.vr-dock-btn.active .vr-dock-btn-icon {
+    opacity: 1;
+}
+
+.vr-dock-btn-label {
+    transition: max-width 0.35s var(--ease-out), opacity 0.25s ease;
+}
+
+/* Predictive "hot" button — highest priority glows */
+.vr-dock-btn-hot {
+    color: var(--neon-cyan);
+    text-shadow: 0 0 8px rgba(var(--neon-cyan-rgb), 0.3);
+}
+
+.vr-dock-btn-hot .vr-dock-btn-icon {
+    opacity: 1;
+    filter: drop-shadow(0 0 4px rgba(var(--neon-cyan-rgb), 0.5));
+}
+
+.vr-dock-btn-hot::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 25%;
+    right: 25%;
+    height: 2px;
+    background: var(--gradient-primary);
+    border-radius: 2px;
+    opacity: 0.6;
+}
+
+/* CTA button in dock */
+.vr-dock-btn-cta {
+    background: rgba(var(--neon-cyan-rgb), 0.1);
+    border: 1px solid rgba(var(--neon-cyan-rgb), 0.15);
+    color: var(--neon-cyan);
+    padding: 0.4rem 0.9rem;
+    font-weight: 600;
+}
+
+.vr-dock-btn-cta:hover {
+    background: rgba(var(--neon-cyan-rgb), 0.18);
+    border-color: rgba(var(--neon-cyan-rgb), 0.3);
+    color: var(--color-white);
+}
+
+/* Menu hamburger button in dock */
+.vr-dock-btn-menu {
     display: flex;
     align-items: center;
     justify-content: center;
     width: 36px;
     height: 36px;
+    min-width: 36px;
     border-radius: 50%;
     background: rgba(0, 229, 255, 0.08);
     border: 1px solid rgba(0, 229, 255, 0.12);
+    padding: 0;
     cursor: pointer;
     transition: background var(--transition-fast), border-color var(--transition-fast);
-    margin-left: 0.25rem;
     flex-shrink: 0;
 }
 
-.nav-dock-menu-btn:hover {
+.vr-dock-btn-menu:hover {
     background: rgba(0, 229, 255, 0.15);
     border-color: rgba(0, 229, 255, 0.3);
 }
@@ -357,11 +406,24 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Active/open state - X shape */
-.nav-dock-menu-btn.active .dock-menu-icon span:first-child {
+.vr-dock-btn-menu.active .dock-menu-icon span:first-child {
     transform: rotate(45deg) translate(1.5px, 1.5px);
 }
-.nav-dock-menu-btn.active .dock-menu-icon span:last-child {
+.vr-dock-btn-menu.active .dock-menu-icon span:last-child {
     transform: rotate(-45deg) translate(1.5px, -1.5px);
+}
+
+/* Dock progress bar */
+.vr-dock-progress {
+    position: absolute;
+    bottom: -3px;
+    left: 10%;
+    height: 2px;
+    width: 0%;
+    background: var(--gradient-primary);
+    border-radius: 2px;
+    transition: width 0.15s linear;
+    box-shadow: 0 0 8px rgba(var(--neon-cyan-rgb), 0.3);
 }
 
 /* --- Full Screen Menu Overlay --- */
@@ -2133,6 +2195,211 @@ h1, h2, h3, h4, h5, h6 {
 .error-content p { color: var(--color-text-muted); margin-bottom: 1.5rem; }
 
 /* ==========================================
+   SPATIAL PANEL NAVIGATION SYSTEM
+   Full-viewport panels, no traditional scroll
+   ========================================== */
+
+/* Lock body scroll when spatial is active */
+body.vr-spatial-active {
+    overflow: hidden;
+    height: 100vh;
+}
+
+/* Spatial container */
+.vr-spatial {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Individual panel */
+.vr-panel {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    z-index: 1;
+    transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out), visibility 0.6s;
+    overflow: hidden;
+    background: var(--color-bg);
+}
+
+/* Active panel */
+.vr-panel-active {
+    opacity: 1;
+    visibility: visible;
+    z-index: 5;
+    transform: translateY(0) scale(1);
+}
+
+/* Panel exit animations */
+.vr-panel-exit-up {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-30vh) scale(0.95);
+    z-index: 2;
+}
+
+.vr-panel-exit-down {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(30vh) scale(0.95);
+    z-index: 2;
+}
+
+/* Panel enter animations */
+.vr-panel-enter-below {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(15vh) scale(0.98);
+}
+
+.vr-panel-enter-above {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-15vh) scale(0.98);
+}
+
+/* Internal scroll container within panels */
+.vr-panel-scroll {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: var(--section-padding) 0;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(var(--neon-cyan-rgb), 0.15) transparent;
+}
+
+.vr-panel-scroll::-webkit-scrollbar {
+    width: 4px;
+}
+
+.vr-panel-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.vr-panel-scroll::-webkit-scrollbar-thumb {
+    background: rgba(var(--neon-cyan-rgb), 0.15);
+    border-radius: 4px;
+}
+
+/* Hero panel — special fullscreen treatment */
+.vr-panel[data-panel="hero"] {
+    background: var(--color-bg);
+}
+
+/* --- Panel Navigation Dots (right side) --- */
+.vr-panel-nav {
+    position: fixed;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1001;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 0.5rem;
+}
+
+.vr-panel-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(var(--neon-cyan-rgb), 0.15);
+    border: 1px solid rgba(var(--neon-cyan-rgb), 0.1);
+    cursor: pointer;
+    transition: all 0.35s var(--ease-out);
+    position: relative;
+}
+
+.vr-panel-dot:hover {
+    background: rgba(var(--neon-cyan-rgb), 0.3);
+    transform: scale(1.3);
+}
+
+.vr-panel-dot.active {
+    background: var(--neon-cyan);
+    box-shadow: 0 0 10px rgba(var(--neon-cyan-rgb), 0.5);
+    transform: scale(1.2);
+}
+
+.vr-panel-dot.active::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 1px solid rgba(var(--neon-cyan-rgb), 0.3);
+    animation: vr-dot-pulse 2s ease-in-out infinite;
+}
+
+@keyframes vr-dot-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.4); opacity: 0; }
+}
+
+/* Dot tooltip on hover */
+.vr-panel-dot[data-label]::before {
+    content: attr(data-label);
+    position: absolute;
+    right: calc(100% + 0.75rem);
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--font-heading);
+    font-size: 0.625rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--neon-cyan);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.vr-panel-dot:hover[data-label]::before {
+    opacity: 1;
+}
+
+/* --- Edge Navigation Indicators --- */
+.vr-edge {
+    position: fixed;
+    left: 0;
+    right: 0;
+    height: 60px;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.vr-edge-top {
+    top: 0;
+    background: linear-gradient(to bottom,
+        rgba(var(--neon-cyan-rgb), 0.06) 0%,
+        transparent 100%
+    );
+}
+
+.vr-edge-bottom {
+    bottom: 0;
+    background: linear-gradient(to top,
+        rgba(var(--neon-cyan-rgb), 0.06) 0%,
+        transparent 100%
+    );
+}
+
+.vr-edge.visible {
+    opacity: 1;
+}
+
+/* ==========================================
    REVEAL ANIMATIONS
    ========================================== */
 [data-reveal] {
@@ -2237,24 +2504,30 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @media (max-width: 768px) {
-    /* Nav dock becomes compact mobile bottom bar */
-    .nav-dock-links { display: none; }
-    .nav-dock-cta { display: none; }
+    /* Dock becomes compact on mobile — hide labels, show icons only */
+    .vr-dock-btn-label { display: none; }
 
-    .nav-dock-inner {
-        padding: 0.35rem 0.5rem;
-        gap: 0.5rem;
+    .vr-dock-track {
+        padding: 0.3rem 0.4rem;
+        gap: 0.1rem;
     }
 
-    /* Show mobile icon nav instead */
-    .nav-dock-mobile-icons {
-        display: flex;
-        gap: 0.25rem;
+    .vr-dock-btn {
+        padding: 0.45rem;
+        min-width: 36px;
+        justify-content: center;
     }
 
-    .nav-dock-menu-btn {
-        width: 44px;
-        height: 44px;
+    .vr-dock-btn-cta .vr-dock-btn-label { display: inline; font-size: 0.6rem; }
+
+    .vr-dock-btn-menu {
+        width: 40px;
+        height: 40px;
+    }
+
+    /* Panel nav dots move closer on mobile */
+    .vr-panel-nav {
+        right: 0.5rem;
     }
 
     .floating-logo {
@@ -2351,21 +2624,7 @@ h1, h2, h3, h4, h5, h6 {
     }
 }
 
-/* ==========================================
-   ADAPTIVE ENGINE - Nav Dock Progress Bar
-   Thin gradient progress bar under the dock.
-   ========================================== */
-.nav-dock-progress {
-    position: absolute;
-    bottom: -3px;
-    left: 10%;
-    height: 2px;
-    width: 0%;
-    background: var(--gradient-primary);
-    border-radius: 2px;
-    transition: width 0.15s linear;
-    box-shadow: 0 0 8px rgba(var(--neon-cyan-rgb), 0.3);
-}
+/* (dock progress bar is in the dock section above) */
 
 /* ==========================================
    ADAPTIVE ENGINE - Idle Breathing

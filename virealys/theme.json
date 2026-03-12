@@ -1,0 +1,64 @@
+{
+    "$schema": "https://schemas.wp.org/wp/6.5/theme.json",
+    "version": 3,
+    "settings": {
+        "appearanceTools": true,
+        "color": {
+            "palette": [
+                { "slug": "neon-cyan",   "color": "#00e5ff", "name": "Neon Cyan" },
+                { "slug": "neon-blue",   "color": "#4d7cff", "name": "Neon Blue" },
+                { "slug": "neon-purple", "color": "#a855f7", "name": "Neon Purple" },
+                { "slug": "neon-pink",   "color": "#e040fb", "name": "Neon Pink" },
+                { "slug": "dark-bg",     "color": "#06060f", "name": "Dark Background" },
+                { "slug": "surface",     "color": "#12122a", "name": "Surface" },
+                { "slug": "light-text",  "color": "#c8d6e5", "name": "Light Text" },
+                { "slug": "heading",     "color": "#e8f0ff", "name": "Heading" }
+            ]
+        },
+        "typography": {
+            "fontFamilies": [
+                {
+                    "fontFamily": "'Space Grotesk', system-ui, sans-serif",
+                    "slug": "heading",
+                    "name": "Space Grotesk"
+                },
+                {
+                    "fontFamily": "'Outfit', system-ui, sans-serif",
+                    "slug": "body",
+                    "name": "Outfit"
+                }
+            ]
+        },
+        "spacing": {
+            "units": ["px", "rem", "vh", "vw", "%"]
+        },
+        "layout": {
+            "contentSize": "800px",
+            "wideSize": "1200px"
+        }
+    },
+    "styles": {
+        "color": {
+            "background": "#06060f",
+            "text": "#c8d6e5"
+        },
+        "typography": {
+            "fontFamily": "'Outfit', system-ui, sans-serif"
+        },
+        "elements": {
+            "heading": {
+                "typography": {
+                    "fontFamily": "'Space Grotesk', system-ui, sans-serif"
+                },
+                "color": {
+                    "text": "#e8f0ff"
+                }
+            },
+            "link": {
+                "color": {
+                    "text": "#00e5ff"
+                }
+            }
+        }
+    }
+}

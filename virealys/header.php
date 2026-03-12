@@ -25,37 +25,43 @@
     </a>
 </div>
 
-<!-- Floating Nav Dock -->
-<nav class="nav-dock" id="nav-dock" aria-label="<?php esc_attr_e( 'Navigation principale', 'virealys' ); ?>">
-    <div class="nav-dock-inner">
-        <div class="nav-dock-links">
-            <?php
-            $dock_links = array(
-                'concept'   => 'Concept',
-                'menus'     => 'Menus',
-                'ambiances' => 'Ambiances',
-                'zones'     => 'Zones',
-                'passeport' => 'Passeport',
-            );
-            foreach ( $dock_links as $slug => $label ) :
-                $page = get_page_by_path( $slug );
-                $url  = $page ? get_permalink( $page ) : home_url( '/#' . $slug );
-            ?>
-                <a href="<?php echo esc_url( $url ); ?>" class="nav-dock-link" data-section="<?php echo esc_attr( $slug ); ?>">
-                    <?php echo esc_html( $label ); ?>
-                </a>
-            <?php endforeach; ?>
-        </div>
-        <a href="<?php echo esc_url( get_theme_mod( 'reservation_url', '#reservation' ) ); ?>" class="nav-dock-cta btn btn-glow btn-sm">
-            Réserver
+<!-- Predictive Adaptive Dock -->
+<nav class="vr-dock" id="vr-dock" aria-label="<?php esc_attr_e( 'Navigation adaptative', 'virealys' ); ?>">
+    <div class="vr-dock-track" id="vr-dock-track">
+        <?php
+        $dock_items = array(
+            'concept'    => array( 'label' => 'Concept', 'icon' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5"/></svg>' ),
+            'ambiances'  => array( 'label' => 'Ambiances', 'icon' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/></svg>' ),
+            'menus'      => array( 'label' => 'Menus', 'icon' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20"/></svg>' ),
+            'zones'      => array( 'label' => 'Zones', 'icon' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="10" rx="3"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/></svg>' ),
+            'passeport'  => array( 'label' => 'Passeport', 'icon' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>' ),
+        );
+        foreach ( $dock_items as $slug => $item ) :
+            $page = get_page_by_path( $slug );
+            $url  = $page ? get_permalink( $page ) : home_url( '/#' . $slug );
+        ?>
+            <a href="<?php echo esc_url( $url ); ?>" class="vr-dock-btn" data-section="<?php echo esc_attr( $slug ); ?>" data-priority="0">
+                <span class="vr-dock-btn-icon"><?php echo $item['icon']; ?></span>
+                <span class="vr-dock-btn-label"><?php echo esc_html( $item['label'] ); ?></span>
+            </a>
+        <?php endforeach; ?>
+        <a href="<?php echo esc_url( get_theme_mod( 'reservation_url', '#reservation' ) ); ?>" class="vr-dock-btn vr-dock-btn-cta" data-section="reservation" data-priority="0">
+            <span class="vr-dock-btn-label">R&eacute;server</span>
         </a>
-        <button class="nav-dock-menu-btn" id="nav-dock-menu-btn" aria-label="<?php esc_attr_e( 'Menu', 'virealys' ); ?>" aria-expanded="false">
-            <span class="dock-menu-icon">
-                <span></span><span></span>
-            </span>
+        <button class="vr-dock-btn vr-dock-btn-menu" id="nav-dock-menu-btn" aria-label="<?php esc_attr_e( 'Menu', 'virealys' ); ?>" aria-expanded="false">
+            <span class="dock-menu-icon"><span></span><span></span></span>
         </button>
     </div>
+    <div class="vr-dock-progress" id="vr-dock-progress"></div>
 </nav>
+
+<!-- Panel Navigation Dots (front page) -->
+<?php if ( is_front_page() ) : ?>
+<div class="vr-panel-nav" id="vr-panel-nav" aria-label="Sections"></div>
+<!-- Edge Navigation Indicators -->
+<div class="vr-edge vr-edge-top" id="vr-edge-top"></div>
+<div class="vr-edge vr-edge-bottom" id="vr-edge-bottom"></div>
+<?php endif; ?>
 
 <!-- Full Screen Menu Overlay -->
 <div class="menu-overlay" id="menu-overlay" aria-hidden="true">
@@ -94,9 +100,9 @@
             <div class="overlay-social">
                 <?php
                 $socials = array(
-                    'instagram' => '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>',
-                    'facebook'  => '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>',
-                    'tiktok'    => '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>',
+                    'instagram' => '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>',
+                    'facebook'  => '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>',
+                    'tiktok'    => '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>',
                 );
                 foreach ( $socials as $network => $icon ) :
                     $url = get_theme_mod( $network . '_url', '' );

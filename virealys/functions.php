@@ -221,14 +221,14 @@ function virealys_customize_register( $wp_customize ) {
     ) );
 
     $images = array(
-        'img_menus'       => 'Image Menus holographiques',
-        'img_tracabilite' => 'Image Traçabilité (plat + hologramme)',
-        'img_ambiances'   => 'Image 4 Ambiances',
-        'img_logo'        => 'Logo Virealys',
-        'img_ambiance_japon'   => 'Ambiance Japon',
-        'img_ambiance_paris'   => 'Ambiance Paris',
-        'img_ambiance_italie'  => 'Ambiance Italie',
-        'img_ambiance_cosmos'  => 'Ambiance Cosmos / Spatial',
+        'img_menus'            => 'Image Menus holographiques',
+        'img_tracabilite'      => 'Image Traçabilité (plat + hologramme)',
+        'img_ambiances'        => 'Image 4 Ambiances',
+        'img_logo'             => 'Logo Virealys',
+        'img_ambiance_japon'   => 'Aperçu Ambiance Japon (accueil)',
+        'img_ambiance_paris'   => 'Aperçu Ambiance Paris (accueil)',
+        'img_ambiance_italie'  => 'Aperçu Ambiance Italie (accueil)',
+        'img_ambiance_cosmos'  => 'Aperçu Ambiance Cosmos (accueil)',
     );
 
     foreach ( $images as $key => $label ) {
