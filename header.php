@@ -58,9 +58,11 @@
 <!-- Panel Navigation Dots (front page) -->
 <?php if ( is_front_page() ) : ?>
 <div class="vr-panel-nav" id="vr-panel-nav" aria-label="Sections"></div>
-<!-- Edge Navigation Indicators -->
+<!-- Edge Navigation Indicators (all 4 directions) -->
 <div class="vr-edge vr-edge-top" id="vr-edge-top"></div>
 <div class="vr-edge vr-edge-bottom" id="vr-edge-bottom"></div>
+<div class="vr-edge vr-edge-left" id="vr-edge-left"></div>
+<div class="vr-edge vr-edge-right" id="vr-edge-right"></div>
 <?php endif; ?>
 
 <!-- Full Screen Menu Overlay -->

@@ -2195,8 +2195,8 @@ h1, h2, h3, h4, h5, h6 {
 .error-content p { color: var(--color-text-muted); margin-bottom: 1.5rem; }
 
 /* ==========================================
-   SPATIAL PANEL NAVIGATION SYSTEM
-   Full-viewport panels, no traditional scroll
+   CONSTELLATION NAVIGATION SYSTEM v5.0
+   2D spatial panels — arrive from ANY direction
    ========================================== */
 
 /* Lock body scroll when spatial is active */
@@ -2225,9 +2225,10 @@ body.vr-spatial-active {
     opacity: 0;
     visibility: hidden;
     z-index: 1;
-    transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out), visibility 0.6s;
+    transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out), visibility 0.7s;
     overflow: hidden;
     background: var(--color-bg);
+    will-change: transform, opacity;
 }
 
 /* Active panel */
@@ -2235,35 +2236,41 @@ body.vr-spatial-active {
     opacity: 1;
     visibility: visible;
     z-index: 5;
-    transform: translateY(0) scale(1);
+    transform: translate(0, 0) scale(1);
 }
 
-/* Panel exit animations */
-.vr-panel-exit-up {
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-30vh) scale(0.95);
-    z-index: 2;
-}
+/* --- EXIT animations (panel leaves in opposite direction) --- */
+.vr-panel-exit-up    { opacity: 0; visibility: hidden; transform: translateY(-35vh) scale(0.92); z-index: 2; }
+.vr-panel-exit-down  { opacity: 0; visibility: hidden; transform: translateY(35vh) scale(0.92); z-index: 2; }
+.vr-panel-exit-left  { opacity: 0; visibility: hidden; transform: translateX(-35vw) scale(0.92); z-index: 2; }
+.vr-panel-exit-right { opacity: 0; visibility: hidden; transform: translateX(35vw) scale(0.92); z-index: 2; }
+/* Diagonal exits */
+.vr-panel-exit-topleft     { opacity: 0; visibility: hidden; transform: translate(-25vw, -25vh) scale(0.88); z-index: 2; }
+.vr-panel-exit-topright    { opacity: 0; visibility: hidden; transform: translate(25vw, -25vh) scale(0.88); z-index: 2; }
+.vr-panel-exit-bottomleft  { opacity: 0; visibility: hidden; transform: translate(-25vw, 25vh) scale(0.88); z-index: 2; }
+.vr-panel-exit-bottomright { opacity: 0; visibility: hidden; transform: translate(25vw, 25vh) scale(0.88); z-index: 2; }
 
-.vr-panel-exit-down {
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(30vh) scale(0.95);
-    z-index: 2;
-}
+/* --- ENTER animations (panel arrives from navigation direction) --- */
+.vr-panel-enter-top    { transform: translateY(-20vh) scale(0.96); opacity: 0; visibility: hidden; }
+.vr-panel-enter-bottom { transform: translateY(20vh) scale(0.96); opacity: 0; visibility: hidden; }
+.vr-panel-enter-left   { transform: translateX(-20vw) scale(0.96); opacity: 0; visibility: hidden; }
+.vr-panel-enter-right  { transform: translateX(20vw) scale(0.96); opacity: 0; visibility: hidden; }
+/* Diagonal enters */
+.vr-panel-enter-topleft     { transform: translate(-15vw, -15vh) scale(0.92); opacity: 0; visibility: hidden; }
+.vr-panel-enter-topright    { transform: translate(15vw, -15vh) scale(0.92); opacity: 0; visibility: hidden; }
+.vr-panel-enter-bottomleft  { transform: translate(-15vw, 15vh) scale(0.92); opacity: 0; visibility: hidden; }
+.vr-panel-enter-bottomright { transform: translate(15vw, 15vh) scale(0.92); opacity: 0; visibility: hidden; }
 
-/* Panel enter animations */
-.vr-panel-enter-below {
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(15vh) scale(0.98);
-}
-
-.vr-panel-enter-above {
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-15vh) scale(0.98);
+/* --- PEEK animation (mouse near edge previews neighbor) --- */
+.vr-panel-peeking {
+    opacity: 0.15;
+    visibility: visible;
+    z-index: 3;
+    transform: translate(
+        calc(var(--peek-x, 0%) + var(--peek-offset, 0%)),
+        calc(var(--peek-y, 0%) + var(--peek-offset, 0%))
+    ) scale(0.85);
+    transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
 /* Internal scroll container within panels */
@@ -2277,82 +2284,81 @@ body.vr-spatial-active {
     scrollbar-color: rgba(var(--neon-cyan-rgb), 0.15) transparent;
 }
 
-.vr-panel-scroll::-webkit-scrollbar {
-    width: 4px;
-}
-
-.vr-panel-scroll::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.vr-panel-scroll::-webkit-scrollbar-thumb {
-    background: rgba(var(--neon-cyan-rgb), 0.15);
-    border-radius: 4px;
-}
+.vr-panel-scroll::-webkit-scrollbar { width: 4px; }
+.vr-panel-scroll::-webkit-scrollbar-track { background: transparent; }
+.vr-panel-scroll::-webkit-scrollbar-thumb { background: rgba(var(--neon-cyan-rgb), 0.15); border-radius: 4px; }
 
 /* Hero panel — special fullscreen treatment */
-.vr-panel[data-panel="hero"] {
-    background: var(--color-bg);
-}
+.vr-panel[data-panel="hero"] { background: var(--color-bg); }
 
-/* --- Panel Navigation Dots (right side) --- */
-.vr-panel-nav {
+/* --- Constellation Mini-Map (replaces linear dots) --- */
+.vr-constellation-map {
     position: fixed;
-    right: 1rem;
+    right: 1.25rem;
     top: 50%;
     transform: translateY(-50%);
     z-index: 1001;
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-    padding: 0.5rem;
+    display: grid;
+    grid-template-columns: repeat(var(--map-cols, 3), 16px);
+    grid-template-rows: repeat(var(--map-rows, 3), 16px);
+    gap: 6px;
+    padding: 0.6rem;
+    background: rgba(6, 6, 15, 0.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(var(--neon-cyan-rgb), 0.08);
+    border-radius: var(--radius-md);
 }
 
-.vr-panel-dot {
-    width: 8px;
-    height: 8px;
+.vr-constellation-dot {
+    grid-column: calc(var(--dot-col) + 1);
+    grid-row: calc(var(--dot-row) + 1);
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
-    background: rgba(var(--neon-cyan-rgb), 0.15);
-    border: 1px solid rgba(var(--neon-cyan-rgb), 0.1);
+    background: rgba(var(--neon-cyan-rgb), 0.12);
+    border: 1px solid rgba(var(--neon-cyan-rgb), 0.08);
     cursor: pointer;
     transition: all 0.35s var(--ease-out);
     position: relative;
+    padding: 0;
+    justify-self: center;
+    align-self: center;
 }
 
-.vr-panel-dot:hover {
-    background: rgba(var(--neon-cyan-rgb), 0.3);
+.vr-constellation-dot:hover {
+    background: rgba(var(--neon-cyan-rgb), 0.35);
+    transform: scale(1.4);
+}
+
+.vr-constellation-dot.active {
+    background: var(--neon-cyan);
+    box-shadow: 0 0 12px rgba(var(--neon-cyan-rgb), 0.6);
     transform: scale(1.3);
 }
 
-.vr-panel-dot.active {
-    background: var(--neon-cyan);
-    box-shadow: 0 0 10px rgba(var(--neon-cyan-rgb), 0.5);
-    transform: scale(1.2);
-}
-
-.vr-panel-dot.active::after {
+.vr-constellation-dot.active::after {
     content: '';
     position: absolute;
-    inset: -4px;
+    inset: -5px;
     border-radius: 50%;
-    border: 1px solid rgba(var(--neon-cyan-rgb), 0.3);
+    border: 1px solid rgba(var(--neon-cyan-rgb), 0.25);
     animation: vr-dot-pulse 2s ease-in-out infinite;
 }
 
 @keyframes vr-dot-pulse {
     0%, 100% { transform: scale(1); opacity: 0.5; }
-    50% { transform: scale(1.4); opacity: 0; }
+    50% { transform: scale(1.5); opacity: 0; }
 }
 
-/* Dot tooltip on hover */
-.vr-panel-dot[data-label]::before {
-    content: attr(data-label);
+/* Constellation label tooltip */
+.vr-constellation-label {
     position: absolute;
     right: calc(100% + 0.75rem);
     top: 50%;
     transform: translateY(-50%);
     font-family: var(--font-heading);
-    font-size: 0.625rem;
+    font-size: 0.5625rem;
     font-weight: 500;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -2363,16 +2369,26 @@ body.vr-spatial-active {
     transition: opacity 0.2s ease;
 }
 
-.vr-panel-dot:hover[data-label]::before {
+.vr-constellation-dot:hover .vr-constellation-label {
     opacity: 1;
 }
 
-/* --- Edge Navigation Indicators --- */
+/* Connection lines between dots */
+.vr-constellation-line {
+    position: absolute;
+    height: 1px;
+    background: rgba(var(--neon-cyan-rgb), 0.08);
+    transform-origin: center;
+    width: calc(var(--line-len, 1) * 22px);
+    left: calc(var(--line-x, 0) * 22px + 11px);
+    top: calc(var(--line-y, 0) * 22px + 11px);
+    transform: translate(-50%, -50%) rotate(var(--line-angle, 0deg));
+    pointer-events: none;
+}
+
+/* --- Edge Navigation Indicators (all 4 sides) --- */
 .vr-edge {
     position: fixed;
-    left: 0;
-    right: 0;
-    height: 60px;
     z-index: 1000;
     pointer-events: none;
     opacity: 0;
@@ -2380,24 +2396,35 @@ body.vr-spatial-active {
 }
 
 .vr-edge-top {
-    top: 0;
-    background: linear-gradient(to bottom,
-        rgba(var(--neon-cyan-rgb), 0.06) 0%,
-        transparent 100%
-    );
+    top: 0; left: 0; right: 0; height: 50px;
+    background: linear-gradient(to bottom, rgba(var(--neon-cyan-rgb), 0.05) 0%, transparent 100%);
 }
 
 .vr-edge-bottom {
-    bottom: 0;
-    background: linear-gradient(to top,
-        rgba(var(--neon-cyan-rgb), 0.06) 0%,
-        transparent 100%
-    );
+    bottom: 0; left: 0; right: 0; height: 50px;
+    background: linear-gradient(to top, rgba(var(--neon-cyan-rgb), 0.05) 0%, transparent 100%);
 }
 
-.vr-edge.visible {
+.vr-edge-left {
+    top: 0; bottom: 0; left: 0; width: 50px;
+    background: linear-gradient(to right, rgba(var(--neon-cyan-rgb), 0.05) 0%, transparent 100%);
+}
+
+.vr-edge-right {
+    top: 0; bottom: 0; right: 0; width: 50px;
+    background: linear-gradient(to left, rgba(var(--neon-cyan-rgb), 0.05) 0%, transparent 100%);
+}
+
+.vr-edge.visible { opacity: 1; }
+
+/* Predicted edge glows brighter */
+.vr-edge.vr-edge-predicted {
     opacity: 1;
 }
+.vr-edge-top.vr-edge-predicted { background: linear-gradient(to bottom, rgba(var(--neon-cyan-rgb), 0.12) 0%, transparent 100%); }
+.vr-edge-bottom.vr-edge-predicted { background: linear-gradient(to top, rgba(var(--neon-cyan-rgb), 0.12) 0%, transparent 100%); }
+.vr-edge-left.vr-edge-predicted { background: linear-gradient(to right, rgba(var(--neon-cyan-rgb), 0.12) 0%, transparent 100%); }
+.vr-edge-right.vr-edge-predicted { background: linear-gradient(to left, rgba(var(--neon-cyan-rgb), 0.12) 0%, transparent 100%); }
 
 /* ==========================================
    REVEAL ANIMATIONS
@@ -2525,10 +2552,14 @@ body.vr-spatial-active {
         height: 40px;
     }
 
-    /* Panel nav dots move closer on mobile */
-    .vr-panel-nav {
+    /* Constellation map compact on mobile */
+    .vr-constellation-map {
         right: 0.5rem;
+        gap: 4px;
+        padding: 0.4rem;
     }
+    .vr-constellation-dot { width: 8px; height: 8px; }
+    .vr-constellation-label { display: none; }
 
     .floating-logo {
         top: 0.75rem;

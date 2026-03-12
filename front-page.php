@@ -22,8 +22,8 @@ $img_amb_cosmos = virealys_get_image( 'img_ambiance_cosmos' );
 <!-- SPATIAL CANVAS -->
 <div class="vr-spatial" id="vr-spatial">
 
-<!-- ===== PANEL 0: HERO ===== -->
-<section class="vr-panel vr-panel-active" data-panel="hero" id="hero">
+<!-- ===== PANEL: HERO (center) ===== -->
+<section class="vr-panel vr-panel-active" data-panel="hero" data-grid-col="1" data-grid-row="1" id="hero">
     <?php if ( $hero_bg ) : ?>
         <div class="hero-bg-image" style="background-image: url(<?php echo esc_url( $hero_bg ); ?>)"></div>
     <?php endif; ?>
@@ -45,9 +45,9 @@ $img_amb_cosmos = virealys_get_image( 'img_ambiance_cosmos' );
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 Vivre l'exp&eacute;rience
             </a>
-            <button class="btn btn-ghost btn-lg vr-panel-goto" data-goto="1">
+            <button class="btn btn-ghost btn-lg vr-panel-goto" data-goto-panel="concept">
                 D&eacute;couvrir
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </button>
         </div>
     </div>
@@ -56,8 +56,8 @@ $img_amb_cosmos = virealys_get_image( 'img_ambiance_cosmos' );
     </div>
 </section>
 
-<!-- ===== PANEL 1: CONCEPT ===== -->
-<section class="vr-panel" data-panel="concept" data-section-color="#00e5ff" id="concept">
+<!-- ===== PANEL: CONCEPT (right of hero) ===== -->
+<section class="vr-panel" data-panel="concept" data-section-color="#00e5ff" data-grid-col="2" data-grid-row="1" id="concept">
     <div class="vr-panel-scroll">
     <div class="container">
         <div class="section-header" data-reveal>
@@ -107,8 +107,8 @@ $img_amb_cosmos = virealys_get_image( 'img_ambiance_cosmos' );
     </div>
 </section>
 
-<!-- ===== PANEL 2: AMBIANCES ===== -->
-<section class="vr-panel" data-panel="ambiances" data-section-color="#a855f7" id="ambiances">
+<!-- ===== PANEL: AMBIANCES (below hero) ===== -->
+<section class="vr-panel" data-panel="ambiances" data-section-color="#a855f7" data-grid-col="1" data-grid-row="2" id="ambiances">
     <div class="vr-panel-scroll">
     <div class="container">
         <div class="section-header" data-reveal>
@@ -178,8 +178,8 @@ $img_amb_cosmos = virealys_get_image( 'img_ambiance_cosmos' );
     </div>
 </section>
 
-<!-- ===== PANEL 3: MENUS ===== -->
-<section class="vr-panel" data-panel="menus" data-section-color="#4d7cff" id="menus">
+<!-- ===== PANEL: MENUS (left of hero) ===== -->
+<section class="vr-panel" data-panel="menus" data-section-color="#4d7cff" data-grid-col="0" data-grid-row="1" id="menus">
     <div class="vr-panel-scroll">
     <div class="container">
         <div class="section-header" data-reveal>
@@ -253,8 +253,8 @@ $img_amb_cosmos = virealys_get_image( 'img_ambiance_cosmos' );
     </div>
 </section>
 
-<!-- ===== PANEL 4: ZONES ===== -->
-<section class="vr-panel" data-panel="zones" data-section-color="#e040fb" id="zones">
+<!-- ===== PANEL: ZONES (above hero) ===== -->
+<section class="vr-panel" data-panel="zones" data-section-color="#e040fb" data-grid-col="1" data-grid-row="0" id="zones">
     <div class="vr-panel-scroll">
     <div class="container">
         <div class="section-header" data-reveal>
@@ -296,8 +296,8 @@ $img_amb_cosmos = virealys_get_image( 'img_ambiance_cosmos' );
     </div>
 </section>
 
-<!-- ===== PANEL 5: PASSEPORT ===== -->
-<section class="vr-panel" data-panel="passeport" data-section-color="#a855f7" id="passeport">
+<!-- ===== PANEL: PASSEPORT (bottom-left diagonal) ===== -->
+<section class="vr-panel" data-panel="passeport" data-section-color="#a855f7" data-grid-col="0" data-grid-row="2" id="passeport">
     <div class="vr-panel-scroll">
     <div class="container">
         <div class="passport-layout">
@@ -334,8 +334,8 @@ $img_amb_cosmos = virealys_get_image( 'img_ambiance_cosmos' );
     </div>
 </section>
 
-<!-- ===== PANEL 6: CTA / RESERVATION ===== -->
-<section class="vr-panel" data-panel="reservation" data-section-color="#00e5ff" id="reservation">
+<!-- ===== PANEL: RESERVATION (bottom-right diagonal) ===== -->
+<section class="vr-panel" data-panel="reservation" data-section-color="#00e5ff" data-grid-col="2" data-grid-row="2" id="reservation">
     <div class="cta-bg"></div>
     <div class="container" style="position: relative; z-index: 1;">
         <div class="cta-content" data-reveal>

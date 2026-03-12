@@ -1,7 +1,8 @@
 /**
- * Virealys - Revolutionary Adaptive Engine v4.0
- * A site that adapts to the user. Spatial navigation, predictive dock,
- * cursor light, magnetic UI, 3D tilt, click ripples, idle breathing.
+ * Virealys - Constellation Adaptive Engine v5.0
+ * 2D spatial navigation — panels arrive from any direction.
+ * Gravitational prediction — the site anticipates where you want to go.
+ * Every interaction reshapes the experience.
  */
 (function () {
     'use strict';
@@ -13,30 +14,36 @@
         TILT_MAX: 6,
         IDLE_TIMEOUT: 4000,
         LERP: 0.12,
-        PANEL_TRANSITION: 800,
+        PANEL_TRANSITION: 700,
         DOCK_REORDER_INTERVAL: 5000,
+        EDGE_PEEK_ZONE: 80,        // px from edge to trigger peek
+        EDGE_PEEK_STRENGTH: 0.08,  // how much the next panel peeks in
     };
 
     var S = {
         mx: window.innerWidth / 2, my: window.innerHeight / 2,
         tx: window.innerWidth / 2, ty: window.innerHeight / 2,
-        scrollVelocity: 0,
         idle: false, idleTimer: null,
         mobile: window.matchMedia('(max-width: 768px)').matches,
         reduced: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-        // Spatial
-        currentPanel: 0, panels: [], transitioning: false, spatialActive: false,
+        // Constellation
+        currentPanel: null, panels: [], panelMap: {}, transitioning: false, spatialActive: false,
         // Dock
         dockHidden: false, lastScrollY: window.scrollY, scrollDelta: 0,
+        // Edge peek
+        peekDirection: null, peekTarget: null,
+        // Mouse direction tracking for prediction
+        mouseHistory: [], mouseDir: { x: 0, y: 0 },
     };
 
     // ========== USER PROFILE (localStorage) ==========
     var PROFILE_KEY = 'vr_user_profile';
     var profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || 'null') || {
-        visits: 0, sections: {}, lastSections: [], lastVisitTime: 0,
+        visits: 0, sections: {}, lastSections: [], transitions: {}, lastVisitTime: 0,
     };
     profile.visits++;
     profile.lastVisitTime = Date.now();
+    if (!profile.transitions) profile.transitions = {};
 
     function saveProfile() {
         localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
@@ -45,14 +52,20 @@
     function trackSection(id) {
         profile.sections[id] = (profile.sections[id] || 0) + 1;
         profile.lastSections.unshift(id);
-        if (profile.lastSections.length > 20) profile.lastSections.length = 20;
+        if (profile.lastSections.length > 30) profile.lastSections.length = 30;
+        saveProfile();
+    }
+
+    function trackTransition(fromId, toId) {
+        var key = fromId + '>' + toId;
+        profile.transitions[key] = (profile.transitions[key] || 0) + 1;
         saveProfile();
     }
 
     function getSectionPriority(id) {
         var freq = profile.sections[id] || 0;
         var recIdx = profile.lastSections.indexOf(id);
-        var recency = recIdx >= 0 ? (15 - recIdx) : 0;
+        var recency = recIdx >= 0 ? (20 - recIdx) : 0;
         var hour = new Date().getHours();
         var timeBonus = 0;
         if ((hour >= 11 && hour <= 14) || (hour >= 18 && hour <= 22)) {
@@ -63,12 +76,50 @@
         return freq * 2 + recency + timeBonus;
     }
 
+    // Predict most likely next panel from current panel
+    function predictNextPanel(currentId) {
+        var best = null, bestScore = -1;
+        var neighbors = getNeighbors(currentId);
+        for (var i = 0; i < neighbors.length; i++) {
+            var n = neighbors[i];
+            var key = currentId + '>' + n.id;
+            var transFreq = profile.transitions[key] || 0;
+            var sectionPri = getSectionPriority(n.id);
+            // Factor in mouse direction
+            var dirScore = 0;
+            if (S.mouseDir.x !== 0 || S.mouseDir.y !== 0) {
+                var dx = n.col - S.panelMap[currentId].col;
+                var dy = n.row - S.panelMap[currentId].row;
+                dirScore = (dx * S.mouseDir.x + dy * S.mouseDir.y) * 10;
+            }
+            var score = transFreq * 3 + sectionPri + dirScore;
+            if (score > bestScore) { bestScore = score; best = n; }
+        }
+        return best;
+    }
+
+    function getNeighbors(panelId) {
+        var p = S.panelMap[panelId];
+        if (!p) return [];
+        var result = [];
+        for (var id in S.panelMap) {
+            if (id === panelId) continue;
+            var o = S.panelMap[id];
+            var dc = Math.abs(o.col - p.col);
+            var dr = Math.abs(o.row - p.row);
+            if (dc <= 1 && dr <= 1 && (dc + dr > 0)) {
+                result.push(o);
+            }
+        }
+        return result;
+    }
+
     saveProfile();
 
     // Early bailout for reduced motion
     if (S.reduced) {
         initReveals(); initNavDock(); initMenuOverlay(); initSmoothScroll();
-        initSpatialCanvas(); return;
+        initConstellationCanvas(); return;
     }
 
     // ========== 1. CURSOR LIGHT ==========
@@ -136,131 +187,410 @@
         setTimeout(function () { if (r.parentNode) r.remove(); }, 800);
     });
 
-    // ========== 5. SPATIAL CANVAS (Front Page) ==========
-    function initSpatialCanvas() {
+    // ========== 5. CONSTELLATION CANVAS (Front Page) ==========
+    function initConstellationCanvas() {
         var spatial = document.getElementById('vr-spatial');
         if (!spatial) return;
 
         S.spatialActive = true;
-        S.panels = Array.from(spatial.querySelectorAll('.vr-panel'));
-        if (S.panels.length === 0) return;
+        var panelEls = Array.from(spatial.querySelectorAll('.vr-panel'));
+        if (panelEls.length === 0) return;
 
-        // Lock body scroll on front page
+        // Build panel map with 2D coordinates
+        panelEls.forEach(function (el) {
+            var id = el.getAttribute('data-panel');
+            var col = parseInt(el.getAttribute('data-grid-col')) || 0;
+            var row = parseInt(el.getAttribute('data-grid-row')) || 0;
+            var entry = { el: el, id: id, col: col, row: row };
+            S.panels.push(entry);
+            S.panelMap[id] = entry;
+        });
+
+        S.currentPanel = S.panels[0];
         document.body.classList.add('vr-spatial-active');
 
-        // Build panel nav dots
-        var panelNav = document.getElementById('vr-panel-nav');
-        if (panelNav) {
-            S.panels.forEach(function (p, i) {
-                var dot = document.createElement('button');
-                dot.className = 'vr-panel-dot' + (i === 0 ? ' active' : '');
-                dot.setAttribute('data-panel-idx', i);
-                dot.setAttribute('aria-label', p.getAttribute('data-panel') || ('Section ' + (i + 1)));
-                dot.addEventListener('click', function () { goToPanel(i); });
-                panelNav.appendChild(dot);
-            });
-        }
+        // Build constellation mini-map
+        buildConstellationNav();
 
-        // Panel goto buttons
+        // Panel goto buttons (by panel name)
         document.querySelectorAll('.vr-panel-goto').forEach(function (btn) {
             btn.addEventListener('click', function (e) {
                 e.preventDefault();
-                var idx = parseInt(this.getAttribute('data-goto'));
-                if (!isNaN(idx)) goToPanel(idx);
+                var target = this.getAttribute('data-goto-panel');
+                if (target && S.panelMap[target]) navigateTo(target);
             });
         });
 
-        // Wheel navigation (within panel scroll or between panels)
+        // Wheel navigation: determine direction from scroll
         spatial.addEventListener('wheel', function (e) {
-            var panel = S.panels[S.currentPanel];
+            if (S.transitioning) return;
+            var panel = S.currentPanel.el;
             var scroller = panel.querySelector('.vr-panel-scroll');
 
+            // Check if internal scroll should handle this
             if (scroller) {
                 var atBottom = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 5;
                 var atTop = scroller.scrollTop <= 5;
-
-                if (e.deltaY > 0 && atBottom) { e.preventDefault(); goToPanel(S.currentPanel + 1); }
-                else if (e.deltaY < 0 && atTop) { e.preventDefault(); goToPanel(S.currentPanel - 1); }
-                // Otherwise let normal scroll happen inside panel
-            } else {
-                e.preventDefault();
-                if (e.deltaY > 0) goToPanel(S.currentPanel + 1);
-                else goToPanel(S.currentPanel - 1);
+                if (e.deltaY > 0 && !atBottom) return;
+                if (e.deltaY < 0 && !atTop) return;
             }
+
+            e.preventDefault();
+
+            // Determine navigation direction from wheel
+            var absDX = Math.abs(e.deltaX);
+            var absDY = Math.abs(e.deltaY);
+
+            var dirCol = 0, dirRow = 0;
+            if (absDX > absDY) {
+                dirCol = e.deltaX > 0 ? 1 : -1;
+            } else {
+                dirRow = e.deltaY > 0 ? 1 : -1;
+            }
+
+            // Find panel in that direction
+            var target = findPanelInDirection(dirCol, dirRow);
+            if (target) navigateTo(target.id);
         }, { passive: false });
 
-        // Touch support
-        var touchY = 0;
-        spatial.addEventListener('touchstart', function (e) { touchY = e.touches[0].clientY; }, { passive: true });
+        // Touch support — swipe in any direction
+        var touchStart = { x: 0, y: 0 };
+        spatial.addEventListener('touchstart', function (e) {
+            touchStart.x = e.touches[0].clientX;
+            touchStart.y = e.touches[0].clientY;
+        }, { passive: true });
+
         spatial.addEventListener('touchend', function (e) {
-            var dy = touchY - e.changedTouches[0].clientY;
-            if (Math.abs(dy) > 60) goToPanel(S.currentPanel + (dy > 0 ? 1 : -1));
+            var dx = touchStart.x - e.changedTouches[0].clientX;
+            var dy = touchStart.y - e.changedTouches[0].clientY;
+            var absDX = Math.abs(dx), absDY = Math.abs(dy);
+            if (absDX < 40 && absDY < 40) return; // too small
+
+            var dirCol = 0, dirRow = 0;
+            // Allow diagonal swipes
+            if (absDX > 30) dirCol = dx > 0 ? 1 : -1;
+            if (absDY > 30) dirRow = dy > 0 ? 1 : -1;
+
+            var target = findPanelInDirection(dirCol, dirRow);
+            if (target) navigateTo(target.id);
         });
 
-        // Keyboard
+        // Keyboard — all 4 arrows
         document.addEventListener('keydown', function (e) {
-            if (!S.spatialActive) return;
-            if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); goToPanel(S.currentPanel + 1); }
-            if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { e.preventDefault(); goToPanel(S.currentPanel - 1); }
+            if (!S.spatialActive || S.transitioning) return;
+            var dirCol = 0, dirRow = 0;
+            if (e.key === 'ArrowRight') dirCol = 1;
+            else if (e.key === 'ArrowLeft') dirCol = -1;
+            else if (e.key === 'ArrowDown') dirRow = 1;
+            else if (e.key === 'ArrowUp') dirRow = -1;
+            else return;
+
+            e.preventDefault();
+            var target = findPanelInDirection(dirCol, dirRow);
+            if (target) navigateTo(target.id);
         });
 
-        // Edge indicators
-        updateEdges();
+        // Edge peek on mouse near viewport edges
+        if (!S.mobile) {
+            document.addEventListener('mousemove', updateEdgePeek);
+        }
+
+        // Update edge indicators
+        updateEdgeIndicators();
+
+        // Reveal first panel
+        S.currentPanel.el.querySelectorAll('[data-reveal]').forEach(function (el) {
+            el.classList.add('revealed');
+        });
     }
 
-    function goToPanel(idx) {
-        if (idx < 0 || idx >= S.panels.length || idx === S.currentPanel || S.transitioning) return;
+    function findPanelInDirection(dirCol, dirRow) {
+        if (!S.currentPanel) return null;
+        var cc = S.currentPanel.col, cr = S.currentPanel.row;
+        var targetCol = cc + dirCol, targetRow = cr + dirRow;
+
+        // Exact match first
+        for (var i = 0; i < S.panels.length; i++) {
+            if (S.panels[i].col === targetCol && S.panels[i].row === targetRow) {
+                return S.panels[i];
+            }
+        }
+
+        // If diagonal didn't match, try nearest in that general direction
+        var best = null, bestDist = Infinity;
+        for (var j = 0; j < S.panels.length; j++) {
+            var p = S.panels[j];
+            if (p.id === S.currentPanel.id) continue;
+            var dc = p.col - cc, dr = p.row - cr;
+            // Must be in the right general direction
+            if (dirCol !== 0 && Math.sign(dc) !== Math.sign(dirCol)) continue;
+            if (dirRow !== 0 && Math.sign(dr) !== Math.sign(dirRow)) continue;
+            if (dirCol === 0 && dc !== 0) continue;
+            if (dirRow === 0 && dr !== 0) continue;
+            var dist = Math.abs(dc) + Math.abs(dr);
+            if (dist < bestDist) { bestDist = dist; best = p; }
+        }
+        return best;
+    }
+
+    // ========== NAVIGATE TO PANEL ==========
+    function navigateTo(targetId) {
+        if (!S.panelMap[targetId] || S.transitioning) return;
+        var target = S.panelMap[targetId];
+        if (target === S.currentPanel) return;
         S.transitioning = true;
 
-        var dir = idx > S.currentPanel ? 1 : -1;
-        var current = S.panels[S.currentPanel];
-        var next = S.panels[idx];
+        var fromId = S.currentPanel.id;
+        var current = S.currentPanel;
 
-        // Exit current
-        current.classList.remove('vr-panel-active');
-        current.classList.add(dir > 0 ? 'vr-panel-exit-up' : 'vr-panel-exit-down');
+        // Calculate direction vector
+        var dc = target.col - current.col;
+        var dr = target.row - current.row;
 
-        // Enter next
-        next.classList.add(dir > 0 ? 'vr-panel-enter-below' : 'vr-panel-enter-above');
-        // Force reflow
-        void next.offsetHeight;
-        next.classList.add('vr-panel-active');
-        next.classList.remove('vr-panel-enter-below', 'vr-panel-enter-above');
+        // Determine transition class based on direction
+        var exitClass = getExitClass(dc, dr);
+        var enterClass = getEnterClass(dc, dr);
 
-        // Track section
-        var sectionId = next.getAttribute('data-panel');
-        if (sectionId) trackSection(sectionId);
+        // Clear any peek
+        clearPeek();
 
-        // Trigger reveals in new panel
-        next.querySelectorAll('[data-reveal]:not(.revealed)').forEach(function (el) {
+        // Exit current panel
+        current.el.classList.remove('vr-panel-active');
+        current.el.classList.add(exitClass);
+
+        // Enter new panel
+        target.el.classList.add(enterClass);
+        void target.el.offsetHeight; // force reflow
+        target.el.classList.add('vr-panel-active');
+        target.el.classList.remove(enterClass);
+
+        // Track
+        trackSection(targetId);
+        trackTransition(fromId, targetId);
+
+        // Trigger reveals
+        target.el.querySelectorAll('[data-reveal]:not(.revealed)').forEach(function (el) {
             el.classList.add('revealed');
         });
 
         // Section color morph
-        var color = next.getAttribute('data-section-color');
+        var color = target.el.getAttribute('data-section-color');
         if (color) document.documentElement.style.setProperty('--section-accent', color);
 
         setTimeout(function () {
-            current.classList.remove('vr-panel-exit-up', 'vr-panel-exit-down');
-            S.currentPanel = idx;
+            current.el.classList.remove(exitClass);
+            S.currentPanel = target;
             S.transitioning = false;
-            updatePanelDots();
-            updateEdges();
+            updateConstellationNav();
+            updateEdgeIndicators();
             updateDockFromPanel();
+            updatePredictiveGlow();
         }, CFG.PANEL_TRANSITION);
     }
 
-    function updatePanelDots() {
-        document.querySelectorAll('.vr-panel-dot').forEach(function (dot, i) {
-            dot.classList.toggle('active', i === S.currentPanel);
+    function getExitClass(dc, dr) {
+        // Panel exits in the OPPOSITE direction of navigation
+        if (dc > 0 && dr === 0) return 'vr-panel-exit-left';
+        if (dc < 0 && dr === 0) return 'vr-panel-exit-right';
+        if (dr > 0 && dc === 0) return 'vr-panel-exit-up';
+        if (dr < 0 && dc === 0) return 'vr-panel-exit-down';
+        // Diagonals
+        if (dc > 0 && dr > 0) return 'vr-panel-exit-topleft';
+        if (dc < 0 && dr > 0) return 'vr-panel-exit-topright';
+        if (dc > 0 && dr < 0) return 'vr-panel-exit-bottomleft';
+        if (dc < 0 && dr < 0) return 'vr-panel-exit-bottomright';
+        return 'vr-panel-exit-up';
+    }
+
+    function getEnterClass(dc, dr) {
+        // Panel enters FROM the direction of navigation
+        if (dc > 0 && dr === 0) return 'vr-panel-enter-right';
+        if (dc < 0 && dr === 0) return 'vr-panel-enter-left';
+        if (dr > 0 && dc === 0) return 'vr-panel-enter-bottom';
+        if (dr < 0 && dc === 0) return 'vr-panel-enter-top';
+        // Diagonals
+        if (dc > 0 && dr > 0) return 'vr-panel-enter-bottomright';
+        if (dc < 0 && dr > 0) return 'vr-panel-enter-bottomleft';
+        if (dc > 0 && dr < 0) return 'vr-panel-enter-topright';
+        if (dc < 0 && dr < 0) return 'vr-panel-enter-topleft';
+        return 'vr-panel-enter-bottom';
+    }
+
+    // ========== CONSTELLATION MINI-MAP ==========
+    function buildConstellationNav() {
+        var nav = document.getElementById('vr-panel-nav');
+        if (!nav) return;
+        nav.innerHTML = '';
+        nav.classList.add('vr-constellation-map');
+
+        // Find grid bounds
+        var minC = Infinity, maxC = -Infinity, minR = Infinity, maxR = -Infinity;
+        S.panels.forEach(function (p) {
+            if (p.col < minC) minC = p.col;
+            if (p.col > maxC) maxC = p.col;
+            if (p.row < minR) minR = p.row;
+            if (p.row > maxR) maxR = p.row;
+        });
+
+        var cols = maxC - minC + 1;
+        var rows = maxR - minR + 1;
+        nav.style.setProperty('--map-cols', cols);
+        nav.style.setProperty('--map-rows', rows);
+
+        S.panels.forEach(function (p) {
+            var dot = document.createElement('button');
+            dot.className = 'vr-constellation-dot' + (p === S.currentPanel ? ' active' : '');
+            dot.setAttribute('data-panel-id', p.id);
+            dot.setAttribute('aria-label', p.id);
+            dot.style.setProperty('--dot-col', p.col - minC);
+            dot.style.setProperty('--dot-row', p.row - minR);
+            dot.addEventListener('click', function () { navigateTo(p.id); });
+
+            // Tooltip
+            var label = document.createElement('span');
+            label.className = 'vr-constellation-label';
+            label.textContent = p.id.charAt(0).toUpperCase() + p.id.slice(1);
+            dot.appendChild(label);
+
+            nav.appendChild(dot);
+        });
+
+        // Draw connection lines
+        S.panels.forEach(function (p) {
+            var neighbors = getNeighbors(p.id);
+            neighbors.forEach(function (n) {
+                // Only draw line once (from lower id to higher id)
+                if (p.id < n.id) {
+                    var line = document.createElement('div');
+                    line.className = 'vr-constellation-line';
+                    var x1 = p.col - minC, y1 = p.row - minR;
+                    var x2 = n.col - minC, y2 = n.row - minR;
+                    var midX = (x1 + x2) / 2, midY = (y1 + y2) / 2;
+                    var dx = x2 - x1, dy = y2 - y1;
+                    var length = Math.sqrt(dx * dx + dy * dy);
+                    var angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    line.style.setProperty('--line-x', midX);
+                    line.style.setProperty('--line-y', midY);
+                    line.style.setProperty('--line-len', length);
+                    line.style.setProperty('--line-angle', angle + 'deg');
+                    nav.appendChild(line);
+                }
+            });
         });
     }
 
-    function updateEdges() {
-        var top = document.getElementById('vr-edge-top');
-        var bottom = document.getElementById('vr-edge-bottom');
-        if (top) top.classList.toggle('visible', S.currentPanel > 0);
-        if (bottom) bottom.classList.toggle('visible', S.currentPanel < S.panels.length - 1);
+    function updateConstellationNav() {
+        document.querySelectorAll('.vr-constellation-dot').forEach(function (dot) {
+            var id = dot.getAttribute('data-panel-id');
+            dot.classList.toggle('active', id === S.currentPanel.id);
+        });
+    }
+
+    // ========== EDGE PEEK (mouse near viewport edge previews neighbor) ==========
+    function updateEdgePeek() {
+        if (S.transitioning || !S.spatialActive || !S.currentPanel) return;
+
+        var w = window.innerWidth, h = window.innerHeight;
+        var zone = CFG.EDGE_PEEK_ZONE;
+        var dirCol = 0, dirRow = 0;
+
+        if (S.mx < zone) dirCol = -1;
+        else if (S.mx > w - zone) dirCol = 1;
+        if (S.my < zone) dirRow = -1;
+        else if (S.my > h - zone) dirRow = 1;
+
+        if (dirCol === 0 && dirRow === 0) {
+            clearPeek();
+            return;
+        }
+
+        var target = findPanelInDirection(dirCol, dirRow);
+        if (!target || target === S.peekTarget) return;
+
+        clearPeek();
+        S.peekTarget = target;
+        S.peekDirection = { col: dirCol, row: dirRow };
+
+        // Show a subtle peek of the target panel
+        target.el.classList.add('vr-panel-peeking');
+        target.el.style.setProperty('--peek-x', (dirCol * -100) + '%');
+        target.el.style.setProperty('--peek-y', (dirRow * -100) + '%');
+        target.el.style.setProperty('--peek-offset', CFG.EDGE_PEEK_STRENGTH * 100 + '%');
+    }
+
+    function clearPeek() {
+        if (S.peekTarget) {
+            S.peekTarget.el.classList.remove('vr-panel-peeking');
+            S.peekTarget = null;
+            S.peekDirection = null;
+        }
+    }
+
+    // ========== EDGE INDICATORS ==========
+    function updateEdgeIndicators() {
+        if (!S.currentPanel) return;
+        var cc = S.currentPanel.col, cr = S.currentPanel.row;
+        var edges = {
+            top: false, bottom: false, left: false, right: false
+        };
+
+        S.panels.forEach(function (p) {
+            if (p.id === S.currentPanel.id) return;
+            var dc = p.col - cc, dr = p.row - cr;
+            if (dr < 0) edges.top = true;
+            if (dr > 0) edges.bottom = true;
+            if (dc < 0) edges.left = true;
+            if (dc > 0) edges.right = true;
+        });
+
+        ['top', 'bottom', 'left', 'right'].forEach(function (dir) {
+            var el = document.getElementById('vr-edge-' + dir);
+            if (el) el.classList.toggle('visible', edges[dir]);
+        });
+    }
+
+    // ========== PREDICTIVE GLOW ==========
+    function updatePredictiveGlow() {
+        if (!S.currentPanel) return;
+        var predicted = predictNextPanel(S.currentPanel.id);
+
+        // Update edge glow intensity for predicted direction
+        if (predicted) {
+            var dc = predicted.col - S.currentPanel.col;
+            var dr = predicted.row - S.currentPanel.row;
+
+            ['top', 'bottom', 'left', 'right'].forEach(function (dir) {
+                var el = document.getElementById('vr-edge-' + dir);
+                if (el) el.classList.remove('vr-edge-predicted');
+            });
+
+            if (dr < 0) addPredictedClass('top');
+            if (dr > 0) addPredictedClass('bottom');
+            if (dc < 0) addPredictedClass('left');
+            if (dc > 0) addPredictedClass('right');
+        }
+    }
+
+    function addPredictedClass(dir) {
+        var el = document.getElementById('vr-edge-' + dir);
+        if (el) el.classList.add('vr-edge-predicted');
+    }
+
+    // ========== MOUSE DIRECTION TRACKING ==========
+    function trackMouseDirection() {
+        S.mouseHistory.push({ x: S.mx, y: S.my, t: Date.now() });
+        if (S.mouseHistory.length > 10) S.mouseHistory.shift();
+
+        if (S.mouseHistory.length >= 3) {
+            var first = S.mouseHistory[0];
+            var last = S.mouseHistory[S.mouseHistory.length - 1];
+            var dx = last.x - first.x, dy = last.y - first.y;
+            var mag = Math.sqrt(dx * dx + dy * dy);
+            if (mag > 20) {
+                S.mouseDir.x = dx / mag;
+                S.mouseDir.y = dy / mag;
+            }
+        }
     }
 
     // ========== 6. PREDICTIVE DOCK ==========
@@ -270,31 +600,21 @@
 
     function initNavDock() {
         if (!dock) return;
-
-        // Non-spatial pages: scroll-based dock
         if (!S.spatialActive) {
             window.addEventListener('scroll', onPageScroll, { passive: true });
         }
-
-        // Initial reorder
         reorderDock();
-
-        // Periodically reorder based on profile
         setInterval(reorderDock, CFG.DOCK_REORDER_INTERVAL);
     }
 
     function onPageScroll() {
         var y = window.scrollY;
         var diff = y - S.lastScrollY;
-
-        // Progress
         if (dockProgress) {
             var h = document.documentElement.scrollHeight - window.innerHeight;
             dockProgress.style.width = (h > 0 ? (y / h) * 100 : 0) + '%';
         }
-
         if (y < 100) { showDock(); S.lastScrollY = y; S.scrollDelta = 0; return; }
-
         if (diff > 0) {
             S.scrollDelta += diff;
             if (S.scrollDelta > 80 && !S.dockHidden) hideDock();
@@ -303,23 +623,20 @@
             if (S.dockHidden) showDock();
         }
         S.lastScrollY = y;
-        S.scrollVelocity = Math.abs(diff);
     }
 
     function hideDock() { if (dock) { dock.classList.add('dock-hidden'); S.dockHidden = true; } }
     function showDock() { if (dock) { dock.classList.remove('dock-hidden'); S.dockHidden = false; } }
 
     function updateDockFromPanel() {
-        // Update progress on spatial navigation
         if (dockProgress && S.spatialActive && S.panels.length > 1) {
-            var pct = (S.currentPanel / (S.panels.length - 1)) * 100;
+            var idx = S.panels.indexOf(S.currentPanel);
+            var pct = (idx / (S.panels.length - 1)) * 100;
             dockProgress.style.width = pct + '%';
         }
-
-        // Highlight active dock button
-        var panelId = S.panels[S.currentPanel] ? S.panels[S.currentPanel].getAttribute('data-panel') : '';
+        if (!S.currentPanel) return;
         document.querySelectorAll('.vr-dock-btn[data-section]').forEach(function (btn) {
-            btn.classList.toggle('active', btn.getAttribute('data-section') === panelId);
+            btn.classList.toggle('active', btn.getAttribute('data-section') === S.currentPanel.id);
         });
     }
 
@@ -329,36 +646,28 @@
         var buttons = Array.from(dockTrack.querySelectorAll('.vr-dock-btn[data-section]'));
         if (buttons.length === 0) return;
 
-        // Calculate priorities
         var prioritized = buttons.map(function (btn) {
             var id = btn.getAttribute('data-section');
             return { btn: btn, id: id, priority: getSectionPriority(id) };
         });
 
-        // Sort by priority descending
         prioritized.sort(function (a, b) { return b.priority - a.priority; });
 
-        // Apply order via CSS (smooth reorder)
         prioritized.forEach(function (item, i) {
             item.btn.style.order = i;
-            // Highest priority gets a subtle glow
             item.btn.classList.toggle('vr-dock-btn-hot', i === 0 && item.priority > 5);
         });
     }
 
-    // Dock buttons also navigate spatial panels
+    // Dock buttons navigate constellation
     if (dock) {
         dock.addEventListener('click', function (e) {
             var btn = e.target.closest('.vr-dock-btn[data-section]');
             if (!btn || !S.spatialActive) return;
-
             var targetId = btn.getAttribute('data-section');
-            for (var i = 0; i < S.panels.length; i++) {
-                if (S.panels[i].getAttribute('data-panel') === targetId) {
-                    e.preventDefault();
-                    goToPanel(i);
-                    break;
-                }
+            if (S.panelMap[targetId]) {
+                e.preventDefault();
+                navigateTo(targetId);
             }
         });
     }
@@ -406,13 +715,6 @@
             els.forEach(function (el) { obs.observe(el); });
         } else {
             els.forEach(function (el) { el.classList.add('revealed'); });
-        }
-
-        // For spatial: reveal first panel immediately
-        if (S.spatialActive && S.panels[0]) {
-            S.panels[0].querySelectorAll('[data-reveal]').forEach(function (el) {
-                el.classList.add('revealed');
-            });
         }
     }
 
@@ -506,9 +808,7 @@
 
         updateMagnetics();
         updateParallax();
-
-        S.scrollVelocity *= 0.92;
-        if (S.scrollVelocity < 0.1) S.scrollVelocity = 0;
+        trackMouseDirection();
 
         requestAnimationFrame(animate);
     }
@@ -524,7 +824,7 @@
     document.addEventListener('click', resetIdle);
 
     // ========== INIT ==========
-    initSpatialCanvas();
+    initConstellationCanvas();
     initMagnetics();
     initTilt();
     initNavDock();
