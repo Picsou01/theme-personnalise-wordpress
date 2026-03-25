@@ -1,74 +1,64 @@
 <?php
 /**
- * Front page template - Constellation Hub
- * v5.0 - Bird's-eye constellation map as the home experience
+ * Front page template - Constellation Hub v7.0
+ * Performance-optimized: minimal DOM, CSS-only stars, lazy images
  */
 get_header();
 
 $hero_title    = get_theme_mod( 'hero_title', 'Voyagez sans quitter votre table' );
 $hero_subtitle = get_theme_mod( 'hero_subtitle', 'Le premier restaurant Slow Food immersif & évolutif' );
-$hero_bg       = get_theme_mod( 'hero_bg', '' );
-$reservation   = get_theme_mod( 'reservation_url', '#reservation' );
 
-// Constellation pages data — all editable via Customizer
 $constellation_pages = array(
     'concept' => array(
         'title'   => get_theme_mod( 'page_concept_title', 'Le Concept' ),
-        'summary' => get_theme_mod( 'page_concept_summary', 'Découvrez comment Virealys fusionne gastronomie slow food et technologie immersive pour réinventer l\'expérience culinaire.' ),
+        'summary' => get_theme_mod( 'page_concept_summary', 'Gastronomie slow food et technologie immersive fusionnées.' ),
         'icon'    => 'layers',
         'color'   => '#00e5ff',
-        'x'       => 18,
-        'y'       => 40,
+        'x'       => 18, 'y' => 40,
         'level'   => 1,
     ),
     'menus' => array(
         'title'   => get_theme_mod( 'page_menus_title', 'Nos Formules' ),
-        'summary' => get_theme_mod( 'page_menus_summary', 'Du dîner classique à l\'immersion totale — quatre formules pour vivre l\'expérience à votre mesure.' ),
+        'summary' => get_theme_mod( 'page_menus_summary', 'Quatre formules du classique à l\'immersion totale.' ),
         'icon'    => 'utensils',
         'color'   => '#4d7cff',
-        'x'       => 82,
-        'y'       => 40,
+        'x'       => 82, 'y' => 40,
         'level'   => 1,
     ),
     'ambiances' => array(
         'title'   => get_theme_mod( 'page_ambiances_title', 'Les Ambiances' ),
-        'summary' => get_theme_mod( 'page_ambiances_summary', 'Quatre univers sensoriels uniques — Japon, Paris, Italie, Cosmos. Choisissez votre voyage.' ),
+        'summary' => get_theme_mod( 'page_ambiances_summary', 'Quatre univers sensoriels qui changent chaque saison.' ),
         'icon'    => 'globe',
         'color'   => '#a855f7',
-        'x'       => 28,
-        'y'       => 70,
+        'x'       => 28, 'y' => 70,
         'level'   => 1,
     ),
     'zones' => array(
         'title'   => get_theme_mod( 'page_zones_title', 'Les 4 Zones' ),
-        'summary' => get_theme_mod( 'page_zones_summary', 'Origine, Voyage, Immersion, Sensorielle — quatre niveaux d\'expérience pour personnaliser votre soirée.' ),
+        'summary' => get_theme_mod( 'page_zones_summary', 'Choisissez votre niveau d\'immersion.' ),
         'icon'    => 'grid',
         'color'   => '#e040fb',
-        'x'       => 72,
-        'y'       => 70,
+        'x'       => 72, 'y' => 70,
         'level'   => 1,
     ),
     'passeport' => array(
         'title'   => get_theme_mod( 'page_passeport_title', 'Le Passeport' ),
-        'summary' => get_theme_mod( 'page_passeport_summary', 'Votre passeport numérique vous accompagne. Collectionnez les tampons, débloquez des expériences exclusives.' ),
+        'summary' => get_theme_mod( 'page_passeport_summary', 'Collectionnez les tampons, débloquez des récompenses.' ),
         'icon'    => 'passport',
         'color'   => '#f97316',
-        'x'       => 50,
-        'y'       => 85,
+        'x'       => 50, 'y' => 85,
         'level'   => 2,
     ),
     'reservation' => array(
         'title'   => get_theme_mod( 'page_reservation_title', 'Réserver' ),
-        'summary' => get_theme_mod( 'page_reservation_summary', 'Réservez votre table et choisissez votre niveau d\'immersion. L\'aventure commence ici.' ),
+        'summary' => get_theme_mod( 'page_reservation_summary', 'Réservez votre table immersive.' ),
         'icon'    => 'calendar',
         'color'   => '#10b981',
-        'x'       => 50,
-        'y'       => 50,
+        'x'       => 50, 'y' => 50,
         'level'   => 0,
     ),
 );
 
-// Hierarchy links between pages
 $constellation_links = array(
     array( 'from' => 'reservation', 'to' => 'concept' ),
     array( 'from' => 'reservation', 'to' => 'menus' ),
@@ -84,12 +74,11 @@ $constellation_links = array(
 
 <!-- CONSTELLATION HUB -->
 <div class="vr-constellation-hub" id="vr-constellation-hub">
-    <!-- Animated background -->
+    <!-- CSS-only animated background (no JS DOM creation) -->
     <div class="constellation-bg">
-        <div class="constellation-stars" id="constellation-stars"></div>
+        <div class="constellation-stars-css" aria-hidden="true"></div>
         <div class="constellation-nebula constellation-nebula-1"></div>
         <div class="constellation-nebula constellation-nebula-2"></div>
-        <div class="constellation-nebula constellation-nebula-3"></div>
     </div>
 
     <!-- Hero overlay with title -->
@@ -97,7 +86,7 @@ $constellation_links = array(
         <div class="constellation-hero-content" data-reveal>
             <h1 class="constellation-title"><?php echo esc_html( $hero_title ); ?></h1>
             <p class="constellation-subtitle"><?php echo esc_html( $hero_subtitle ); ?></p>
-            <p class="constellation-hint"><?php echo esc_html( get_theme_mod( 'constellation_hint', 'Explorez la constellation ou maintenez le clic droit pour naviguer' ) ); ?></p>
+            <p class="constellation-hint"><?php esc_html_e( 'Explorez la constellation', 'virealys' ); ?> <span class="constellation-hint-desktop"><?php esc_html_e( 'ou maintenez le clic droit', 'virealys' ); ?></span></p>
         </div>
     </div>
 
@@ -115,8 +104,7 @@ $constellation_links = array(
                   x2="<?php echo esc_attr( $to['x'] ); ?>%"
                   y2="<?php echo esc_attr( $to['y'] ); ?>%"
                   stroke="rgba(0,229,255,0.12)"
-                  stroke-width="1"
-                  stroke-dasharray="4 4" />
+                  stroke-width="1" />
         <?php endforeach; ?>
     </svg>
 
@@ -131,9 +119,7 @@ $constellation_links = array(
                class="constellation-node"
                data-page="<?php echo esc_attr( $slug ); ?>"
                data-level="<?php echo esc_attr( $page_data['level'] ); ?>"
-               style="--node-x: <?php echo esc_attr( $page_data['x'] ); ?>%;
-                      --node-y: <?php echo esc_attr( $page_data['y'] ); ?>%;
-                      --node-color: <?php echo esc_attr( $page_data['color'] ); ?>;">
+               style="--node-x:<?php echo esc_attr( $page_data['x'] ); ?>%;--node-y:<?php echo esc_attr( $page_data['y'] ); ?>%;--node-color:<?php echo esc_attr( $page_data['color'] ); ?>">
                 <span class="constellation-node-glow"></span>
                 <span class="constellation-node-ring"></span>
                 <span class="constellation-node-dot"></span>
@@ -141,11 +127,28 @@ $constellation_links = array(
                 <span class="constellation-node-label"><?php echo esc_html( $page_data['title'] ); ?></span>
                 <span class="constellation-node-expand">
                     <?php if ( $thumb ) : ?>
-                        <img src="<?php echo esc_url( $thumb ); ?>" alt="" class="constellation-node-thumb" loading="lazy">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='267'%3E%3C/svg%3E" data-src="<?php echo esc_url( $thumb ); ?>" alt="" class="constellation-node-thumb" loading="lazy" decoding="async" width="400" height="267">
                     <?php endif; ?>
                     <span class="constellation-node-summary"><?php echo esc_html( $page_data['summary'] ); ?></span>
                     <span class="constellation-node-cta">Explorer &rarr;</span>
                 </span>
+            </a>
+        <?php endforeach; ?>
+    </div>
+
+    <!-- Mobile: scrollable card list (hidden on desktop) -->
+    <div class="constellation-mobile-list" id="constellation-mobile-list">
+        <?php foreach ( $constellation_pages as $slug => $page_data ) :
+            $wp_page = get_page_by_path( $slug );
+            $url = $wp_page ? get_permalink( $wp_page ) : home_url( '/' . $slug . '/' );
+        ?>
+            <a href="<?php echo esc_url( $url ); ?>" class="constellation-mobile-card" style="--node-color:<?php echo esc_attr( $page_data['color'] ); ?>">
+                <span class="constellation-mobile-icon"><?php echo virealys_get_constellation_icon( $page_data['icon'] ); ?></span>
+                <span class="constellation-mobile-info">
+                    <span class="constellation-mobile-title"><?php echo esc_html( $page_data['title'] ); ?></span>
+                    <span class="constellation-mobile-summary"><?php echo esc_html( $page_data['summary'] ); ?></span>
+                </span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
             </a>
         <?php endforeach; ?>
     </div>
