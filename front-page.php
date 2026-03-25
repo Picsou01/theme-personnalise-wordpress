@@ -17,8 +17,8 @@ $constellation_pages = array(
         'summary' => get_theme_mod( 'page_concept_summary', 'Découvrez comment Virealys fusionne gastronomie slow food et technologie immersive pour réinventer l\'expérience culinaire.' ),
         'icon'    => 'layers',
         'color'   => '#00e5ff',
-        'x'       => 30,
-        'y'       => 25,
+        'x'       => 18,
+        'y'       => 40,
         'level'   => 1,
     ),
     'menus' => array(
@@ -26,8 +26,8 @@ $constellation_pages = array(
         'summary' => get_theme_mod( 'page_menus_summary', 'Du dîner classique à l\'immersion totale — quatre formules pour vivre l\'expérience à votre mesure.' ),
         'icon'    => 'utensils',
         'color'   => '#4d7cff',
-        'x'       => 70,
-        'y'       => 25,
+        'x'       => 82,
+        'y'       => 40,
         'level'   => 1,
     ),
     'ambiances' => array(
@@ -35,8 +35,8 @@ $constellation_pages = array(
         'summary' => get_theme_mod( 'page_ambiances_summary', 'Quatre univers sensoriels uniques — Japon, Paris, Italie, Cosmos. Choisissez votre voyage.' ),
         'icon'    => 'globe',
         'color'   => '#a855f7',
-        'x'       => 25,
-        'y'       => 60,
+        'x'       => 28,
+        'y'       => 70,
         'level'   => 1,
     ),
     'zones' => array(
@@ -44,8 +44,8 @@ $constellation_pages = array(
         'summary' => get_theme_mod( 'page_zones_summary', 'Origine, Voyage, Immersion, Sensorielle — quatre niveaux d\'expérience pour personnaliser votre soirée.' ),
         'icon'    => 'grid',
         'color'   => '#e040fb',
-        'x'       => 75,
-        'y'       => 55,
+        'x'       => 72,
+        'y'       => 70,
         'level'   => 1,
     ),
     'passeport' => array(
@@ -54,7 +54,7 @@ $constellation_pages = array(
         'icon'    => 'passport',
         'color'   => '#f97316',
         'x'       => 50,
-        'y'       => 80,
+        'y'       => 85,
         'level'   => 2,
     ),
     'reservation' => array(
@@ -63,7 +63,7 @@ $constellation_pages = array(
         'icon'    => 'calendar',
         'color'   => '#10b981',
         'x'       => 50,
-        'y'       => 40,
+        'y'       => 50,
         'level'   => 0,
     ),
 );
@@ -97,7 +97,7 @@ $constellation_links = array(
         <div class="constellation-hero-content" data-reveal>
             <h1 class="constellation-title"><?php echo esc_html( $hero_title ); ?></h1>
             <p class="constellation-subtitle"><?php echo esc_html( $hero_subtitle ); ?></p>
-            <p class="constellation-hint">Explorez la constellation pour naviguer</p>
+            <p class="constellation-hint"><?php echo esc_html( get_theme_mod( 'constellation_hint', 'Explorez la constellation ou maintenez le clic droit pour naviguer' ) ); ?></p>
         </div>
     </div>
 
