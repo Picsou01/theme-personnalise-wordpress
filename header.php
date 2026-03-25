@@ -2,9 +2,10 @@
 <html <?php language_attributes(); ?>>
 <head>
     <meta charset="<?php bloginfo( 'charset' ); ?>">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Virealys - Le premier restaurant Slow Food immersif & évolutif. Voyagez sans quitter votre table.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#06060f">
+    <meta name="color-scheme" content="dark">
+    <meta name="format-detection" content="telephone=no">
     <?php wp_head(); ?>
 </head>
 <body <?php body_class(); ?>>
@@ -16,9 +17,9 @@
         <?php if ( has_custom_logo() ) : ?>
             <?php
             $custom_logo_id = get_theme_mod( 'custom_logo' );
-            $logo_url = wp_get_attachment_image_url( $custom_logo_id, 'full' );
+            $logo_url = wp_get_attachment_image_url( $custom_logo_id, 'thumbnail' );
             ?>
-            <img src="<?php echo esc_url( $logo_url ); ?>" alt="<?php bloginfo( 'name' ); ?>" class="floating-logo-img">
+            <img src="<?php echo esc_url( $logo_url ); ?>" alt="<?php bloginfo( 'name' ); ?>" class="floating-logo-img" width="120" height="24" loading="eager">
         <?php else : ?>
             <span class="logo-text">VIREALYS</span>
         <?php endif; ?>
@@ -28,21 +29,11 @@
 <!-- Full Screen Menu Overlay -->
 <div class="menu-overlay" id="menu-overlay" aria-hidden="true">
     <button class="menu-overlay-close" id="menu-overlay-close" aria-label="<?php esc_attr_e( 'Fermer le menu', 'virealys' ); ?>">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
     <div class="menu-overlay-inner">
         <div class="menu-overlay-nav">
-            <?php
-            wp_nav_menu( array(
-                'theme_location' => 'primary',
-                'container'      => false,
-                'menu_class'     => 'overlay-nav-list',
-                'walker'         => new Virealys_Nav_Walker(),
-                'fallback_cb'    => 'virealys_overlay_fallback_menu',
-            ) );
-            ?>
+            <?php wp_nav_menu( array( 'theme_location' => 'primary', 'container' => false, 'menu_class' => 'overlay-nav-list', 'walker' => new Virealys_Nav_Walker(), 'fallback_cb' => 'virealys_overlay_fallback_menu' ) ); ?>
         </div>
         <div class="menu-overlay-info">
             <?php
@@ -70,9 +61,7 @@
                     $url = get_theme_mod( $network . '_url', '' );
                     if ( $url ) :
                 ?>
-                    <a href="<?php echo esc_url( $url ); ?>" class="overlay-social-link" aria-label="<?php echo esc_attr( ucfirst( $network ) ); ?>" target="_blank" rel="noopener">
-                        <?php echo $icon; ?>
-                    </a>
+                    <a href="<?php echo esc_url( $url ); ?>" class="overlay-social-link" aria-label="<?php echo esc_attr( ucfirst( $network ) ); ?>" target="_blank" rel="noopener"><?php echo $icon; ?></a>
                 <?php endif; endforeach; ?>
             </div>
         </div>
