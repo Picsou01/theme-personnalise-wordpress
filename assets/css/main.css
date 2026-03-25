@@ -207,26 +207,6 @@ h1, h2, h3, h4, h5, h6 {
     object-fit: contain;
 }
 
-/* Dock removed */
-
-
-/* Individual dock button — order is set dynamically by JS */
-
-
-
-
-
-
-/* Predictive "hot" button — highest priority glows */
-
-
-
-/* CTA button in dock */
-
-
-/* Menu hamburger button in dock */
-
-
 .dock-menu-icon {
     display: flex;
     flex-direction: column;
@@ -244,10 +224,6 @@ h1, h2, h3, h4, h5, h6 {
     transition: all 0.3s var(--ease-out);
     transform-origin: center;
 }
-
-/* Active/open state - X shape */
-
-/* Dock progress bar */
 
 /* --- Full Screen Menu Overlay --- */
 .menu-overlay {
@@ -552,7 +528,7 @@ h1, h2, h3, h4, h5, h6 {
 .hero-orb {
     position: absolute;
     border-radius: 50%;
-    filter: blur(80px);
+    filter: blur(50px);
     z-index: 1;
     animation: orbFloat 12s ease-in-out infinite;
     pointer-events: none;
@@ -2079,7 +2055,7 @@ h1, h2, h3, h4, h5, h6 {
 .constellation-nebula {
     position: absolute;
     border-radius: 50%;
-    filter: blur(60px);
+    filter: blur(40px);
     z-index: 0;
     animation: nebulaFloat 20s ease-in-out infinite;
     pointer-events: none;
@@ -2963,7 +2939,7 @@ h1, h2, h3, h4, h5, h6 {
     }
 }
 
-/* (dock progress bar is in the dock section above) */
+/*  */
 
 /* ==========================================
    ADAPTIVE ENGINE - Idle Breathing
@@ -2996,10 +2972,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Subtle scale during fast scroll */
-.section {
-    transform: scaleY(calc(1 - var(--scroll-velocity) * 0.01));
-    transform-origin: center;
-}
+/* v8.0: removed expensive scaleY */
 
 /* ==========================================
    ADAPTIVE ENGINE - Magnetic elements
@@ -3211,9 +3184,6 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3), 0 0 30px rgba(var(--neon-cyan-rgb), 0.05);
 }
 
-/* Hypnotic link hover */
-
-
 /* Page content image hover zoom */
 .page-content img,
 .post-content img {
@@ -3350,3 +3320,11 @@ html {
     .section { transform: none; }
     .constellation-node { transform: translate(-50%, -50%); }
 }
+
+/* ==========================================
+   v8.0 INSTANT IMAGE PIPELINE
+   ========================================== */
+img[data-src]{filter:blur(8px);transition:filter .4s ease}
+img.vr-img-loaded{filter:none}
+.constellation-stars-css{will-change:opacity}
+.site-footer{content-visibility:auto;contain-intrinsic-size:auto 400px}

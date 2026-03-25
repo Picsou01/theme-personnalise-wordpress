@@ -1,6 +1,6 @@
 /**
- * Virealys - Constellation Engine v7.0
- * Performance-optimized: cached DOM, throttled events, lazy everything
+ * Virealys - Constellation Engine v8.0
+ * Sub-1s Revolution: cached DOM, lazy IO, touch engine, idle scheduling
  */
 (function () {
     'use strict';
@@ -17,8 +17,8 @@
     };
 
     var S = {
-        mx: window.innerWidth / 2, my: window.innerHeight / 2,
-        tx: window.innerWidth / 2, ty: window.innerHeight / 2,
+        mx: 0, my: 0,
+        tx: 0, ty: 0,
         idle: false, idleTimer: null,
         mobile: window.innerWidth <= 768,
         reduced: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
@@ -27,6 +27,15 @@
         tabVisible: true,
         animating: false,
     };
+
+    // Initialize center position
+    S.mx = S.tx = window.innerWidth / 2;
+    S.my = S.ty = window.innerHeight / 2;
+
+    /* =========================================
+       IDLE SCHEDULING — defer non-critical init
+       ========================================= */
+    var ric = window.requestIdleCallback || function (cb) { setTimeout(cb, 1); };
 
     /* =========================================
        USER PROFILE (localStorage) — lazy init
@@ -41,14 +50,20 @@
     profile.visits++;
     profile.lastVisitTime = Date.now();
 
+    var profileDirty = true;
     function saveProfile() {
-        try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch (e) {}
+        if (!profileDirty) return;
+        profileDirty = false;
+        ric(function () {
+            try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch (e) {}
+        });
     }
 
     function trackSection(id) {
         profile.sections[id] = (profile.sections[id] || 0) + 1;
         profile.lastSections.unshift(id);
         if (profile.lastSections.length > 20) profile.lastSections.length = 20;
+        profileDirty = true;
         saveProfile();
     }
 
@@ -76,6 +91,7 @@
         initReveals();
         initMenuOverlay();
         initConstellationHub();
+        initLazyImages();
         initRadialMenu();
         return;
     }
@@ -112,7 +128,6 @@
         document.querySelectorAll('.btn, .overlay-social-link, .footer-social a').forEach(function (el) {
             el.setAttribute('data-magnetic', '');
         });
-        // Cache the query — only re-query on DOM changes
         magneticEls = document.querySelectorAll('[data-magnetic]');
     }
 
@@ -166,7 +181,38 @@
     });
 
     /* =========================================
-       5. RADIAL MENU
+       5. LAZY IMAGE LOADING — IntersectionObserver
+       v8.0: Load images 200px before visible
+       ========================================= */
+    function initLazyImages() {
+        var lazyImgs = document.querySelectorAll('img[data-src]');
+        if (lazyImgs.length === 0) return;
+
+        if ('IntersectionObserver' in window) {
+            var imgObs = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (entry.isIntersecting) {
+                        var img = entry.target;
+                        img.src = img.dataset.src;
+                        delete img.dataset.src;
+                        img.removeAttribute('data-src');
+                        img.classList.add('vr-img-loaded');
+                        imgObs.unobserve(img);
+                    }
+                });
+            }, { rootMargin: '200px 0px', threshold: 0 });
+            lazyImgs.forEach(function (img) { imgObs.observe(img); });
+        } else {
+            // Fallback: load all immediately
+            lazyImgs.forEach(function (img) {
+                img.src = img.dataset.src;
+                delete img.dataset.src;
+            });
+        }
+    }
+
+    /* =========================================
+       6. RADIAL MENU
        ========================================= */
     var radialMenuEl = null;
     var radialCursorLine = null;
@@ -224,12 +270,11 @@
             }
         });
 
-        // Throttled mouse move for radial
         var radialMoveThrottle = 0;
         document.addEventListener('mousemove', function (e) {
             if (!S.radialOpen || !S.radialHolding) return;
             var now = Date.now();
-            if (now - radialMoveThrottle < 16) return; // ~60fps max
+            if (now - radialMoveThrottle < 16) return;
             radialMoveThrottle = now;
             updateRadialCursor(e.clientX, e.clientY);
         });
@@ -340,28 +385,13 @@
     }
 
     /* =========================================
-       6. CONSTELLATION HUB — no JS star generation
+       7. CONSTELLATION HUB
        ========================================= */
     function initConstellationHub() {
         var hub = document.getElementById('vr-constellation-hub');
         if (!hub) return;
 
-        // Stars are now CSS-only, no DOM generation needed!
-
         var nodes = hub.querySelectorAll('.constellation-node');
-
-        // Lazy-load constellation node thumbnail images
-        nodes.forEach(function (node) {
-            var img = node.querySelector('.constellation-node-thumb');
-            if (img && img.dataset.src) {
-                node.addEventListener('mouseenter', function () {
-                    if (img.dataset.src) {
-                        img.src = img.dataset.src;
-                        delete img.dataset.src;
-                    }
-                }, { once: false });
-            }
-        });
 
         // Node mouse interaction (desktop only)
         if (!S.mobile) {
@@ -397,7 +427,6 @@
         reorderConstellation(nodes);
     }
 
-    // Cache lines query
     var cachedLines = null;
     function highlightConnectedLines(slug, highlight) {
         if (!cachedLines) cachedLines = document.querySelectorAll('.constellation-link-line');
@@ -424,7 +453,85 @@
     }
 
     /* =========================================
-       7. DISCOVERY SYSTEM — lightweight
+       8. MOBILE TOUCH ENGINE v8.0
+       Swipe navigation, haptic feedback, thumb zones
+       ========================================= */
+    function initMobileTouch() {
+        if (!S.mobile) return;
+
+        var mobileList = document.getElementById('constellation-mobile-list');
+        if (!mobileList) return;
+
+        var cards = mobileList.querySelectorAll('.constellation-mobile-card');
+        var startX = 0, startY = 0, currentCard = null, swiping = false;
+
+        // Haptic feedback helper
+        function haptic(ms) {
+            if (navigator.vibrate) navigator.vibrate(ms || 10);
+        }
+
+        // Touch feedback on cards
+        cards.forEach(function (card) {
+            card.addEventListener('touchstart', function (e) {
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                currentCard = card;
+                swiping = false;
+                card.style.transition = 'none';
+            }, { passive: true });
+
+            card.addEventListener('touchmove', function (e) {
+                if (!currentCard) return;
+                var dx = e.touches[0].clientX - startX;
+                var dy = e.touches[0].clientY - startY;
+
+                // Horizontal swipe detection (threshold 10px, must be more horizontal than vertical)
+                if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+                    swiping = true;
+                    // Elastic resistance effect
+                    var resistance = Math.min(Math.abs(dx) / 200, 1);
+                    var tx = dx * (1 - resistance * 0.5);
+                    card.style.transform = 'translateX(' + tx + 'px) scale(' + (1 - Math.abs(resistance) * 0.03) + ')';
+                    card.style.opacity = (1 - Math.abs(resistance) * 0.3).toFixed(2);
+                }
+            }, { passive: true });
+
+            card.addEventListener('touchend', function () {
+                if (!currentCard) return;
+                card.style.transition = 'transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease';
+
+                if (swiping) {
+                    var endX = parseFloat(card.style.transform.replace(/[^-\d.]/g, '')) || 0;
+                    if (Math.abs(endX) > 80) {
+                        // Swipe threshold reached — navigate
+                        haptic(15);
+                        card.style.transform = 'translateX(' + (endX > 0 ? '120%' : '-120%') + ') scale(0.9)';
+                        card.style.opacity = '0';
+                        setTimeout(function () {
+                            window.location.href = card.href;
+                        }, 200);
+                        return;
+                    }
+                }
+
+                // Spring back
+                card.style.transform = '';
+                card.style.opacity = '';
+                currentCard = null;
+                swiping = false;
+            }, { passive: true });
+        });
+
+        // Scroll snap feedback
+        mobileList.addEventListener('scroll', function () {
+            if (mobileList.scrollTop % 60 < 2) {
+                haptic(5);
+            }
+        }, { passive: true });
+    }
+
+    /* =========================================
+       9. DISCOVERY SYSTEM
        ========================================= */
     function initDiscovery() {
         var DISCOVERY_KEY = 'vr_discovery';
@@ -476,18 +583,17 @@
     }
 
     /* =========================================
-       8. CONSTELLATION RETURN BAR
+       10. CONSTELLATION RETURN BAR
        ========================================= */
     function initConstellationReturn() {
         var returnBar = document.getElementById('vr-constellation-return');
         if (!returnBar) return;
-        // Pulse via CSS only — no setInterval needed
         var pulse = returnBar.querySelector('.constellation-return-pulse');
         if (pulse) pulse.classList.add('pulse-auto');
     }
 
     /* =========================================
-       8. IDLE BREATHING
+       11. IDLE BREATHING
        ========================================= */
     function resetIdle() {
         if (S.idle) { S.idle = false; document.body.classList.remove('vr-idle'); }
@@ -499,7 +605,7 @@
     }
 
     /* =========================================
-       9. PARALLAX — cached elements
+       12. PARALLAX — cached elements
        ========================================= */
     var parallaxEls = [];
 
@@ -522,7 +628,7 @@
     }
 
     /* =========================================
-       10. REVEALS
+       13. REVEALS
        ========================================= */
     function initReveals() {
         var els = document.querySelectorAll('[data-reveal]');
@@ -562,7 +668,6 @@
         });
         if (closeBtn) closeBtn.addEventListener('click', close);
 
-        // Event delegation instead of per-link listeners
         if (overlay) overlay.addEventListener('click', function (e) {
             if (e.target.closest('.nav-link, .overlay-nav-link')) close();
         });
@@ -616,39 +721,57 @@
     var mouseMoveThrottle = 0;
     document.addEventListener('mousemove', function (e) {
         var now = Date.now();
-        if (now - mouseMoveThrottle < 8) return; // ~120fps cap
+        if (now - mouseMoveThrottle < 8) return;
         mouseMoveThrottle = now;
         S.mx = e.clientX; S.my = e.clientY;
         resetIdle();
     });
 
-    // No parallax on touch — just idle reset
     document.addEventListener('touchstart', resetIdle, { passive: true });
     document.addEventListener('keydown', resetIdle);
     document.addEventListener('click', resetIdle);
 
+    var resizeTimer;
     window.addEventListener('resize', function () {
-        S.mobile = window.innerWidth <= 768;
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function () {
+            S.mobile = window.innerWidth <= 768;
+        }, 150);
     });
 
     /* =========================================
-       INIT
+       INIT — Critical path first, then idle tasks
        ========================================= */
+    // Critical: render immediately
     initConstellationHub();
-    initRadialMenu();
-    initConstellationReturn();
-    initDiscovery();
-    initMagnetics();
-    initTilt();
-    initParallax();
     initReveals();
     initMenuOverlay();
-    initSmoothScroll();
-    resetIdle();
+    initLazyImages();
+
+    // Deferred: use idle time
+    ric(function () {
+        initRadialMenu();
+        initConstellationReturn();
+        initMobileTouch();
+        initSmoothScroll();
+        resetIdle();
+    });
+
+    ric(function () {
+        initDiscovery();
+        initMagnetics();
+        initTilt();
+        initParallax();
+    });
 
     if (!S.mobile) {
         S.animating = true;
         requestAnimationFrame(animate);
+    }
+
+    // Performance mark
+    if (window.performance && performance.mark) {
+        performance.mark('virealys-ready');
     }
 
 })();

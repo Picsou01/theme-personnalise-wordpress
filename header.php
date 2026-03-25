@@ -6,6 +6,9 @@
     <meta name="theme-color" content="#06060f">
     <meta name="color-scheme" content="dark">
     <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <?php wp_head(); ?>
 </head>
 <body <?php body_class(); ?>>
@@ -19,7 +22,7 @@
             $custom_logo_id = get_theme_mod( 'custom_logo' );
             $logo_url = wp_get_attachment_image_url( $custom_logo_id, 'thumbnail' );
             ?>
-            <img src="<?php echo esc_url( $logo_url ); ?>" alt="<?php bloginfo( 'name' ); ?>" class="floating-logo-img" width="120" height="24" loading="eager">
+            <img src="<?php echo esc_url( $logo_url ); ?>" alt="<?php bloginfo( 'name' ); ?>" class="floating-logo-img" width="120" height="24" loading="eager" fetchpriority="high">
         <?php else : ?>
             <span class="logo-text">VIREALYS</span>
         <?php endif; ?>
