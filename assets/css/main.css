@@ -595,6 +595,13 @@ html{scroll-behavior:auto}
 .constellation-node{transform:translate(-50%,-50%)}
 }
 
+/* Breadcrumbs */
+.breadcrumbs{padding:.75rem 0;font-size:.75rem;color:var(--color-text-muted);position:relative;z-index:10}
+.breadcrumb-link{color:var(--color-text-muted);transition:color .2s}
+.breadcrumb-link:hover{color:var(--neon-cyan)}
+.breadcrumb-sep{margin:0 .25rem;opacity:.4}
+.breadcrumb-current{color:var(--color-heading)}
+
 /* Smooth scroll */
 html{scroll-behavior:smooth}
 

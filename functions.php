@@ -237,34 +237,105 @@ function virealys_minify( $h ) {
 }
 add_action( 'template_redirect', 'virealys_start_minify', 0 );
 
-/* ── SEO META ── */
+/* ── SEO META v10.1 ── */
 
 function virealys_seo() {
     $name = get_bloginfo( 'name' );
-    $desc = 'Virealys — Le premier restaurant Slow Food immersif & évolutif.';
+    $desc = 'Virealys — Le premier restaurant Slow Food immersif & évolutif. Gastronomie locale, projections 270°, 4 ambiances sensorielles.';
     $url  = is_front_page() ? home_url( '/' ) : get_permalink();
     $img  = get_theme_mod( 'hero_bg', get_template_directory_uri() . '/screenshot.png' );
+    $title = wp_get_document_title();
 
     if ( ( is_single() || is_page() ) && get_the_excerpt() ) $desc = wp_strip_all_tags( get_the_excerpt() );
     if ( is_front_page() ) $desc = get_theme_mod( 'hero_subtitle', $desc );
     if ( has_post_thumbnail() ) $img = get_the_post_thumbnail_url( null, 'virealys-hero' );
     ?>
     <meta name="description" content="<?php echo esc_attr( $desc ); ?>">
+    <meta name="keywords" content="restaurant immersif, slow food, gastronomie, expérience culinaire, projection mapping, dîner sensoriel, Virealys, restaurant Paris">
+    <meta name="author" content="Virealys">
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
     <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+    <meta name="bingbot" content="index, follow, max-snippet:-1, max-image-preview:large">
     <link rel="canonical" href="<?php echo esc_url( $url ); ?>">
     <meta property="og:type" content="<?php echo is_front_page() ? 'website' : 'article'; ?>">
     <meta property="og:url" content="<?php echo esc_url( $url ); ?>">
-    <meta property="og:title" content="<?php echo esc_attr( wp_get_document_title() ); ?>">
+    <meta property="og:title" content="<?php echo esc_attr( $title ); ?>">
     <meta property="og:description" content="<?php echo esc_attr( $desc ); ?>">
     <meta property="og:image" content="<?php echo esc_url( $img ); ?>">
+    <meta property="og:image:width" content="1280">
+    <meta property="og:image:height" content="720">
     <meta property="og:site_name" content="<?php echo esc_attr( $name ); ?>">
     <meta property="og:locale" content="fr_FR">
     <meta name="twitter:card" content="summary_large_image">
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Restaurant","name":"<?php echo esc_js( $name ); ?>","description":"<?php echo esc_js( $desc ); ?>","url":"<?php echo esc_url( home_url('/') ); ?>","servesCuisine":["Gastronomie française","Slow Food"],"priceRange":"€€€","telephone":"<?php echo esc_js( get_theme_mod('phone_number','') ); ?>","email":"<?php echo esc_js( get_theme_mod('email','contact@virealys.com') ); ?>","acceptsReservations":true}</script>
+    <meta name="twitter:title" content="<?php echo esc_attr( $title ); ?>">
+    <meta name="twitter:description" content="<?php echo esc_attr( $desc ); ?>">
+    <meta name="twitter:image" content="<?php echo esc_url( $img ); ?>">
+    <script type="application/ld+json">{
+    "@context":"https://schema.org",
+    "@type":"Restaurant",
+    "name":"<?php echo esc_js( $name ); ?>",
+    "description":"<?php echo esc_js( $desc ); ?>",
+    "url":"<?php echo esc_url( home_url('/') ); ?>",
+    "servesCuisine":["Gastronomie française","Slow Food","Cuisine immersive"],
+    "priceRange":"€€€",
+    "address":{"@type":"PostalAddress","addressLocality":"<?php echo esc_js( get_theme_mod('address','') ); ?>"},
+    "telephone":"<?php echo esc_js( get_theme_mod('phone_number','') ); ?>",
+    "email":"<?php echo esc_js( get_theme_mod('email','contact@virealys.com') ); ?>",
+    "openingHours":["Tu-Sa 19:00-23:00","Su 12:00-14:30"],
+    "image":"<?php echo esc_url( $img ); ?>",
+    "acceptsReservations":true,
+    "menu":"<?php echo esc_url( home_url('/menus/') ); ?>"
+    }</script>
     <?php
 }
 add_action( 'wp_head', 'virealys_seo', 3 );
+
+/* ── SEO: Breadcrumbs (Schema.org) ── */
+
+function virealys_breadcrumbs() {
+    if ( is_front_page() ) return;
+    $items = array( array( 'name' => 'Accueil', 'url' => home_url( '/' ) ) );
+    if ( is_page() ) {
+        $items[] = array( 'name' => get_the_title(), 'url' => get_permalink() );
+    } elseif ( is_single() ) {
+        $items[] = array( 'name' => 'Blog', 'url' => home_url( '/blog/' ) );
+        $items[] = array( 'name' => get_the_title(), 'url' => get_permalink() );
+    }
+    echo '<nav class="breadcrumbs" aria-label="Fil d\'Ariane"><div class="container">';
+    foreach ( $items as $i => $item ) {
+        if ( $i > 0 ) echo ' <span class="breadcrumb-sep">/</span> ';
+        if ( $i === count( $items ) - 1 ) {
+            echo '<span class="breadcrumb-current">' . esc_html( $item['name'] ) . '</span>';
+        } else {
+            echo '<a href="' . esc_url( $item['url'] ) . '" class="breadcrumb-link">' . esc_html( $item['name'] ) . '</a>';
+        }
+    }
+    echo '</div></nav>';
+    // Schema.org BreadcrumbList
+    echo '<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[';
+    foreach ( $items as $i => $item ) {
+        if ( $i > 0 ) echo ',';
+        echo '{"@type":"ListItem","position":' . ( $i + 1 ) . ',"name":"' . esc_js( $item['name'] ) . '","item":"' . esc_url( $item['url'] ) . '"}';
+    }
+    echo ']}</script>';
+}
+add_action( 'wp_body_open', 'virealys_breadcrumbs', 5 );
+
+/* ── SEO: XML Sitemap improvements ── */
+
+function virealys_sitemap_styles() {
+    // WordPress 5.5+ has built-in sitemaps at /wp-sitemap.xml
+    // Ensure pages are prioritized
+    return true;
+}
+add_filter( 'wp_sitemaps_enabled', 'virealys_sitemap_styles' );
+
+/* ── SEO: Better title format ── */
+
+function virealys_title_separator( $sep ) {
+    return '—';
+}
+add_filter( 'document_title_separator', 'virealys_title_separator' );
 
 /* ── BODY SLUG ── */
 
