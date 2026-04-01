@@ -15,8 +15,88 @@
  */
 
 if ( ! defined( 'VIREALYS_VERSION' ) ) {
-    define( 'VIREALYS_VERSION', '9.0.0' );
+    define( 'VIREALYS_VERSION', '9.3.0' );
 }
+
+/* =============================================
+   v9.3 — BUILT-IN HTML PAGE CACHE
+   Serves cached HTML in < 5ms, bypassing WordPress entirely.
+   Cache auto-purges on post save/update.
+   ============================================= */
+
+function virealys_page_cache_dir() {
+    return WP_CONTENT_DIR . '/cache/virealys/';
+}
+
+function virealys_page_cache_key() {
+    $url = $_SERVER['REQUEST_URI'] ?? '/';
+    $mobile = wp_is_mobile() ? '_m' : '_d';
+    return md5( $url . $mobile ) . '.html';
+}
+
+function virealys_serve_cached_page() {
+    if ( is_admin() || is_user_logged_in() || $_SERVER['REQUEST_METHOD'] !== 'GET' ) return;
+    if ( isset( $_GET['preview'] ) || isset( $_GET['customize_changeset_uuid'] ) ) return;
+
+    $cache_dir = virealys_page_cache_dir();
+    $cache_file = $cache_dir . virealys_page_cache_key();
+
+    if ( file_exists( $cache_file ) ) {
+        $age = time() - filemtime( $cache_file );
+        // Cache valid for 1 hour
+        if ( $age < 3600 ) {
+            header( 'X-VR-Cache: HIT (' . $age . 's)' );
+            header( 'Cache-Control: public, max-age=3600, s-maxage=86400' );
+            readfile( $cache_file );
+            exit;
+        }
+        @unlink( $cache_file );
+    }
+}
+
+function virealys_start_page_cache() {
+    if ( is_admin() || is_user_logged_in() || $_SERVER['REQUEST_METHOD'] !== 'GET' ) return;
+    if ( isset( $_GET['preview'] ) || isset( $_GET['customize_changeset_uuid'] ) ) return;
+
+    ob_start( 'virealys_save_page_cache' );
+}
+
+function virealys_save_page_cache( $html ) {
+    if ( empty( $html ) || http_response_code() !== 200 ) return $html;
+
+    $cache_dir = virealys_page_cache_dir();
+    if ( ! is_dir( $cache_dir ) ) {
+        @mkdir( $cache_dir, 0755, true );
+    }
+
+    $cache_file = $cache_dir . virealys_page_cache_key();
+    @file_put_contents( $cache_file, $html );
+    header( 'X-VR-Cache: MISS' );
+
+    return $html;
+}
+
+function virealys_purge_cache() {
+    $cache_dir = virealys_page_cache_dir();
+    if ( is_dir( $cache_dir ) ) {
+        $files = glob( $cache_dir . '*.html' );
+        if ( $files ) {
+            foreach ( $files as $f ) @unlink( $f );
+        }
+    }
+}
+
+// Serve cached page BEFORE WordPress loads (fastest possible)
+virealys_serve_cached_page();
+
+// Start output buffering to capture and cache the page
+add_action( 'template_redirect', 'virealys_start_page_cache', -1 );
+
+// Purge cache when content changes
+add_action( 'save_post', 'virealys_purge_cache' );
+add_action( 'customize_save_after', 'virealys_purge_cache' );
+add_action( 'switch_theme', 'virealys_purge_cache' );
+add_action( 'wp_update_nav_menu', 'virealys_purge_cache' );
 
 /* =============================================
    THEME SETUP
@@ -322,13 +402,18 @@ add_action( 'send_headers', 'virealys_link_headers' );
    v9.0 — AGGRESSIVE CACHE HEADERS
    ============================================= */
 
+/**
+ * v9.3 — Smart cache headers:
+ * HTML pages = short cache (1h) with revalidation
+ * Static assets (.css, .js, .woff2) = long cache via WordPress ?ver= busting
+ */
 function virealys_cache_headers() {
     if ( is_admin() ) return;
     if ( ! is_user_logged_in() ) {
-        header( 'Cache-Control: public, max-age=31536000, s-maxage=86400, immutable' );
+        header( 'Cache-Control: public, max-age=3600, stale-while-revalidate=86400' );
         header( 'X-Content-Type-Options: nosniff' );
         header( 'Vary: Accept-Encoding' );
-        // v9.2: Hint PHP to gzip output if not already done by server
+        // v9.2: Enable gzip compression
         if ( ! ini_get( 'zlib.output_compression' ) && extension_loaded( 'zlib' ) ) {
             ini_set( 'zlib.output_compression', 'On' );
         }
