@@ -5,7 +5,7 @@
  */
 get_header();
 $reservation = get_theme_mod( 'reservation_url', '#reservation' );
-$page_slug   = $post->post_name;
+$page_slug   = isset( $post ) ? $post->post_name : '';
 ?>
 
 <section class="page-hero"<?php if ( has_post_thumbnail() ) : ?> style="--page-hero-bg:url(<?php echo esc_url( get_the_post_thumbnail_url( null, 'virealys-hero' ) ); ?>)"<?php endif; ?>>
