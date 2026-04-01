@@ -57,6 +57,14 @@ $constellation_pages = array(
         'x'       => 50, 'y' => 50,
         'level'   => 0,
     ),
+    'voyage-game' => array(
+        'title'   => get_theme_mod( 'page_voyage_game_title', 'Le Voyage' ),
+        'summary' => get_theme_mod( 'page_voyage_game_summary', 'Vivez votre soirée virtuelle chez Virealys.' ),
+        'icon'    => 'gamepad',
+        'color'   => '#ffd700',
+        'x'       => 50, 'y' => 22,
+        'level'   => 2,
+    ),
 );
 
 $constellation_links = array(
@@ -69,6 +77,8 @@ $constellation_links = array(
     array( 'from' => 'menus', 'to' => 'zones' ),
     array( 'from' => 'ambiances', 'to' => 'passeport' ),
     array( 'from' => 'zones', 'to' => 'passeport' ),
+    array( 'from' => 'voyage-game', 'to' => 'concept' ),
+    array( 'from' => 'voyage-game', 'to' => 'reservation' ),
 );
 ?>
 
