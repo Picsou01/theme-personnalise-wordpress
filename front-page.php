@@ -1,7 +1,7 @@
 <?php
 /**
- * Front page template - Constellation Hub v8.0
- * Sub-1s: minimal DOM, CSS-only stars, lazy IO images, touch swipe
+ * Front page template - Constellation Hub v9.0
+ * HyperSpeed: minimal DOM, CSS-only stars, instant images, touch swipe
  */
 get_header();
 
@@ -72,16 +72,16 @@ $constellation_links = array(
 );
 ?>
 
-<!-- CONSTELLATION HUB v8.0 -->
+<!-- CONSTELLATION HUB v9.0 -->
 <div class="vr-constellation-hub" id="vr-constellation-hub">
-    <!-- CSS-only background (zero JS, zero DOM nodes for stars) -->
     <div class="constellation-bg">
         <div class="constellation-stars-css" aria-hidden="true"></div>
+        <?php if ( ! wp_is_mobile() ) : ?>
         <div class="constellation-nebula constellation-nebula-1"></div>
         <div class="constellation-nebula constellation-nebula-2"></div>
+        <?php endif; ?>
     </div>
 
-    <!-- Hero overlay -->
     <div class="constellation-hero">
         <div class="constellation-hero-content" data-reveal>
             <h1 class="constellation-title"><?php echo esc_html( $hero_title ); ?></h1>
@@ -90,7 +90,8 @@ $constellation_links = array(
         </div>
     </div>
 
-    <!-- SVG lines between nodes -->
+    <?php // v9.1: Desktop-only elements — not rendered on mobile = -4KB HTML + -58 DOM nodes ?>
+    <?php if ( ! wp_is_mobile() ) : ?>
     <svg class="constellation-lines" id="constellation-lines" aria-hidden="true">
         <?php foreach ( $constellation_links as $link ) :
             $from = $constellation_pages[ $link['from'] ];
@@ -114,6 +115,7 @@ $constellation_links = array(
             $wp_page = get_page_by_path( $slug );
             $url = $wp_page ? get_permalink( $wp_page ) : home_url( '/' . $slug . '/' );
             $thumb = $wp_page && has_post_thumbnail( $wp_page ) ? get_the_post_thumbnail_url( $wp_page, 'virealys-card' ) : '';
+            $thumb_sm = $wp_page && has_post_thumbnail( $wp_page ) ? get_the_post_thumbnail_url( $wp_page, 'virealys-card-sm' ) : '';
         ?>
             <a href="<?php echo esc_url( $url ); ?>"
                class="constellation-node"
@@ -129,6 +131,7 @@ $constellation_links = array(
                     <?php if ( $thumb ) : ?>
                         <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='267'%3E%3C/svg%3E"
                              data-src="<?php echo esc_url( $thumb ); ?>"
+                             <?php if ( $thumb_sm ) : ?>data-src-sm="<?php echo esc_url( $thumb_sm ); ?>"<?php endif; ?>
                              alt="" class="constellation-node-thumb" loading="lazy" decoding="async" width="400" height="267">
                     <?php endif; ?>
                     <span class="constellation-node-summary"><?php echo esc_html( $page_data['summary'] ); ?></span>
@@ -137,8 +140,9 @@ $constellation_links = array(
             </a>
         <?php endforeach; ?>
     </div>
+    <?php endif; ?>
 
-    <!-- Mobile: scrollable card list with touch swipe -->
+    <!-- Mobile: scrollable card list -->
     <div class="constellation-mobile-list" id="constellation-mobile-list">
         <?php foreach ( $constellation_pages as $slug => $page_data ) :
             $wp_page = get_page_by_path( $slug );

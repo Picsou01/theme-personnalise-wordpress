@@ -1,7 +1,7 @@
 <?php
 /**
- * Universal page template v8.0
- * Responsive hero images, CSS containment, shared return bar
+ * Universal page template v9.0
+ * Responsive hero with srcset, CSS containment, constellation return
  */
 get_header();
 $reservation = get_theme_mod( 'reservation_url', '#reservation' );
