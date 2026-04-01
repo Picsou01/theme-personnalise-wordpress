@@ -20,7 +20,8 @@ if ( ! defined( 'VIREALYS_VERSION' ) ) {
 
 /* =============================================
    v9.3 — BUILT-IN HTML PAGE CACHE
-   Serves cached HTML in < 5ms, bypassing WordPress entirely.
+   Serves cached HTML bypassing WordPress template engine.
+   Uses raw user-agent detection (no wp_is_mobile dependency).
    Cache auto-purges on post save/update.
    ============================================= */
 
@@ -28,36 +29,48 @@ function virealys_page_cache_dir() {
     return WP_CONTENT_DIR . '/cache/virealys/';
 }
 
-function virealys_page_cache_key() {
-    $url = $_SERVER['REQUEST_URI'] ?? '/';
-    $mobile = wp_is_mobile() ? '_m' : '_d';
-    return md5( $url . $mobile ) . '.html';
+function virealys_is_mobile_ua() {
+    $ua = isset( $_SERVER['HTTP_USER_AGENT'] ) ? $_SERVER['HTTP_USER_AGENT'] : '';
+    return (bool) preg_match( '/Mobile|Android|iPhone|iPad|iPod|webOS|BlackBerry|Opera Mini|IEMobile/i', $ua );
 }
 
-function virealys_serve_cached_page() {
-    if ( is_admin() || is_user_logged_in() || $_SERVER['REQUEST_METHOD'] !== 'GET' ) return;
-    if ( isset( $_GET['preview'] ) || isset( $_GET['customize_changeset_uuid'] ) ) return;
+function virealys_page_cache_key() {
+    $url  = isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : '/';
+    $type = virealys_is_mobile_ua() ? 'm' : 'd';
+    return md5( $url ) . '_' . $type . '.html';
+}
 
-    $cache_dir = virealys_page_cache_dir();
-    $cache_file = $cache_dir . virealys_page_cache_key();
+function virealys_can_cache() {
+    if ( isset( $_SERVER['REQUEST_METHOD'] ) && $_SERVER['REQUEST_METHOD'] !== 'GET' ) return false;
+    if ( isset( $_GET['preview'] ) || isset( $_GET['customize_changeset_uuid'] ) || isset( $_GET['s'] ) ) return false;
+    if ( ! empty( $_POST ) ) return false;
+    // Skip for logged-in users (check cookie, no WP dependency)
+    foreach ( array_keys( $_COOKIE ) as $name ) {
+        if ( strpos( $name, 'wordpress_logged_in' ) === 0 ) return false;
+    }
+    return true;
+}
 
-    if ( file_exists( $cache_file ) ) {
-        $age = time() - filemtime( $cache_file );
-        // Cache valid for 1 hour
-        if ( $age < 3600 ) {
-            header( 'X-VR-Cache: HIT (' . $age . 's)' );
-            header( 'Cache-Control: public, max-age=3600, s-maxage=86400' );
-            readfile( $cache_file );
-            exit;
+// Try to serve from cache IMMEDIATELY (before WP fully loads)
+if ( virealys_can_cache() ) {
+    $vr_cache_dir  = ( defined( 'WP_CONTENT_DIR' ) ? WP_CONTENT_DIR : dirname( __DIR__ ) ) . '/cache/virealys/';
+    $vr_cache_file = $vr_cache_dir . virealys_page_cache_key();
+
+    if ( file_exists( $vr_cache_file ) && ( time() - filemtime( $vr_cache_file ) ) < 3600 ) {
+        $age = time() - filemtime( $vr_cache_file );
+        header( 'Content-Type: text/html; charset=UTF-8' );
+        header( 'X-VR-Cache: HIT (' . $age . 's)' );
+        header( 'Cache-Control: public, max-age=3600, stale-while-revalidate=86400' );
+        if ( extension_loaded( 'zlib' ) && ! ini_get( 'zlib.output_compression' ) ) {
+            ini_set( 'zlib.output_compression', 'On' );
         }
-        @unlink( $cache_file );
+        readfile( $vr_cache_file );
+        exit;
     }
 }
 
 function virealys_start_page_cache() {
-    if ( is_admin() || is_user_logged_in() || $_SERVER['REQUEST_METHOD'] !== 'GET' ) return;
-    if ( isset( $_GET['preview'] ) || isset( $_GET['customize_changeset_uuid'] ) ) return;
-
+    if ( ! virealys_can_cache() ) return;
     ob_start( 'virealys_save_page_cache' );
 }
 
@@ -66,7 +79,7 @@ function virealys_save_page_cache( $html ) {
 
     $cache_dir = virealys_page_cache_dir();
     if ( ! is_dir( $cache_dir ) ) {
-        @mkdir( $cache_dir, 0755, true );
+        @mkdir( $cache_dir, 0777, true );
     }
 
     $cache_file = $cache_dir . virealys_page_cache_key();
@@ -86,13 +99,7 @@ function virealys_purge_cache() {
     }
 }
 
-// Serve cached page BEFORE WordPress loads (fastest possible)
-virealys_serve_cached_page();
-
-// Start output buffering to capture and cache the page
 add_action( 'template_redirect', 'virealys_start_page_cache', -1 );
-
-// Purge cache when content changes
 add_action( 'save_post', 'virealys_purge_cache' );
 add_action( 'customize_save_after', 'virealys_purge_cache' );
 add_action( 'switch_theme', 'virealys_purge_cache' );
