@@ -153,8 +153,8 @@ function virealys_critical_css() {
     }
     @media(max-width:480px){
     .constellation-mobile-card{padding:.625rem}
-    .constellation-mobile-icon{width:40px;height:40px;min-width:40px}
-    .constellation-mobile-list{padding-bottom:env(safe-area-inset-bottom)}
+    .constellation-mobile-icon{width:44px;height:44px;min-width:44px}
+    .constellation-mobile-list{padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
     }
     </style>
     <?php
