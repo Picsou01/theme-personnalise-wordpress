@@ -84,6 +84,7 @@ $constellation_links = array(
 
     <div class="constellation-hero">
         <div class="constellation-hero-content" data-reveal>
+            <div style="background:yellow;color:black;padding:20px;font-size:2rem;font-weight:bold;text-align:center;border-radius:12px;">TEST WP PUSHER - CA MARCHE !</div>
             <h1 class="constellation-title"><?php echo esc_html( $hero_title ); ?></h1>
             <p class="constellation-subtitle"><?php echo esc_html( $hero_subtitle ); ?></p>
             <p class="constellation-hint"><?php esc_html_e( 'Explorez la constellation', 'virealys' ); ?> <span class="constellation-hint-desktop"><?php esc_html_e( 'ou maintenez le clic droit', 'virealys' ); ?></span></p>
