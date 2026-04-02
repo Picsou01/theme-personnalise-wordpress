@@ -203,12 +203,25 @@
     function init() {
         var g = document.getElementById('vr-game');
         if (!g) return;
-        g.innerHTML = '<canvas id="vr-c"></canvas><div id="vr-ui" class="vr-ui"></div>' +
-            '<div id="vr-dlg" class="vr-dlg" style="display:none"><div class="vr-dlg-speaker" id="vr-ds"></div><div class="vr-dlg-text" id="vr-dt"></div><div class="vr-dlg-hint">\u25bc Cliquez pour continuer</div></div>' +
-            '<div id="vr-hud" class="vr-hud" style="display:none"></div>' +
-            '<div id="vr-joy" class="vr-joy" style="display:none"><div class="vr-joy-knob" id="vr-jk"></div></div>' +
-            '<button id="vr-ib" class="vr-interact-btn" style="display:none"></button>';
-        canvas = document.getElementById('vr-c');
+        g.innerHTML = '';
+        canvas = document.createElement('canvas');
+        canvas.id = 'vr-c';
+        canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block';
+        g.appendChild(canvas);
+
+        var ui = document.createElement('div'); ui.id = 'vr-ui'; ui.className = 'vr-ui'; g.appendChild(ui);
+
+        var dlg = document.createElement('div'); dlg.id = 'vr-dlg'; dlg.className = 'vr-dlg'; dlg.style.display = 'none';
+        dlg.innerHTML = '<div class="vr-dlg-speaker" id="vr-ds"></div><div class="vr-dlg-text" id="vr-dt"></div><div class="vr-dlg-hint">\u25bc Cliquez pour continuer</div>';
+        g.appendChild(dlg);
+
+        var hud = document.createElement('div'); hud.id = 'vr-hud'; hud.className = 'vr-hud'; hud.style.display = 'none'; g.appendChild(hud);
+
+        var joy = document.createElement('div'); joy.id = 'vr-joy'; joy.className = 'vr-joy'; joy.style.display = 'none';
+        joy.innerHTML = '<div class="vr-joy-knob" id="vr-jk"></div>'; g.appendChild(joy);
+
+        var ib = document.createElement('button'); ib.id = 'vr-ib'; ib.className = 'vr-interact-btn'; ib.style.display = 'none'; g.appendChild(ib);
+
         ctx = canvas.getContext('2d');
         resize(); window.addEventListener('resize', resize);
         if (loadSave() && state.phase === 'playing') startGame(); else showCreation();
