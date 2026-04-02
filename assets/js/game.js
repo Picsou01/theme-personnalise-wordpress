@@ -275,7 +275,7 @@
         c.fillRect(x-4*s, y+6*s, 3*s, 8*s); c.fillRect(x+1*s, y+6*s, 3*s, 8*s);
         // Body
         c.fillStyle = of;
-        c.beginPath(); c.roundRect(x-6*s, y-4*s, 12*s, 12*s, 2*s); c.fill();
+        c.fillRect(x-6*s, y-4*s, 12*s, 12*s);
         // Collar
         c.fillStyle = sk;
         c.beginPath(); c.ellipse(x, y-4*s, 3*s, 1.5*s, 0, 0, Math.PI*2); c.fill();
