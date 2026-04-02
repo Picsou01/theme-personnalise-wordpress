@@ -1,6 +1,6 @@
 /**
- * Virealys Experience v4.0 — Jeu 2D Immersif Holographique
- * Salles plein ecran + eclairage + particules + slow food
+ * Virealys Experience v5.0 — Jeu 2D Immersif avec Sprites LimeZu
+ * Salles plein ecran + sprites tiles + eclairage + particules + slow food
  */
 (function () {
     'use strict';
@@ -16,6 +16,53 @@
     var OUTFITS = ['#00e5ff','#4d7cff','#a855f7','#e040fb','#10b981','#f97316','#ef4444','#ffd700'];
     var EYES_C = ['#2c1810','#1a6b3d','#2563eb','#7c3aed','#92400e'];
     var STAMPS_DEF = { cuisine:'\ud83d\udc68\u200d\ud83c\udf73', origine:'\ud83c\udf3f', voyage:'\u2708\ufe0f', immersion:'\ud83c\udf0a', sensoriel:'\u2728', bar:'\ud83c\udf78' };
+
+    /* ═══════════════════════════════════════
+       SPRITE LOADING SYSTEM
+       ═══════════════════════════════════════ */
+    var sprites = {};
+    var spritesLoaded = false;
+    var spritesTotal = 3;
+    var spritesCount = 0;
+
+    function getBaseUrl() {
+        // Try WordPress localized variable first
+        if (typeof virealys !== 'undefined' && virealys.theme_url) {
+            return virealys.theme_url;
+        }
+        // Fallback: derive from the script's own src
+        var scripts = document.querySelectorAll('script[src*="game.js"]');
+        if (scripts.length) {
+            return scripts[0].src.replace('/assets/js/game.js', '').split('?')[0];
+        }
+        return '';
+    }
+
+    function loadSprites(cb) {
+        var base = getBaseUrl() + '/assets/sprites/';
+        var toLoad = { rooms: 'rooms.png', furniture: 'furniture.png', player: 'char_adam.png' };
+        Object.keys(toLoad).forEach(function(key) {
+            var img = new Image();
+            img.onload = function() {
+                sprites[key] = img;
+                spritesCount++;
+                if (spritesCount >= spritesTotal) { spritesLoaded = true; cb(); }
+            };
+            img.onerror = function() {
+                console.warn('Virealys: sprite not loaded: ' + key);
+                spritesCount++;
+                if (spritesCount >= spritesTotal) { spritesLoaded = true; cb(); }
+            };
+            img.src = base + toLoad[key];
+        });
+    }
+
+    /* ═══════════════════════════════════════
+       PLAYER SPRITE ANIMATION
+       ═══════════════════════════════════════ */
+    var playerFrame = 0;
+    var playerDir = 0; // 0=down, 1=left, 2=right, 3=up
+    var playerAnimTimer = 0;
 
     /* ═══════════════════════════════════════
        SLOW FOOD TIPS
@@ -253,7 +300,24 @@
 
         ctx = canvas.getContext('2d');
         resize(); window.addEventListener('resize', resize);
-        if (loadSave() && state.phase === 'playing') startGame(); else showCreation();
+
+        // Load sprites, then start game
+        showLoadingScreen();
+        loadSprites(function() {
+            if (loadSave() && state.phase === 'playing') startGame(); else showCreation();
+        });
+    }
+
+    function showLoadingScreen() {
+        ctx.fillStyle = '#020010';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#00e5ff';
+        ctx.font = 'bold 16px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Chargement des sprites...', canvas.width / 2, canvas.height / 2);
+        ctx.fillStyle = 'rgba(0,229,255,0.4)';
+        ctx.font = '12px sans-serif';
+        ctx.fillText('VIREALYS', canvas.width / 2, canvas.height / 2 + 30);
     }
 
     function resize() {
@@ -305,7 +369,7 @@
     }
 
     /* ═══════════════════════════════════════
-       AVATAR RENDERER
+       AVATAR RENDERER (procedural fallback)
        ═══════════════════════════════════════ */
     function drawAvatar(c, x, y, s) {
         var sk = SKINS[state.skin], hr = HAIRS[state.hair], of = OUTFITS[state.outfit], ey = EYES_C[state.eyes];
@@ -341,6 +405,162 @@
         // Mouth
         c.strokeStyle = 'rgba(0,0,0,0.4)'; c.lineWidth = s*.8;
         c.beginPath(); c.arc(x, y-8*s, 2*s, .2, Math.PI-.2); c.stroke();
+    }
+
+    /* ═══════════════════════════════════════
+       SPRITE-BASED PLAYER RENDERER
+       ═══════════════════════════════════════ */
+    function drawPlayer(x, y) {
+        if (!sprites.player) {
+            // Fallback to procedural avatar
+            drawAvatar(ctx, x, y, 1.5);
+            return;
+        }
+
+        // Determine movement state
+        var moving = (keys.ArrowUp || keys.w || keys.z || keys.ArrowDown || keys.s ||
+                      keys.ArrowLeft || keys.q || keys.a || keys.ArrowRight || keys.d || joystick.active);
+
+        if (keys.ArrowDown || keys.s || (joystick.active && joystick.dy > 0.3)) playerDir = 0;
+        else if (keys.ArrowLeft || keys.q || keys.a || (joystick.active && joystick.dx < -0.3)) playerDir = 1;
+        else if (keys.ArrowRight || keys.d || (joystick.active && joystick.dx > 0.3)) playerDir = 2;
+        else if (keys.ArrowUp || keys.w || keys.z || (joystick.active && joystick.dy < -0.3)) playerDir = 3;
+
+        // Animation cycle
+        if (moving) {
+            playerAnimTimer++;
+            if (playerAnimTimer % 8 === 0) playerFrame = (playerFrame + 1) % 6;
+        } else {
+            playerFrame = 0;
+        }
+
+        // Source coordinates in char_adam.png spritesheet (16x16 frames)
+        // Layout: each direction uses 2 rows, 6 frames across per walk cycle
+        // Row 0-1: down, Row 2-3: left, Row 4-5: right, Row 6-7: up
+        var srcX = playerFrame * 16;
+        var srcY = playerDir * 32;
+
+        // Draw scaled 3x (16px -> 48px)
+        var prevSmoothing = ctx.imageSmoothingEnabled;
+        ctx.imageSmoothingEnabled = false;
+
+        // Shadow under player
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.beginPath(); ctx.ellipse(x, y + 20, 14, 5, 0, 0, Math.PI * 2); ctx.fill();
+
+        ctx.drawImage(sprites.player, srcX, srcY, 16, 16, x - 24, y - 24, 48, 48);
+        ctx.imageSmoothingEnabled = prevSmoothing;
+    }
+
+    /* ═══════════════════════════════════════
+       SPRITE-BASED FLOOR RENDERING
+       ═══════════════════════════════════════ */
+    function drawSpriteFloor() {
+        if (!sprites.rooms) {
+            // Fallback to procedural floor based on room
+            var r = state.room;
+            if (r === 'entree') { drawFloorStone(); }
+            else if (r === 'zone_sensoriel') { drawFloorDarkCarpet(); }
+            else { drawFloorParquet(); }
+            return;
+        }
+
+        // Floor tile source coordinates in rooms.png (32x32 tiles)
+        // These map to different tile positions in the spritesheet
+        var floorTiles = {
+            'entree':         { sx: 352, sy: 160 },  // Stone gray
+            'lobby':          { sx: 128, sy: 160 },  // Dark wood
+            'cuisine':        { sx: 320, sy: 128 },  // Checkered
+            'zone_origine':   { sx: 128, sy: 192 },  // Wood planks
+            'zone_voyage':    { sx: 128, sy: 160 },  // Dark wood
+            'zone_immersion': { sx: 352, sy: 128 },  // Gray
+            'zone_sensoriel': { sx: 352, sy: 192 },  // Dark stone
+            'bar':            { sx: 128, sy: 128 }   // Medium wood
+        };
+
+        var tile = floorTiles[state.room] || { sx: 128, sy: 160 };
+        var tileSize = 32;
+        var scale = 2; // 32px tiles drawn at 64px
+        var drawSize = tileSize * scale;
+
+        var prevSmoothing = ctx.imageSmoothingEnabled;
+        ctx.imageSmoothingEnabled = false;
+        for (var tx = 0; tx < W; tx += drawSize) {
+            for (var ty = 0; ty < H; ty += drawSize) {
+                ctx.drawImage(sprites.rooms, tile.sx, tile.sy, tileSize, tileSize, tx, ty, drawSize, drawSize);
+            }
+        }
+        ctx.imageSmoothingEnabled = prevSmoothing;
+    }
+
+    /* ═══════════════════════════════════════
+       SPRITE-BASED WALL RENDERING
+       ═══════════════════════════════════════ */
+    function drawSpriteWalls() {
+        if (!sprites.rooms) {
+            // Fallback to procedural walls
+            var wallH = H * 0.04;
+            ctx.fillStyle = 'rgba(20,20,40,0.8)';
+            ctx.fillRect(0, 0, W, wallH);
+            ctx.fillRect(0, H - wallH, W, wallH);
+            ctx.fillRect(0, 0, W * 0.025, H);
+            ctx.fillRect(W * 0.975, 0, W * 0.025, H);
+            // Wall trim
+            ctx.fillStyle = 'rgba(0,229,255,0.08)';
+            ctx.fillRect(0, wallH - 2, W, 2);
+            ctx.fillRect(0, H - wallH, W, 2);
+            ctx.fillRect(W * 0.025 - 1, 0, 1, H);
+            ctx.fillRect(W * 0.975, 0, 1, H);
+            return;
+        }
+
+        // Wall tile row Y coordinates in rooms.png for different room styles
+        // Each wall section in the spritesheet has left (col 0), center (col 1), right (col 2)
+        var wallRows = {
+            'entree':         224,  // Gray/blue walls
+            'lobby':          224,  // Gray walls
+            'cuisine':        160,  // Wood panels
+            'zone_origine':   160,  // Wood panels
+            'zone_voyage':    96,   // Mint walls
+            'zone_immersion': 224,  // Gray
+            'zone_sensoriel': 224,  // Gray
+            'bar':            192   // Orange wood
+        };
+
+        var wallY = wallRows[state.room] || 224;
+        var tileSize = 32;
+        var scale = 2;
+        var drawSize = tileSize * scale;
+        var wallThickness = drawSize;
+
+        var prevSmoothing = ctx.imageSmoothingEnabled;
+        ctx.imageSmoothingEnabled = false;
+
+        // Top wall (using center wall tile - col 1)
+        for (var tx = 0; tx < W; tx += drawSize) {
+            ctx.drawImage(sprites.rooms, 32, wallY, tileSize, tileSize, tx, 0, drawSize, wallThickness);
+        }
+        // Bottom wall
+        for (var tx = 0; tx < W; tx += drawSize) {
+            ctx.drawImage(sprites.rooms, 32, wallY, tileSize, tileSize, tx, H - wallThickness, drawSize, wallThickness);
+        }
+        // Left wall (using left wall tile - col 0)
+        for (var ty = 0; ty < H; ty += drawSize) {
+            ctx.drawImage(sprites.rooms, 0, wallY, tileSize, tileSize, 0, ty, wallThickness, drawSize);
+        }
+        // Right wall (using right wall tile - col 2)
+        for (var ty = 0; ty < H; ty += drawSize) {
+            ctx.drawImage(sprites.rooms, 64, wallY, tileSize, tileSize, W - wallThickness, ty, wallThickness, drawSize);
+        }
+
+        ctx.imageSmoothingEnabled = prevSmoothing;
+
+        // Wall trim overlay (subtle glow on edges)
+        ctx.fillStyle = 'rgba(0,229,255,0.06)';
+        ctx.fillRect(0, wallThickness - 2, W, 2);
+        ctx.fillRect(0, H - wallThickness, W, 2);
+        ctx.fillRect(wallThickness - 1, 0, 1, H);
+        ctx.fillRect(W - wallThickness, 0, 1, H);
     }
 
     /* ═══════════════════════════════════════
@@ -699,7 +919,7 @@
     }
 
     /* ═══════════════════════════════════════
-       FLOOR PATTERNS
+       FLOOR PATTERNS (procedural fallback)
        ═══════════════════════════════════════ */
     function drawFloorParquet() {
         var woodColors = ['#2a1e12', '#332414', '#3a2a18'];
@@ -773,7 +993,6 @@
         var lights = [];
         var pulse = Math.sin(frame * 0.02) * 0.02;
         if (roomKey === 'entree') {
-            // Cool blue tones
             lights = [
                 { x: W * 0.5, y: H * 0.15, r: W * 0.35, color: 'rgba(0,100,200,' + (0.04 + pulse) + ')' },
                 { x: W * 0.2, y: H * 0.5, r: W * 0.25, color: 'rgba(0,150,255,' + (0.03 + pulse) + ')' },
@@ -781,7 +1000,6 @@
                 { x: W * 0.5, y: H * 0.85, r: W * 0.3, color: 'rgba(0,80,180,' + (0.03 + pulse) + ')' }
             ];
         } else if (roomKey === 'zone_origine' || roomKey === 'cuisine' || roomKey === 'lobby') {
-            // Warm amber
             lights = [
                 { x: W * 0.25, y: H * 0.3, r: W * 0.28, color: 'rgba(255,170,50,' + (0.05 + pulse) + ')' },
                 { x: W * 0.75, y: H * 0.3, r: W * 0.28, color: 'rgba(255,170,50,' + (0.05 + pulse) + ')' },
@@ -790,7 +1008,6 @@
                 { x: W * 0.85, y: H * 0.7, r: W * 0.2, color: 'rgba(255,140,20,' + (0.03 + pulse) + ')' }
             ];
         } else if (roomKey === 'zone_voyage') {
-            // Blue tones
             lights = [
                 { x: W * 0.5, y: H * 0.15, r: W * 0.4, color: 'rgba(50,80,200,' + (0.05 + pulse) + ')' },
                 { x: W * 0.2, y: H * 0.6, r: W * 0.25, color: 'rgba(60,100,220,' + (0.04 + pulse) + ')' },
@@ -798,7 +1015,6 @@
                 { x: W * 0.5, y: H * 0.8, r: W * 0.3, color: 'rgba(40,70,180,' + (0.03 + pulse) + ')' }
             ];
         } else if (roomKey === 'zone_immersion') {
-            // Purple tones
             lights = [
                 { x: W * 0.5, y: H * 0.2, r: W * 0.45, color: 'rgba(120,40,200,' + (0.05 + pulse) + ')' },
                 { x: W * 0.15, y: H * 0.5, r: W * 0.2, color: 'rgba(140,50,220,' + (0.04 + pulse) + ')' },
@@ -806,7 +1022,6 @@
                 { x: W * 0.5, y: H * 0.65, r: W * 0.3, color: 'rgba(100,30,180,' + (0.04 + pulse) + ')' }
             ];
         } else if (roomKey === 'zone_sensoriel') {
-            // Pink/purple tones
             lights = [
                 { x: W * 0.3, y: H * 0.25, r: W * 0.3, color: 'rgba(200,50,180,' + (0.04 + pulse) + ')' },
                 { x: W * 0.7, y: H * 0.25, r: W * 0.3, color: 'rgba(180,40,200,' + (0.04 + pulse) + ')' },
@@ -815,7 +1030,6 @@
                 { x: W * 0.8, y: H * 0.7, r: W * 0.2, color: 'rgba(160,30,160,' + (0.03 + pulse) + ')' }
             ];
         } else if (roomKey === 'bar') {
-            // Warm gold tones
             lights = [
                 { x: W * 0.5, y: H * 0.12, r: W * 0.4, color: 'rgba(255,200,50,' + (0.05 + pulse) + ')' },
                 { x: W * 0.15, y: H * 0.5, r: W * 0.22, color: 'rgba(255,180,30,' + (0.04 + pulse) + ')' },
@@ -837,49 +1051,40 @@
        WALL DECORATIONS PER ROOM
        ═══════════════════════════════════════ */
     function drawWallDecorations(roomKey) {
-        var wallH = H * 0.04;
+        // Compute wall offset based on whether sprites are used
+        var wallH = sprites.rooms ? 64 : H * 0.04;
         if (roomKey === 'entree') {
-            // Stone-themed sconces on pillars
             drawWallSconce(W * 0.14, H * 0.25);
             drawWallSconce(W * 0.86, H * 0.25);
         } else if (roomKey === 'lobby') {
-            // Paintings on walls
             drawPainting(W * 0.06, wallH + 10, 40, 28, ['#2a1a10', '#4a3020', '#1a0a05']);
             drawPainting(W * 0.9, wallH + 10, 40, 28, ['#0a1a2a', '#1a2a4a', '#050f1a']);
-            // Sconces
             drawWallSconce(W * 0.15, wallH + 50);
             drawWallSconce(W * 0.85, wallH + 50);
             drawWallSconce(W * 0.5, wallH + 8);
         } else if (roomKey === 'cuisine') {
-            // Kitchen art
             drawPainting(W * 0.85, wallH + 10, 36, 24, ['#3a2a10', '#5a4020', '#2a1a08']);
             drawWallSconce(W * 0.08, wallH + 40);
             drawWallSconce(W * 0.92, wallH + 40);
         } else if (roomKey === 'zone_origine') {
-            // Classic art paintings
             drawPainting(W * 0.06, wallH + 12, 44, 30, ['#2a2010', '#4a3a20', '#3a2a15']);
             drawPainting(W * 0.88, wallH + 12, 44, 30, ['#1a2a10', '#2a3a18', '#0a1a08']);
-            // Sconces between tables
             drawWallSconce(W * 0.5, wallH + 8);
             drawWallSconce(W * 0.06, H * 0.5);
         } else if (roomKey === 'zone_voyage') {
-            // Travel-themed paintings
             drawPainting(W * 0.04, wallH + 10, 38, 26, ['#1a1a3a', '#2a2a5a', '#0a0a2a']);
             drawPainting(W * 0.9, wallH + 10, 38, 26, ['#2a1a2a', '#4a2a4a', '#1a0a1a']);
             drawWallSconce(W * 0.06, H * 0.5);
             drawWallSconce(W * 0.94, H * 0.5);
         } else if (roomKey === 'zone_immersion') {
-            // Minimal - the projections are the decoration
             drawWallSconce(W * 0.06, H * 0.55);
             drawWallSconce(W * 0.94, H * 0.55);
         } else if (roomKey === 'zone_sensoriel') {
-            // Moody purple paintings
             drawPainting(W * 0.05, wallH + 10, 36, 24, ['#2a0a3a', '#3a1a4a', '#1a0a2a']);
             drawPainting(W * 0.9, wallH + 10, 36, 24, ['#3a0a2a', '#4a1a3a', '#2a0a1a']);
             drawWallSconce(W * 0.06, H * 0.5);
             drawWallSconce(W * 0.94, H * 0.5);
         } else if (roomKey === 'bar') {
-            // Bar artwork
             drawPainting(W * 0.04, wallH + 10, 34, 22, ['#2a1a30', '#3a2a40', '#1a0a20']);
             drawPainting(W * 0.92, wallH + 10, 34, 22, ['#3a2a10', '#5a4020', '#2a1a08']);
             drawWallSconce(W * 0.3, wallH + 8);
@@ -975,7 +1180,7 @@
             drawWineGlass(W*.15, H*.52); drawWineGlass(W*.22, H*.53);
             drawWineGlass(W*.68, H*.52); drawWineGlass(W*.76, H*.53);
         } else if (r === 'zone_immersion') {
-            // Massive 270° projection
+            // Massive 270 projection
             drawProjection(W*.03, H*.04, W*.94, H*.3, 'rgba(168,85,247', '\ud83c\udf0c For\u00eat Enchant\u00e9e \u2014 Projection 270\u00b0');
             // Side projections
             drawProjection(W*.03, H*.35, W*.08, H*.4, 'rgba(168,85,247', '');
@@ -1054,29 +1259,19 @@
         grad.addColorStop(0, room.bgTop); grad.addColorStop(1, room.bgBot);
         ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
 
-        // Floor pattern per room type
+        // Floor: sprite-based or procedural fallback
+        drawSpriteFloor();
+
         var r = state.room;
-        if (r === 'entree') {
-            drawFloorStone();
-        } else if (r === 'zone_sensoriel') {
-            drawFloorDarkCarpet();
-        } else {
-            drawFloorParquet();
-        }
 
         // Ambient lighting per room
         drawAmbientLighting(r);
 
-        // Walls with wainscoting
-        var wallH = H*.04;
-        ctx.fillStyle = 'rgba(20,20,40,0.8)'; ctx.fillRect(0,0,W,wallH); ctx.fillRect(0,H-wallH,W,wallH);
-        ctx.fillRect(0,0,W*.025,H); ctx.fillRect(W*.975,0,W*.025,H);
-        // Wall trim
-        ctx.fillStyle = 'rgba(0,229,255,0.08)';
-        ctx.fillRect(0,wallH-2,W,2); ctx.fillRect(0,H-wallH,W,2);
-        ctx.fillRect(W*.025-1,0,1,H); ctx.fillRect(W*.975,0,1,H);
+        // Walls: sprite-based or procedural fallback
+        drawSpriteWalls();
 
-        // Crown molding
+        // Crown molding (adapts to wall thickness)
+        var wallH = sprites.rooms ? 64 : H * 0.04;
         drawCrownMolding(wallH);
 
         // Wall decorations (paintings, sconces)
@@ -1116,7 +1311,7 @@
             }
         });
 
-        // NPCs
+        // NPCs (still use procedural avatar for NPCs)
         room.npcs.forEach(function(n) {
             var nx=px(n.x,W), ny=px(n.y,H);
             drawAvatar(ctx, nx, ny, 1.3);
@@ -1132,9 +1327,9 @@
             }
         });
 
-        // Player
+        // Player — sprite-based with animated walk cycle
         var ppx=px(state.px,W), ppy=px(state.py,H);
-        drawAvatar(ctx, ppx, ppy, 1.5);
+        drawPlayer(ppx, ppy);
         ctx.fillStyle = '#00e5ff'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
         ctx.fillText(state.name, ppx, ppy-28);
 
