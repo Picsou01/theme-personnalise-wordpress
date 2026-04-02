@@ -6,7 +6,7 @@
     'use strict';
 
     var SAVE_KEY = 'vr_game4';
-    var SPEED = 2.5;
+    var SPEED = 2;
     var TYPE_SPEED = 30;
     var INTERACT_DIST = 60;
     var PARTICLE_COUNT = 30;
@@ -16,6 +16,23 @@
     var OUTFITS = ['#00e5ff','#4d7cff','#a855f7','#e040fb','#10b981','#f97316','#ef4444','#ffd700'];
     var EYES_C = ['#2c1810','#1a6b3d','#2563eb','#7c3aed','#92400e'];
     var STAMPS_DEF = { cuisine:'\ud83d\udc68\u200d\ud83c\udf73', origine:'\ud83c\udf3f', voyage:'\u2708\ufe0f', immersion:'\ud83c\udf0a', sensoriel:'\u2728', bar:'\ud83c\udf78' };
+
+    /* ═══════════════════════════════════════
+       SLOW FOOD TIPS
+       ═══════════════════════════════════════ */
+    var SLOW_FOOD_TIPS = [
+        'Slow Food : savourez chaque instant',
+        'La cuisine est un art qui prend son temps',
+        'Manger bien, manger juste, manger local',
+        'Le temps est le meilleur des ingr\u00e9dients',
+        'Chaque plat raconte l\'histoire d\'un terroir',
+        'Prenez le temps de go\u00fbter la diff\u00e9rence'
+    ];
+    var slowFoodTipAlpha = 0;
+    var slowFoodTipText = '';
+    var slowFoodTipTimer = 0;
+    var slowFoodTipPhase = 'hidden'; // hidden, fadein, visible, fadeout
+    var SLOW_TIP_INTERVAL = 900; // ~30 seconds at 30fps
 
     /* ═══════════════════════════════════════
        ROOMS — each room fills the viewport
@@ -182,12 +199,12 @@
        ═══════════════════════════════════════ */
     var DLG = {
         portier: ['Bonsoir ! Bienvenue chez Virealys.', 'Le premier restaurant Slow Food immersif.', 'Poussez la porte en bas pour entrer.'],
-        hote: ['Bienvenue dans le Grand Hall !', 'Quatre zones d\'immersion vous attendent :', '\ud83c\udf3f Origine \u2014 Le go\u00fbt pur, l\'essentiel', '\u2708\ufe0f Voyage \u2014 Projections et accords mets-vins', '\ud83c\udf0a Immersion \u2014 Projection 270\u00b0, son spatial', '\u2728 Sensoriel \u2014 Brume, vibrations, exp\u00e9rience totale', 'La cuisine et le bar sont aussi ouverts !', 'Explorez tout et collectez vos tampons !'],
-        chef: ['Bienvenue dans ma cuisine !', 'Ici tout est Slow Food : local, de saison.', 'Chaque producteur est notre voisin.', 'Ce soir : filet de Wagyu, laquage miso,', 'truffe noire du P\u00e9rigord.', 'Imaginez les ar\u00f4mes qui envahissent la pi\u00e8ce...', 'Votre \u00e9cran ne peut pas vous les transmettre.', 'Mais chez Virealys, chaque soir, c\'est r\u00e9el.'],
+        hote: ['Bienvenue dans le Grand Hall !', 'Quatre zones d\'immersion vous attendent :', '\ud83c\udf3f Origine \u2014 Le go\u00fbt pur, l\'essentiel', '\u2708\ufe0f Voyage \u2014 Projections et accords mets-vins', '\ud83c\udf0a Immersion \u2014 Projection 270\u00b0, son spatial', '\u2728 Sensoriel \u2014 Brume, vibrations, exp\u00e9rience totale', 'La cuisine et le bar sont aussi ouverts !', 'Explorez tout et collectez vos tampons !', 'Prenez le temps d\'explorer. Rien ne presse chez Virealys.'],
+        chef: ['Bienvenue dans ma cuisine !', 'Ici tout est Slow Food : local, de saison.', 'Chaque producteur est notre voisin.', 'Ce soir : filet de Wagyu, laquage miso,', 'truffe noire du P\u00e9rigord.', 'Imaginez les ar\u00f4mes qui envahissent la pi\u00e8ce...', 'Votre \u00e9cran ne peut pas vous les transmettre.', 'Mais chez Virealys, chaque soir, c\'est r\u00e9el.', 'Prenez votre temps... Le Slow Food, c\'est aussi savourer chaque instant.'],
         serveur_o: ['Bienvenue en Zone Origine.', 'Ici, pas de projection, pas d\'effet.', 'Juste vous, la bougie, et le go\u00fbt.', 'Formule Classique \u00e0 45\u20ac.', 'Chaque ingr\u00e9dient de moins de 50km.', 'Le carpaccio de Saint-Jacques est sublime.'],
-        sommelier: ['Bonsoir ! Je suis votre Sommelier.', 'Chaque plat m\u00e9rite son accord parfait.', 'Pour le carpaccio de Saint-Jacques,', 'je recommande un Muscadet S\u00e8vre-et-Maine.', 'Sa min\u00e9ralit\u00e9 r\u00e9v\u00e8le la fra\u00eecheur iod\u00e9e.', 'Derri\u00e8re moi, la projection montre le vignoble.', 'Ce vignoble existe. On peut le visiter.'],
+        sommelier: ['Bonsoir ! Je suis votre Sommelier.', 'Chaque plat m\u00e9rite son accord parfait.', 'Pour le carpaccio de Saint-Jacques,', 'je recommande un Muscadet S\u00e8vre-et-Maine.', 'Sa min\u00e9ralit\u00e9 r\u00e9v\u00e8le la fra\u00eecheur iod\u00e9e.', 'Derri\u00e8re moi, la projection montre le vignoble.', 'Ce vignoble existe. On peut le visiter.', 'N\'allez pas trop vite. Un bon vin se d\u00e9guste lentement...'],
         guide_imm: ['Bienvenue en Zone Immersion.', 'Les projections 270\u00b0 vous entourent.', '12 m\u00e8tres de haut. Son spatial.', 'Quatre ambiances changent chaque saison :', '\ud83c\udf3f For\u00eat \u2022 \ud83c\udf0a Oc\u00e9an \u2022 \ud83c\udf05 Aurore \u2022 \ud83c\udf0c Cosmos', 'Chaque visite est diff\u00e9rente.', 'Ce que vous voyez l\u00e0 est une fraction.', 'En vrai, c\'est... indescriptible.'],
-        maitre_sens: ['Bienvenue en Zone Sensoriel.', 'L\'exp\u00e9rience la plus avanc\u00e9e.', 'Brume parfum\u00e9e \u00e0 la lavande...', 'Le sol vibre sous vos pieds...', 'Le son vous enveloppe de partout...', 'Formule Sensoriel : 120\u20ac, 7 services.', 'Chaque plat transforme l\'espace.', 'C\'est impossible \u00e0 reproduire ici.', 'Ce moment n\'existe qu\'en vrai.', 'R\u00e9servez pour le vivre.'],
+        maitre_sens: ['Bienvenue en Zone Sensoriel.', 'L\'exp\u00e9rience la plus avanc\u00e9e.', 'Brume parfum\u00e9e \u00e0 la lavande...', 'Le sol vibre sous vos pieds...', 'Le son vous enveloppe de partout...', 'Formule Sensoriel : 120\u20ac, 7 services.', 'Chaque plat transforme l\'espace.', 'C\'est impossible \u00e0 reproduire ici.', 'Ce moment n\'existe qu\'en vrai.', 'R\u00e9servez pour le vivre.', 'Respirez. Fermez les yeux un instant. Sentez-vous l\'ambiance ?'],
         barman: ['Bonsoir ! Le cocktail Constellation ?', 'Gin infus\u00e9 au thym, tonic artisanal,', 'z\u00e9leste de yuzu frais.', 'Servi avec une brume glac\u00e9e...', 'La brume d\u00e9borde du verre...', 'Les ar\u00f4mes s\'\u00e9l\u00e8vent...', 'Vous ne pouvez pas les sentir ici.', 'Mais au bar de Virealys, chaque soir.']
     };
 
@@ -403,9 +420,67 @@
         updateHUD();
         // Particles
         particles.forEach(function(p) { p.y -= p.sp; p.a = Math.sin(frame*.02+p.x)*.5+.5; if(p.y<-2) { p.y=102; p.x=Math.random()*100; } });
+        // Slow food tip timer
+        updateSlowFoodTip();
     }
 
     function rectHit(px,py,pw,ph,rx,ry,rw,rh) { return px+pw>rx && px-pw<rx+rw && py+ph>ry && py-ph<ry+rh; }
+
+    /* ═══════════════════════════════════════
+       SLOW FOOD TIP OVERLAY
+       ═══════════════════════════════════════ */
+    function updateSlowFoodTip() {
+        slowFoodTipTimer++;
+        if (slowFoodTipPhase === 'hidden') {
+            if (slowFoodTipTimer >= SLOW_TIP_INTERVAL) {
+                slowFoodTipTimer = 0;
+                slowFoodTipText = SLOW_FOOD_TIPS[Math.floor(Math.random() * SLOW_FOOD_TIPS.length)];
+                slowFoodTipPhase = 'fadein';
+                slowFoodTipAlpha = 0;
+            }
+        } else if (slowFoodTipPhase === 'fadein') {
+            slowFoodTipAlpha += 0.015;
+            if (slowFoodTipAlpha >= 0.85) { slowFoodTipAlpha = 0.85; slowFoodTipPhase = 'visible'; slowFoodTipTimer = 0; }
+        } else if (slowFoodTipPhase === 'visible') {
+            if (slowFoodTipTimer >= 180) { slowFoodTipPhase = 'fadeout'; }
+        } else if (slowFoodTipPhase === 'fadeout') {
+            slowFoodTipAlpha -= 0.015;
+            if (slowFoodTipAlpha <= 0) { slowFoodTipAlpha = 0; slowFoodTipPhase = 'hidden'; slowFoodTipTimer = 0; }
+        }
+    }
+
+    function drawSlowFoodTip() {
+        if (slowFoodTipAlpha <= 0) return;
+        ctx.save();
+        ctx.globalAlpha = slowFoodTipAlpha;
+        var tipW = ctx.measureText(slowFoodTipText).width + 60;
+        var tipH = 36;
+        var tipX = W / 2 - tipW / 2;
+        var tipY = 44;
+        // Background
+        ctx.fillStyle = 'rgba(10,5,20,0.75)';
+        ctx.beginPath();
+        ctx.moveTo(tipX + 8, tipY);
+        ctx.lineTo(tipX + tipW - 8, tipY);
+        ctx.quadraticCurveTo(tipX + tipW, tipY, tipX + tipW, tipY + 8);
+        ctx.lineTo(tipX + tipW, tipY + tipH - 8);
+        ctx.quadraticCurveTo(tipX + tipW, tipY + tipH, tipX + tipW - 8, tipY + tipH);
+        ctx.lineTo(tipX + 8, tipY + tipH);
+        ctx.quadraticCurveTo(tipX, tipY + tipH, tipX, tipY + tipH - 8);
+        ctx.lineTo(tipX, tipY + 8);
+        ctx.quadraticCurveTo(tipX, tipY, tipX + 8, tipY);
+        ctx.fill();
+        // Border
+        ctx.strokeStyle = 'rgba(255,215,0,0.4)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        // Text
+        ctx.fillStyle = '#ffd700';
+        ctx.font = 'italic 13px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(slowFoodTipText, W / 2, tipY + tipH / 2 + 5);
+        ctx.restore();
+    }
 
     /* ═══════════════════════════════════════
        DETAILED FURNITURE DRAWING HELPERS
@@ -545,6 +620,258 @@
             var mg = ctx.createRadialGradient(mx, my, 0, mx, my, mr);
             mg.addColorStop(0, color); mg.addColorStop(1, 'rgba(0,0,0,0)');
             ctx.fillStyle = mg; ctx.fillRect(mx-mr, my-mr, mr*2, mr*2);
+        }
+    }
+
+    /* ═══════════════════════════════════════
+       WALL DECORATIONS
+       ═══════════════════════════════════════ */
+    function drawPainting(x, y, w, h, colors) {
+        // Frame (gold)
+        ctx.fillStyle = 'rgba(180,150,80,0.6)';
+        ctx.fillRect(x - 3, y - 3, w + 6, h + 6);
+        // Canvas
+        var pg = ctx.createLinearGradient(x, y, x + w, y + h);
+        pg.addColorStop(0, colors[0]); pg.addColorStop(0.5, colors[1]); pg.addColorStop(1, colors[2] || colors[0]);
+        ctx.fillStyle = pg;
+        ctx.fillRect(x, y, w, h);
+        // Inner border
+        ctx.strokeStyle = 'rgba(200,170,100,0.4)'; ctx.lineWidth = 1;
+        ctx.strokeRect(x + 2, y + 2, w - 4, h - 4);
+        // Shine
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.fillRect(x, y, w * 0.4, h);
+    }
+
+    function drawWallSconce(x, y) {
+        // Bracket
+        ctx.fillStyle = 'rgba(180,150,80,0.5)';
+        ctx.fillRect(x - 2, y, 4, 10);
+        // Sconce cup
+        ctx.fillStyle = 'rgba(200,170,100,0.6)';
+        ctx.beginPath();
+        ctx.moveTo(x - 6, y);
+        ctx.lineTo(x + 6, y);
+        ctx.lineTo(x + 4, y - 5);
+        ctx.lineTo(x - 4, y - 5);
+        ctx.closePath();
+        ctx.fill();
+        // Flame
+        var flick = Math.sin(frame * 0.12 + x) * 1;
+        ctx.fillStyle = 'rgba(255,200,80,0.8)';
+        ctx.beginPath(); ctx.ellipse(x, y - 7 + flick, 2.5, 4, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255,240,150,0.9)';
+        ctx.beginPath(); ctx.ellipse(x, y - 6 + flick, 1.2, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+        // Light glow
+        var sg = ctx.createRadialGradient(x, y - 6, 0, x, y - 6, 60);
+        sg.addColorStop(0, 'rgba(255,200,80,0.08)'); sg.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = sg;
+        ctx.fillRect(x - 60, y - 66, 120, 120);
+    }
+
+    function drawCrownMolding(wallH) {
+        // Top molding
+        ctx.fillStyle = 'rgba(180,150,80,0.12)';
+        ctx.fillRect(0, wallH - 5, W, 3);
+        ctx.fillStyle = 'rgba(180,150,80,0.08)';
+        ctx.fillRect(0, wallH - 8, W, 2);
+        // Bottom molding
+        ctx.fillStyle = 'rgba(180,150,80,0.12)';
+        ctx.fillRect(0, H - wallH + 2, W, 3);
+        ctx.fillStyle = 'rgba(180,150,80,0.08)';
+        ctx.fillRect(0, H - wallH + 5, W, 2);
+        // Side molding
+        ctx.fillStyle = 'rgba(180,150,80,0.10)';
+        ctx.fillRect(W * 0.025 - 1, 0, 3, H);
+        ctx.fillRect(W * 0.975 - 2, 0, 3, H);
+    }
+
+    /* ═══════════════════════════════════════
+       FLOOR PATTERNS
+       ═══════════════════════════════════════ */
+    function drawFloorParquet() {
+        var woodColors = ['#2a1e12', '#332414', '#3a2a18'];
+        var plankW = 40;
+        var plankH = 12;
+        for (var fy = 0; fy < H; fy += plankH) {
+            var rowOffset = (Math.floor(fy / plankH) % 2) * (plankW / 2);
+            for (var fx = -plankW; fx < W + plankW; fx += plankW) {
+                var ci = (Math.floor(fx / plankW) + Math.floor(fy / plankH)) % 3;
+                ctx.fillStyle = woodColors[ci];
+                ctx.globalAlpha = 0.15;
+                ctx.fillRect(fx + rowOffset, fy, plankW - 1, plankH - 1);
+                // Wood grain line
+                ctx.strokeStyle = 'rgba(255,255,255,0.02)';
+                ctx.lineWidth = 0.5;
+                ctx.beginPath();
+                ctx.moveTo(fx + rowOffset + 4, fy + plankH / 2);
+                ctx.lineTo(fx + rowOffset + plankW - 5, fy + plankH / 2);
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+            }
+        }
+        // Subtle gap lines
+        ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+        ctx.lineWidth = 0.5;
+        for (var gy = 0; gy < H; gy += plankH) {
+            ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
+        }
+    }
+
+    function drawFloorStone() {
+        var stoneW = 60;
+        var stoneH = 40;
+        for (var fy = 0; fy < H; fy += stoneH) {
+            var rowOffset = (Math.floor(fy / stoneH) % 2) * (stoneW / 2);
+            for (var fx = -stoneW; fx < W + stoneW; fx += stoneW) {
+                var shade = 0.03 + ((Math.floor(fx / stoneW) * 7 + Math.floor(fy / stoneH) * 13) % 5) * 0.008;
+                ctx.fillStyle = 'rgba(100,110,130,' + shade + ')';
+                ctx.fillRect(fx + rowOffset, fy, stoneW - 2, stoneH - 2);
+                // Stone edge highlight
+                ctx.strokeStyle = 'rgba(150,160,180,0.04)';
+                ctx.lineWidth = 0.5;
+                ctx.strokeRect(fx + rowOffset, fy, stoneW - 2, stoneH - 2);
+            }
+        }
+    }
+
+    function drawFloorDarkCarpet() {
+        // Base carpet texture
+        ctx.fillStyle = 'rgba(30,10,40,0.15)';
+        ctx.fillRect(0, 0, W, H);
+        // Carpet fiber pattern
+        for (var fy = 0; fy < H; fy += 6) {
+            for (var fx = 0; fx < W; fx += 6) {
+                var noise = ((fx * 17 + fy * 31) % 7) * 0.004;
+                ctx.fillStyle = 'rgba(60,20,80,' + noise + ')';
+                ctx.fillRect(fx, fy, 5, 5);
+            }
+        }
+        // Subtle border pattern
+        ctx.strokeStyle = 'rgba(120,40,160,0.06)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(W * 0.05, H * 0.05, W * 0.9, H * 0.9);
+        ctx.strokeRect(W * 0.06, H * 0.06, W * 0.88, H * 0.88);
+    }
+
+    /* ═══════════════════════════════════════
+       AMBIENT LIGHTING
+       ═══════════════════════════════════════ */
+    function drawAmbientLighting(roomKey) {
+        var lights = [];
+        var pulse = Math.sin(frame * 0.02) * 0.02;
+        if (roomKey === 'entree') {
+            // Cool blue tones
+            lights = [
+                { x: W * 0.5, y: H * 0.15, r: W * 0.35, color: 'rgba(0,100,200,' + (0.04 + pulse) + ')' },
+                { x: W * 0.2, y: H * 0.5, r: W * 0.25, color: 'rgba(0,150,255,' + (0.03 + pulse) + ')' },
+                { x: W * 0.8, y: H * 0.5, r: W * 0.25, color: 'rgba(0,150,255,' + (0.03 + pulse) + ')' },
+                { x: W * 0.5, y: H * 0.85, r: W * 0.3, color: 'rgba(0,80,180,' + (0.03 + pulse) + ')' }
+            ];
+        } else if (roomKey === 'zone_origine' || roomKey === 'cuisine' || roomKey === 'lobby') {
+            // Warm amber
+            lights = [
+                { x: W * 0.25, y: H * 0.3, r: W * 0.28, color: 'rgba(255,170,50,' + (0.05 + pulse) + ')' },
+                { x: W * 0.75, y: H * 0.3, r: W * 0.28, color: 'rgba(255,170,50,' + (0.05 + pulse) + ')' },
+                { x: W * 0.5, y: H * 0.6, r: W * 0.3, color: 'rgba(255,150,30,' + (0.04 + pulse) + ')' },
+                { x: W * 0.15, y: H * 0.7, r: W * 0.2, color: 'rgba(255,140,20,' + (0.03 + pulse) + ')' },
+                { x: W * 0.85, y: H * 0.7, r: W * 0.2, color: 'rgba(255,140,20,' + (0.03 + pulse) + ')' }
+            ];
+        } else if (roomKey === 'zone_voyage') {
+            // Blue tones
+            lights = [
+                { x: W * 0.5, y: H * 0.15, r: W * 0.4, color: 'rgba(50,80,200,' + (0.05 + pulse) + ')' },
+                { x: W * 0.2, y: H * 0.6, r: W * 0.25, color: 'rgba(60,100,220,' + (0.04 + pulse) + ')' },
+                { x: W * 0.8, y: H * 0.6, r: W * 0.25, color: 'rgba(60,100,220,' + (0.04 + pulse) + ')' },
+                { x: W * 0.5, y: H * 0.8, r: W * 0.3, color: 'rgba(40,70,180,' + (0.03 + pulse) + ')' }
+            ];
+        } else if (roomKey === 'zone_immersion') {
+            // Purple tones
+            lights = [
+                { x: W * 0.5, y: H * 0.2, r: W * 0.45, color: 'rgba(120,40,200,' + (0.05 + pulse) + ')' },
+                { x: W * 0.15, y: H * 0.5, r: W * 0.2, color: 'rgba(140,50,220,' + (0.04 + pulse) + ')' },
+                { x: W * 0.85, y: H * 0.5, r: W * 0.2, color: 'rgba(140,50,220,' + (0.04 + pulse) + ')' },
+                { x: W * 0.5, y: H * 0.65, r: W * 0.3, color: 'rgba(100,30,180,' + (0.04 + pulse) + ')' }
+            ];
+        } else if (roomKey === 'zone_sensoriel') {
+            // Pink/purple tones
+            lights = [
+                { x: W * 0.3, y: H * 0.25, r: W * 0.3, color: 'rgba(200,50,180,' + (0.04 + pulse) + ')' },
+                { x: W * 0.7, y: H * 0.25, r: W * 0.3, color: 'rgba(180,40,200,' + (0.04 + pulse) + ')' },
+                { x: W * 0.5, y: H * 0.55, r: W * 0.35, color: 'rgba(220,60,200,' + (0.05 + pulse) + ')' },
+                { x: W * 0.2, y: H * 0.7, r: W * 0.2, color: 'rgba(160,30,160,' + (0.03 + pulse) + ')' },
+                { x: W * 0.8, y: H * 0.7, r: W * 0.2, color: 'rgba(160,30,160,' + (0.03 + pulse) + ')' }
+            ];
+        } else if (roomKey === 'bar') {
+            // Warm gold tones
+            lights = [
+                { x: W * 0.5, y: H * 0.12, r: W * 0.4, color: 'rgba(255,200,50,' + (0.05 + pulse) + ')' },
+                { x: W * 0.15, y: H * 0.5, r: W * 0.22, color: 'rgba(255,180,30,' + (0.04 + pulse) + ')' },
+                { x: W * 0.5, y: H * 0.5, r: W * 0.22, color: 'rgba(255,180,30,' + (0.04 + pulse) + ')' },
+                { x: W * 0.85, y: H * 0.5, r: W * 0.22, color: 'rgba(255,180,30,' + (0.04 + pulse) + ')' },
+                { x: W * 0.5, y: H * 0.8, r: W * 0.3, color: 'rgba(255,160,20,' + (0.03 + pulse) + ')' }
+            ];
+        }
+        lights.forEach(function(l) {
+            var lg = ctx.createRadialGradient(l.x, l.y, 0, l.x, l.y, l.r);
+            lg.addColorStop(0, l.color);
+            lg.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = lg;
+            ctx.fillRect(l.x - l.r, l.y - l.r, l.r * 2, l.r * 2);
+        });
+    }
+
+    /* ═══════════════════════════════════════
+       WALL DECORATIONS PER ROOM
+       ═══════════════════════════════════════ */
+    function drawWallDecorations(roomKey) {
+        var wallH = H * 0.04;
+        if (roomKey === 'entree') {
+            // Stone-themed sconces on pillars
+            drawWallSconce(W * 0.14, H * 0.25);
+            drawWallSconce(W * 0.86, H * 0.25);
+        } else if (roomKey === 'lobby') {
+            // Paintings on walls
+            drawPainting(W * 0.06, wallH + 10, 40, 28, ['#2a1a10', '#4a3020', '#1a0a05']);
+            drawPainting(W * 0.9, wallH + 10, 40, 28, ['#0a1a2a', '#1a2a4a', '#050f1a']);
+            // Sconces
+            drawWallSconce(W * 0.15, wallH + 50);
+            drawWallSconce(W * 0.85, wallH + 50);
+            drawWallSconce(W * 0.5, wallH + 8);
+        } else if (roomKey === 'cuisine') {
+            // Kitchen art
+            drawPainting(W * 0.85, wallH + 10, 36, 24, ['#3a2a10', '#5a4020', '#2a1a08']);
+            drawWallSconce(W * 0.08, wallH + 40);
+            drawWallSconce(W * 0.92, wallH + 40);
+        } else if (roomKey === 'zone_origine') {
+            // Classic art paintings
+            drawPainting(W * 0.06, wallH + 12, 44, 30, ['#2a2010', '#4a3a20', '#3a2a15']);
+            drawPainting(W * 0.88, wallH + 12, 44, 30, ['#1a2a10', '#2a3a18', '#0a1a08']);
+            // Sconces between tables
+            drawWallSconce(W * 0.5, wallH + 8);
+            drawWallSconce(W * 0.06, H * 0.5);
+        } else if (roomKey === 'zone_voyage') {
+            // Travel-themed paintings
+            drawPainting(W * 0.04, wallH + 10, 38, 26, ['#1a1a3a', '#2a2a5a', '#0a0a2a']);
+            drawPainting(W * 0.9, wallH + 10, 38, 26, ['#2a1a2a', '#4a2a4a', '#1a0a1a']);
+            drawWallSconce(W * 0.06, H * 0.5);
+            drawWallSconce(W * 0.94, H * 0.5);
+        } else if (roomKey === 'zone_immersion') {
+            // Minimal - the projections are the decoration
+            drawWallSconce(W * 0.06, H * 0.55);
+            drawWallSconce(W * 0.94, H * 0.55);
+        } else if (roomKey === 'zone_sensoriel') {
+            // Moody purple paintings
+            drawPainting(W * 0.05, wallH + 10, 36, 24, ['#2a0a3a', '#3a1a4a', '#1a0a2a']);
+            drawPainting(W * 0.9, wallH + 10, 36, 24, ['#3a0a2a', '#4a1a3a', '#2a0a1a']);
+            drawWallSconce(W * 0.06, H * 0.5);
+            drawWallSconce(W * 0.94, H * 0.5);
+        } else if (roomKey === 'bar') {
+            // Bar artwork
+            drawPainting(W * 0.04, wallH + 10, 34, 22, ['#2a1a30', '#3a2a40', '#1a0a20']);
+            drawPainting(W * 0.92, wallH + 10, 34, 22, ['#3a2a10', '#5a4020', '#2a1a08']);
+            drawWallSconce(W * 0.3, wallH + 8);
+            drawWallSconce(W * 0.7, wallH + 8);
         }
     }
 
@@ -707,24 +1034,26 @@
        DRAW MAIN
        ═══════════════════════════════════════ */
     function draw() {
+        ctx.imageSmoothingEnabled = false;
+
         var room = ROOMS[state.room];
         // Background gradient
         var grad = ctx.createLinearGradient(0,0,0,H);
         grad.addColorStop(0, room.bgTop); grad.addColorStop(1, room.bgBot);
         ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
 
-        // Floor pattern (wood/tile)
-        var ts = 50;
-        for (var ftx=0; ftx<W; ftx+=ts) {
-            for (var fty=0; fty<H; fty+=ts) {
-                var even = (Math.floor(ftx/ts)+Math.floor(fty/ts))%2===0;
-                ctx.fillStyle = even ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)';
-                ctx.fillRect(ftx, fty, ts, ts);
-                // Subtle tile border
-                ctx.strokeStyle = 'rgba(255,255,255,0.015)'; ctx.lineWidth = .5;
-                ctx.strokeRect(ftx, fty, ts, ts);
-            }
+        // Floor pattern per room type
+        var r = state.room;
+        if (r === 'entree') {
+            drawFloorStone();
+        } else if (r === 'zone_sensoriel') {
+            drawFloorDarkCarpet();
+        } else {
+            drawFloorParquet();
         }
+
+        // Ambient lighting per room
+        drawAmbientLighting(r);
 
         // Walls with wainscoting
         var wallH = H*.04;
@@ -734,6 +1063,12 @@
         ctx.fillStyle = 'rgba(0,229,255,0.08)';
         ctx.fillRect(0,wallH-2,W,2); ctx.fillRect(0,H-wallH,W,2);
         ctx.fillRect(W*.025-1,0,1,H); ctx.fillRect(W*.975,0,1,H);
+
+        // Crown molding
+        drawCrownMolding(wallH);
+
+        // Wall decorations (paintings, sconces)
+        drawWallDecorations(r);
 
         // Doors (glowing arches)
         room.doors.forEach(function(d) {
@@ -814,6 +1149,9 @@
         ctx.strokeRect(W/2-rnw/2, 8, rnw, 28);
         ctx.fillStyle = '#fff'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center';
         ctx.fillText(room.name, W/2, 27);
+
+        // Slow food tip overlay
+        drawSlowFoodTip();
 
         // Hour CTA
         var h = new Date().getHours();
