@@ -239,6 +239,18 @@
 
         var ib = document.createElement('button'); ib.id = 'vr-ib'; ib.className = 'vr-interact-btn'; ib.style.display = 'none'; g.appendChild(ib);
 
+        var ctrls = document.createElement('div');
+        ctrls.style.cssText = 'position:fixed;bottom:1rem;right:1rem;z-index:10002;display:flex;gap:.5rem';
+        var svBtn = document.createElement('button');
+        svBtn.textContent = 'Sauvegarder';
+        svBtn.style.cssText = 'padding:.5rem 1rem;background:rgba(6,6,15,.85);border:1px solid rgba(0,229,255,.3);border-radius:8px;color:#00e5ff;font-size:.75rem;cursor:pointer;font-family:sans-serif;min-height:40px';
+        svBtn.addEventListener('click', function() { save(); svBtn.textContent = '\u2713 Sauvegard\u00e9'; setTimeout(function(){ svBtn.textContent = 'Sauvegarder'; }, 1500); });
+        var rsBtn = document.createElement('button');
+        rsBtn.textContent = 'Recommencer';
+        rsBtn.style.cssText = 'padding:.5rem 1rem;background:rgba(6,6,15,.85);border:1px solid rgba(239,68,68,.3);border-radius:8px;color:#ef4444;font-size:.75rem;cursor:pointer;font-family:sans-serif;min-height:40px';
+        rsBtn.addEventListener('click', function() { if(confirm('Recommencer ? Progression perdue.')){ localStorage.removeItem(SAVE_KEY); location.reload(); } });
+        ctrls.appendChild(svBtn); ctrls.appendChild(rsBtn); g.appendChild(ctrls);
+
         ctx = canvas.getContext('2d');
         resize(); window.addEventListener('resize', resize);
         if (loadSave() && state.phase === 'playing') startGame(); else showCreation();
