@@ -29,7 +29,7 @@
         'arrival': {
             chapter: 1, chapterName: 'L\'Arriv\u00e9e',
             bg: 'linear-gradient(180deg, #020010 0%, #0a0a2e 40%, #06060f 100%)',
-            emoji: '\ud83c\udf03\u2728\ud83c\udff0',
+            emoji: '\u2022 V I R E A L Y S \u2022',
             speaker: 'Narrateur',
             dialogue: [
                 'La nuit est tomb\u00e9e sur la ville.',
@@ -45,7 +45,7 @@
         'arrival_observe': {
             chapter: 1, chapterName: 'L\'Arriv\u00e9e',
             bg: 'linear-gradient(180deg, #020010 0%, #0a0a2e 40%, #06060f 100%)',
-            emoji: '\ud83d\udd2d\u2728\ud83c\udf1f',
+            emoji: '\u2726 La Fa\u00e7ade \u2726',
             speaker: 'Narrateur',
             dialogue: [
                 'Des projections dansent sur les murs ext\u00e9rieurs.',
@@ -61,7 +61,7 @@
         'reception': {
             chapter: 1, chapterName: 'L\'Arriv\u00e9e',
             bg: 'linear-gradient(135deg, #06060f 0%, #12122a 50%, #0a0a1a 100%)',
-            emoji: '\ud83d\ude4b\u2728\ud83c\udf7d\ufe0f',
+            emoji: '\u2726 R\u00e9ception \u2726',
             speaker: 'L\'H\u00f4te',
             dialogue: [
                 'Bonsoir et bienvenue chez Virealys !',
@@ -82,7 +82,7 @@
         'zone_origine': {
             chapter: 2, chapterName: 'L\'Installation',
             bg: 'linear-gradient(135deg, #0a1a0a 0%, #0f2010 50%, #06060f 100%)',
-            emoji: '\ud83c\udf3f\ud83c\udf7d\ufe0f\ud83d\udd6f\ufe0f',
+            emoji: '\u25cf Zone Origine',
             speaker: 'L\'H\u00f4te',
             dialogue: [
                 'La Zone Origine. L\'exp\u00e9rience pure.',
@@ -98,7 +98,7 @@
         'zone_voyage': {
             chapter: 2, chapterName: 'L\'Installation',
             bg: 'linear-gradient(135deg, #0a0a2e 0%, #0f1a3e 50%, #06060f 100%)',
-            emoji: '\u2708\ufe0f\ud83c\udf77\ud83c\udf0d',
+            emoji: '\u25cf Zone Voyage',
             speaker: 'L\'H\u00f4te',
             dialogue: [
                 'La Zone Voyage. L\'\u00e9vasion commence.',
@@ -114,7 +114,7 @@
         'zone_immersion': {
             chapter: 2, chapterName: 'L\'Installation',
             bg: 'linear-gradient(135deg, #1a0a2e 0%, #2a0f3e 50%, #06060f 100%)',
-            emoji: '\ud83c\udf0a\ud83d\udda5\ufe0f\ud83c\udf1f',
+            emoji: '\u25cf Zone Immersion',
             speaker: 'L\'H\u00f4te',
             dialogue: [
                 'La Zone Immersion. Projection 270 degr\u00e9s.',
@@ -130,7 +130,7 @@
         'zone_sensoriel': {
             chapter: 2, chapterName: 'L\'Installation',
             bg: 'linear-gradient(135deg, #2a0a2e 0%, #3e0f3e 50%, #06060f 100%)',
-            emoji: '\u2728\ud83c\udf2c\ufe0f\ud83d\udcab',
+            emoji: '\u25cf Zone Sensoriel',
             speaker: 'L\'H\u00f4te',
             dialogue: [
                 'La Zone Sensoriel. L\'exp\u00e9rience totale.',
@@ -149,7 +149,7 @@
         'menu_discover': {
             chapter: 2, chapterName: 'L\'Installation',
             bg: 'linear-gradient(135deg, #0a0a1a 0%, #12122a 50%, #06060f 100%)',
-            emoji: '\ud83d\udcd6\ud83c\udf7d\ufe0f\u2728',
+            emoji: '\u2726 Le Menu \u2726',
             speaker: 'Le Chef',
             dialogue: [
                 'Bonsoir ! Je suis le Chef de Virealys.',
@@ -167,7 +167,7 @@
         'wine_select': {
             chapter: 2, chapterName: 'L\'Installation',
             bg: 'linear-gradient(135deg, #1a0a0a 0%, #2e1210 50%, #06060f 100%)',
-            emoji: '\ud83c\udf77\ud83e\uddd1\u200d\ud83c\udf73\ud83c\udf47',
+            emoji: '\u2726 Le Sommelier \u2726',
             speaker: 'Le Sommelier',
             dialogue: [
                 'Bonsoir ! Je m\'occupe de sublimer votre repas avec le bon vin.',
@@ -191,7 +191,7 @@
         'entree_service': {
             chapter: 3, chapterName: 'L\'Exp\u00e9rience',
             bg: 'linear-gradient(135deg, #0a0a1a 0%, #0f1520 50%, #06060f 100%)',
-            emoji: '\ud83e\uddc1\u2728\ud83c\udf3f',
+            emoji: '\u2726 L\'Entr\u00e9e \u2726',
             speaker: 'Narrateur',
             dialogue: [
                 'L\'entr\u00e9e arrive. Un carpaccio de Saint-Jacques, tuile de parmesan.',
@@ -209,7 +209,7 @@
         'projection_show': {
             chapter: 3, chapterName: 'L\'Exp\u00e9rience',
             bg: 'linear-gradient(135deg, #0a1a2e 0%, #1a2a4e 30%, #0f0520 70%, #06060f 100%)',
-            emoji: '\ud83c\udf0c\ud83c\udfa5\ud83c\udf1f',
+            emoji: '\u2726 Projections 270\u00b0 \u2726',
             speaker: 'Narrateur',
             dialogue: [
                 'Les projections 270\u00b0 s\'activent.',
@@ -233,7 +233,7 @@
         'plat_principal': {
             chapter: 3, chapterName: 'L\'Exp\u00e9rience',
             bg: 'linear-gradient(135deg, #1a0f0a 0%, #2e1a10 50%, #06060f 100%)',
-            emoji: '\ud83c\udf56\ud83d\udd25\u2728',
+            emoji: '\u2726 Le Plat Signature \u2726',
             speaker: 'Le Chef',
             dialogue: [
                 'Voici notre plat signature : le Filet de b\u0153uf Wagyu,',
@@ -253,7 +253,7 @@
         'surprise_moment': {
             chapter: 3, chapterName: 'L\'Exp\u00e9rience',
             bg: 'linear-gradient(135deg, #2a0a3e 0%, #4e1a5e 30%, #0a0a2e 70%, #06060f 100%)',
-            emoji: '\ud83c\udf86\ud83c\udf2c\ufe0f\ud83c\udfb6',
+            emoji: '\u2726 Surprise \u2726',
             speaker: 'Narrateur',
             dialogue: [
                 'SURPRISE !',
@@ -275,7 +275,7 @@
         'dessert_finale': {
             chapter: 3, chapterName: 'L\'Exp\u00e9rience',
             bg: 'linear-gradient(135deg, #1a1a0a 0%, #2e2a10 30%, #0f0a20 70%, #06060f 100%)',
-            emoji: '\ud83c\udf70\u2728\ud83c\udf1f',
+            emoji: '\u2726 Le Dessert \u2726',
             speaker: 'Le Chef',
             dialogue: [
                 'Le dessert arrive. Sph\u00e8re de chocolat Valrhona,',
@@ -298,7 +298,7 @@
         'passport_stamp': {
             chapter: 4, chapterName: 'Le D\u00e9part',
             bg: 'linear-gradient(135deg, #0a0a1a 0%, #1a1a2a 50%, #06060f 100%)',
-            emoji: '\ud83d\udcab\ud83d\udcd8\u2b50',
+            emoji: '\u2726 Passeport \u2726',
             speaker: 'L\'H\u00f4te',
             dialogue: [
                 'Quelle soir\u00e9e extraordinaire !',
@@ -314,7 +314,7 @@
         'feedback': {
             chapter: 4, chapterName: 'Le D\u00e9part',
             bg: 'linear-gradient(135deg, #06060f 0%, #0a0a2e 50%, #06060f 100%)',
-            emoji: '\ud83d\udcdd\u2b50\ud83d\ude0a',
+            emoji: '\u2726 Votre Avis \u2726',
             speaker: 'L\'H\u00f4te',
             dialogue: [
                 'Comment avez-vous trouv\u00e9 votre soir\u00e9e ?'
@@ -328,7 +328,7 @@
         'farewell': {
             chapter: 4, chapterName: 'Le D\u00e9part',
             bg: 'linear-gradient(180deg, #020010 0%, #0a0a2e 40%, #06060f 100%)',
-            emoji: '\ud83c\udf1f\ud83c\udf1c\u2728',
+            emoji: '\u2726 Au Revoir \u2726',
             speaker: 'Narrateur',
             dialogue: [
                 'L\'h\u00f4te vous raccompagne vers la sortie.',
@@ -431,20 +431,21 @@
     function playDialogue(lines, idx, slow, cb) {
         if (idx >= lines.length) { cb(); return; }
         var speed = slow ? CFG.SLOW_TYPE_SPEED : CFG.TYPE_SPEED;
-        $['game-tap-hint'].textContent = (idx < lines.length - 1) ? 'Tapez pour continuer...' : '';
+        var isLast = (idx >= lines.length - 1);
+        $['game-tap-hint'].textContent = isLast ? '' : '\u25bc Cliquez n\'importe o\u00f9 pour continuer';
         typewrite($['game-text'], lines[idx], speed, function () {
-            if (idx >= lines.length - 1) { $['game-tap-hint'].textContent = ''; cb(); return; }
+            if (isLast) { $['game-tap-hint'].textContent = ''; cb(); return; }
+            // Make the ENTIRE game container clickable to advance
             function advance(e) {
+                // Don't advance if clicking a button
+                if (e.target.closest('button, .game-choice-btn, .game-quiz-btn, .game-cta-btn, .game-controls')) return;
                 e.preventDefault();
-                e.stopPropagation();
-                $['game-text'].removeEventListener('click', advance);
-                $['game-text'].removeEventListener('touchend', advance);
-                $['game-dialogue'].removeEventListener('click', advance);
+                $['vr-game'].removeEventListener('click', advance);
+                $['vr-game'].removeEventListener('touchend', advance);
                 playDialogue(lines, idx + 1, slow, cb);
             }
-            $['game-text'].addEventListener('click', advance);
-            $['game-text'].addEventListener('touchend', advance);
-            $['game-dialogue'].addEventListener('click', advance);
+            $['vr-game'].addEventListener('click', advance);
+            $['vr-game'].addEventListener('touchend', advance);
         });
     }
 
