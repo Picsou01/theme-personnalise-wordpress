@@ -408,7 +408,303 @@
     function rectHit(px,py,pw,ph,rx,ry,rw,rh) { return px+pw>rx && px-pw<rx+rw && py+ph>ry && py-ph<ry+rh; }
 
     /* ═══════════════════════════════════════
-       DRAW
+       DETAILED FURNITURE DRAWING HELPERS
+       ═══════════════════════════════════════ */
+    function drawTable(x, y, w, h, hasCandle) {
+        // Table shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.25)';
+        ctx.beginPath(); ctx.ellipse(x+w/2+3, y+h+5, w/2, 6, 0, 0, Math.PI*2); ctx.fill();
+        // Legs
+        ctx.fillStyle = '#3a2a1a';
+        ctx.fillRect(x+4, y+h-2, 4, 10); ctx.fillRect(x+w-8, y+h-2, 4, 10);
+        // Table top
+        ctx.fillStyle = '#4a3020';
+        ctx.fillRect(x, y, w, h);
+        // Tablecloth shine
+        var tg = ctx.createLinearGradient(x, y, x, y+h);
+        tg.addColorStop(0, 'rgba(255,255,255,0.08)'); tg.addColorStop(1, 'rgba(0,0,0,0.1)');
+        ctx.fillStyle = tg; ctx.fillRect(x, y, w, h);
+        // Edge
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
+        // Plate
+        ctx.fillStyle = 'rgba(255,255,255,0.15)';
+        ctx.beginPath(); ctx.ellipse(x+w/2, y+h/2, w*.2, h*.3, 0, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.beginPath(); ctx.ellipse(x+w/2, y+h/2, w*.15, h*.2, 0, 0, Math.PI*2); ctx.stroke();
+        // Candle
+        if (hasCandle) { drawCandle(x+w-12, y+4); }
+    }
+
+    function drawCandle(x, y) {
+        ctx.fillStyle = '#f5f0e0'; ctx.fillRect(x, y+4, 6, 12);
+        // Flame
+        var flicker = Math.sin(frame*.15)*1.5;
+        ctx.fillStyle = '#ffaa00';
+        ctx.beginPath(); ctx.ellipse(x+3, y+2+flicker, 3, 5, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#ffee66';
+        ctx.beginPath(); ctx.ellipse(x+3, y+3+flicker, 1.5, 3, 0, 0, Math.PI*2); ctx.fill();
+        // Glow
+        var cg = ctx.createRadialGradient(x+3, y+3, 0, x+3, y+3, 40);
+        cg.addColorStop(0, 'rgba(255,170,0,0.12)'); cg.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = cg; ctx.fillRect(x-37, y-37, 80, 80);
+    }
+
+    function drawChair(x, y, dir) {
+        ctx.fillStyle = '#2a2020';
+        // Seat
+        ctx.fillRect(x, y, 14, 12);
+        // Back
+        if (dir === 'up') ctx.fillRect(x+1, y-6, 12, 6);
+        else if (dir === 'down') ctx.fillRect(x+1, y+12, 12, 6);
+        else if (dir === 'left') ctx.fillRect(x-6, y+1, 6, 10);
+        else ctx.fillRect(x+14, y+1, 6, 10);
+    }
+
+    function drawCounter(x, y, w, h) {
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.fillRect(x+3, y+3, w, h+8);
+        // Counter front
+        ctx.fillStyle = '#2a1a30';
+        ctx.fillRect(x, y+h, w, 10);
+        // Counter top
+        var cg = ctx.createLinearGradient(x, y, x+w, y);
+        cg.addColorStop(0, '#3a2a3a'); cg.addColorStop(.5, '#4a3a4a'); cg.addColorStop(1, '#3a2a3a');
+        ctx.fillStyle = cg; ctx.fillRect(x, y, w, h);
+        // Shine
+        ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.fillRect(x, y, w, h/3);
+        // Edge
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
+    }
+
+    function drawProjection(x, y, w, h, color, label) {
+        // Screen glow
+        var pulse = .4 + Math.sin(frame*.03)*.15;
+        var pg = ctx.createRadialGradient(x+w/2, y+h/2, 0, x+w/2, y+h/2, Math.max(w,h));
+        pg.addColorStop(0, color.replace(')', ','+pulse+')')); pg.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = pg; ctx.fillRect(x-20, y-20, w+40, h+40);
+        // Screen
+        ctx.fillStyle = color.replace(')', ',0.3)');
+        ctx.fillRect(x, y, w, h);
+        // Scan lines
+        ctx.strokeStyle = 'rgba(255,255,255,0.03)'; ctx.lineWidth = 1;
+        for (var sy = y; sy < y+h; sy += 4) { ctx.beginPath(); ctx.moveTo(x, sy); ctx.lineTo(x+w, sy); ctx.stroke(); }
+        // Moving light bar
+        var barY = y + ((frame * 0.5) % h);
+        ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.fillRect(x, barY, w, 3);
+        // Border
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 2; ctx.strokeRect(x, y, w, h);
+        // Label
+        if (label) { ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(label, x+w/2, y+h/2+4); }
+    }
+
+    function drawPlant(x, y, size) {
+        // Pot
+        ctx.fillStyle = '#5a3a2a';
+        ctx.fillRect(x-size*.4, y, size*.8, size*.6);
+        ctx.fillRect(x-size*.5, y, size, size*.15);
+        // Leaves
+        ctx.fillStyle = '#1a5a2a';
+        for (var i = 0; i < 5; i++) {
+            var angle = -Math.PI/2 + (i-2)*0.5 + Math.sin(frame*.01+i)*.05;
+            var lx = x + Math.cos(angle)*size*.8;
+            var ly = y - Math.sin(-angle)*size*.6 - size*.3;
+            ctx.beginPath(); ctx.ellipse(lx, ly, size*.25, size*.08, angle+Math.PI/2, 0, Math.PI*2); ctx.fill();
+        }
+    }
+
+    function drawStool(x, y) {
+        ctx.fillStyle = '#2a2020';
+        ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#1a1515';
+        ctx.fillRect(x-2, y+8, 4, 12); ctx.fillRect(x-6, y+18, 12, 3);
+    }
+
+    function drawWineBottle(x, y) {
+        ctx.fillStyle = '#1a3a1a'; ctx.fillRect(x, y+8, 8, 16);
+        ctx.fillStyle = '#2a4a2a'; ctx.fillRect(x+1, y, 6, 10);
+        ctx.fillStyle = '#3a1a1a'; ctx.fillRect(x+2, y-2, 4, 4);
+        // Shine
+        ctx.fillStyle = 'rgba(255,255,255,0.15)'; ctx.fillRect(x+1, y+8, 2, 14);
+    }
+
+    function drawWineGlass(x, y) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.ellipse(x, y, 5, 3, 0, 0, Math.PI*2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x, y+3); ctx.lineTo(x, y+12); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x-4, y+12); ctx.lineTo(x+4, y+12); ctx.stroke();
+        // Wine inside
+        ctx.fillStyle = 'rgba(120,20,30,0.5)';
+        ctx.beginPath(); ctx.ellipse(x, y, 4, 2, 0, 0, Math.PI*2); ctx.fill();
+    }
+
+    function drawMist(x, y, w, h, color) {
+        for (var i = 0; i < 8; i++) {
+            var mx = x + Math.sin(frame*.008+i*2)*w*.3 + w/2;
+            var my = y + Math.cos(frame*.006+i*1.5)*h*.3 + h/2;
+            var mr = 20 + Math.sin(frame*.01+i)*10;
+            var mg = ctx.createRadialGradient(mx, my, 0, mx, my, mr);
+            mg.addColorStop(0, color); mg.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = mg; ctx.fillRect(mx-mr, my-mr, mr*2, mr*2);
+        }
+    }
+
+    /* ═══════════════════════════════════════
+       ROOM-SPECIFIC DETAILED DRAWING
+       ═══════════════════════════════════════ */
+    function drawRoomDetails(room) {
+        var r = state.room;
+        if (r === 'entree') {
+            // Neon sign
+            ctx.shadowColor = '#00e5ff'; ctx.shadowBlur = 30;
+            ctx.fillStyle = '#00e5ff'; ctx.font = 'bold '+Math.max(24,W*.03)+'px sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText('VIREALYS', W/2, H*.12);
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = 'rgba(0,229,255,0.5)'; ctx.font = (W*.012)+'px sans-serif';
+            ctx.fillText('Restaurant Slow Food Immersif', W/2, H*.17);
+            // Pillars
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(W*.12, H*.2, W*.04, H*.55);
+            ctx.fillRect(W*.84, H*.2, W*.04, H*.55);
+            // Pillar detail
+            ctx.fillStyle = 'rgba(0,229,255,0.05)';
+            ctx.fillRect(W*.125, H*.2, W*.01, H*.55);
+            ctx.fillRect(W*.845, H*.2, W*.01, H*.55);
+            // Floor carpet
+            ctx.fillStyle = 'rgba(100,50,50,0.08)';
+            ctx.fillRect(W*.3, H*.4, W*.4, H*.5);
+        } else if (r === 'lobby') {
+            // Central chandelier glow
+            var chg = ctx.createRadialGradient(W/2, H*.15, 0, W/2, H*.15, H*.25);
+            chg.addColorStop(0, 'rgba(255,215,0,0.08)'); chg.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = chg; ctx.fillRect(0, 0, W, H*.4);
+            // Couches
+            drawCouch(W*.28, H*.38, W*.18, H*.1, '#1f1528');
+            drawCouch(W*.54, H*.38, W*.18, H*.1, '#1f1528');
+            // Plants
+            drawPlant(W*.15, H*.7, 20);
+            drawPlant(W*.85, H*.7, 20);
+            // Welcome desk
+            drawCounter(W*.35, H*.08, W*.3, H*.06);
+        } else if (r === 'cuisine') {
+            // Counter
+            drawCounter(W*.12, H*.12, W*.35, H*.08);
+            // Stove
+            ctx.fillStyle = '#2a2a2a'; ctx.fillRect(W*.55, H*.12, W*.25, H*.1);
+            ctx.fillStyle = '#3a1a0a';
+            ctx.beginPath(); ctx.arc(W*.62, H*.17, 8, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(W*.72, H*.17, 8, 0, Math.PI*2); ctx.fill();
+            // Flame under
+            ctx.fillStyle = 'rgba(255,100,0,0.3)';
+            ctx.beginPath(); ctx.arc(W*.62, H*.17, 5, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(W*.72, H*.17, 5, 0, Math.PI*2); ctx.fill();
+            // Island
+            drawCounter(W*.3, H*.7, W*.35, H*.08);
+            // Plat signature
+            drawTable(W*.2, H*.5, W*.18, H*.1, false);
+            ctx.fillStyle = '#fff'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText('\ud83c\udf56 Plat Signature', W*.29, H*.48);
+            // Hanging pots
+            ctx.fillStyle = '#333';
+            ctx.fillRect(W*.15, H*.05, 3, H*.08);
+            ctx.fillRect(W*.25, H*.05, 3, H*.06);
+            ctx.beginPath(); ctx.arc(W*.155, H*.13, 6, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(W*.255, H*.11, 5, 0, Math.PI*2); ctx.fill();
+        } else if (r === 'zone_origine') {
+            // 4 detailed tables with candles
+            drawTable(W*.15, H*.25, W*.18, H*.12, true);
+            drawTable(W*.62, H*.25, W*.18, H*.12, true);
+            drawTable(W*.15, H*.6, W*.18, H*.12, true);
+            drawTable(W*.62, H*.6, W*.18, H*.12, true);
+            // Chairs
+            drawChair(W*.20, H*.17, 'up'); drawChair(W*.26, H*.17, 'up');
+            drawChair(W*.20, H*.39, 'down'); drawChair(W*.26, H*.39, 'down');
+            drawChair(W*.67, H*.17, 'up'); drawChair(W*.73, H*.17, 'up');
+            drawChair(W*.67, H*.39, 'down'); drawChair(W*.73, H*.39, 'down');
+            // Warm ambient light
+            var wl = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W*.4);
+            wl.addColorStop(0, 'rgba(255,170,0,0.04)'); wl.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = wl; ctx.fillRect(0,0,W,H);
+        } else if (r === 'zone_voyage') {
+            // Large projection screen
+            drawProjection(W*.15, H*.06, W*.7, H*.22, 'rgba(77,124,255', 'Vignoble Toscan');
+            // Tables
+            drawTable(W*.12, H*.5, W*.18, H*.1, false);
+            drawTable(W*.65, H*.5, W*.18, H*.1, false);
+            // Wine display
+            drawCounter(W*.38, H*.72, W*.24, H*.06);
+            drawWineBottle(W*.42, H*.62); drawWineBottle(W*.48, H*.63); drawWineBottle(W*.54, H*.61);
+            drawWineGlass(W*.15, H*.52); drawWineGlass(W*.22, H*.53);
+            drawWineGlass(W*.68, H*.52); drawWineGlass(W*.76, H*.53);
+        } else if (r === 'zone_immersion') {
+            // Massive 270° projection
+            drawProjection(W*.03, H*.04, W*.94, H*.3, 'rgba(168,85,247', '\ud83c\udf0c For\u00eat Enchant\u00e9e \u2014 Projection 270\u00b0');
+            // Side projections
+            drawProjection(W*.03, H*.35, W*.08, H*.4, 'rgba(168,85,247', '');
+            drawProjection(W*.89, H*.35, W*.08, H*.4, 'rgba(168,85,247', '');
+            // Immersive table
+            drawTable(W*.33, H*.52, W*.34, H*.15, true);
+            drawChair(W*.40, H*.44, 'up'); drawChair(W*.55, H*.44, 'up');
+            drawChair(W*.40, H*.69, 'down'); drawChair(W*.55, H*.69, 'down');
+            // Speakers
+            ctx.fillStyle = '#1a1a3a';
+            ctx.beginPath(); ctx.arc(W*.2, H*.7, 12, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(W*.8, H*.7, 12, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = 'rgba(168,85,247,0.3)';
+            ctx.beginPath(); ctx.arc(W*.2, H*.7, 6, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(W*.8, H*.7, 6, 0, Math.PI*2); ctx.fill();
+        } else if (r === 'zone_sensoriel') {
+            // Mist effect
+            drawMist(W*.1, H*.1, W*.8, H*.3, 'rgba(224,64,251,0.04)');
+            // Vibrating table
+            var vib = Math.sin(frame*.1)*2;
+            drawTable(W*.28+vib, H*.52, W*.4, H*.14, true);
+            drawChair(W*.38, H*.44, 'up'); drawChair(W*.55, H*.44, 'up');
+            drawChair(W*.38, H*.68, 'down'); drawChair(W*.55, H*.68, 'down');
+            // Diffusers with mist
+            ctx.fillStyle = '#2a0a3a';
+            ctx.beginPath(); ctx.arc(W*.15, H*.5, 10, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(W*.85, H*.5, 10, 0, Math.PI*2); ctx.fill();
+            drawMist(W*.1, H*.4, W*.1, H*.2, 'rgba(200,150,255,0.05)');
+            drawMist(W*.8, H*.4, W*.1, H*.2, 'rgba(200,150,255,0.05)');
+            // Floor vibration lines
+            ctx.strokeStyle = 'rgba(224,64,251,0.08)'; ctx.lineWidth = 1;
+            for (var vi = 0; vi < 6; vi++) {
+                var vy = H*.5 + vi*15 + Math.sin(frame*.05+vi)*3;
+                ctx.beginPath(); ctx.moveTo(W*.2, vy); ctx.lineTo(W*.8, vy); ctx.stroke();
+            }
+        } else if (r === 'bar') {
+            // Bar counter
+            drawCounter(W*.1, H*.08, W*.8, H*.1);
+            // Bar stools
+            drawStool(W*.2, H*.22); drawStool(W*.35, H*.22); drawStool(W*.5, H*.22);
+            drawStool(W*.65, H*.22); drawStool(W*.8, H*.22);
+            // Bottles behind bar
+            for (var bi = 0; bi < 8; bi++) { drawWineBottle(W*.15 + bi*W*.08, H*.02); }
+            // Tables
+            drawTable(W*.08, H*.48, W*.15, H*.1, true);
+            drawTable(W*.42, H*.48, W*.15, H*.1, true);
+            drawTable(W*.76, H*.48, W*.15, H*.1, true);
+            // Cocktail display
+            ctx.fillStyle = 'rgba(255,215,0,0.1)';
+            ctx.beginPath(); ctx.arc(W*.9, H*.15, 15, 0, Math.PI*2); ctx.fill();
+            drawWineGlass(W*.88, H*.13); drawWineGlass(W*.92, H*.12);
+        }
+    }
+
+    function drawCouch(x, y, w, h, color) {
+        ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fillRect(x+3, y+3, w, h);
+        ctx.fillStyle = color; ctx.fillRect(x, y, w, h);
+        ctx.fillStyle = 'rgba(255,255,255,0.05)'; ctx.fillRect(x, y, w, h*.3);
+        // Armrests
+        ctx.fillStyle = color; ctx.fillRect(x-4, y+2, 4, h-4); ctx.fillRect(x+w, y+2, 4, h-4);
+        // Cushion lines
+        ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(x+w*.33, y); ctx.lineTo(x+w*.33, y+h); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x+w*.66, y); ctx.lineTo(x+w*.66, y+h); ctx.stroke();
+    }
+
+    /* ═══════════════════════════════════════
+       DRAW MAIN
        ═══════════════════════════════════════ */
     function draw() {
         var room = ROOMS[state.room];
@@ -417,66 +713,59 @@
         grad.addColorStop(0, room.bgTop); grad.addColorStop(1, room.bgBot);
         ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
 
-        // Floor pattern
-        ctx.globalAlpha = 0.15;
+        // Floor pattern (wood/tile)
         var ts = 50;
-        for (var tx=0; tx<W; tx+=ts) { for (var ty=0; ty<H; ty+=ts) { if((Math.floor(tx/ts)+Math.floor(ty/ts))%2===0) { ctx.fillStyle='rgba(255,255,255,0.05)'; ctx.fillRect(tx,ty,ts,ts); } } }
-        ctx.globalAlpha = 1;
+        for (var ftx=0; ftx<W; ftx+=ts) {
+            for (var fty=0; fty<H; fty+=ts) {
+                var even = (Math.floor(ftx/ts)+Math.floor(fty/ts))%2===0;
+                ctx.fillStyle = even ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)';
+                ctx.fillRect(ftx, fty, ts, ts);
+                // Subtle tile border
+                ctx.strokeStyle = 'rgba(255,255,255,0.015)'; ctx.lineWidth = .5;
+                ctx.strokeRect(ftx, fty, ts, ts);
+            }
+        }
 
-        // Walls
-        ctx.fillStyle = 'rgba(255,255,255,0.03)';
-        ctx.fillRect(0,0,W,H*.03); ctx.fillRect(0,H*.97,W,H*.03);
-        ctx.fillRect(0,0,W*.02,H); ctx.fillRect(W*.98,0,W*.02,H);
+        // Walls with wainscoting
+        var wallH = H*.04;
+        ctx.fillStyle = 'rgba(20,20,40,0.8)'; ctx.fillRect(0,0,W,wallH); ctx.fillRect(0,H-wallH,W,wallH);
+        ctx.fillRect(0,0,W*.025,H); ctx.fillRect(W*.975,0,W*.025,H);
+        // Wall trim
+        ctx.fillStyle = 'rgba(0,229,255,0.08)';
+        ctx.fillRect(0,wallH-2,W,2); ctx.fillRect(0,H-wallH,W,2);
+        ctx.fillRect(W*.025-1,0,1,H); ctx.fillRect(W*.975,0,1,H);
 
-        // Doors (glowing)
+        // Doors (glowing arches)
         room.doors.forEach(function(d) {
             var dx=px(d.x,W), dy=px(d.y,H), dw=px(d.w,W), dh=px(d.h,H);
             var pulse = .5 + Math.sin(frame*.05)*.3;
-            ctx.fillStyle = 'rgba(0,229,255,'+pulse+')';
-            ctx.fillRect(dx,dy,dw,dh);
-            // Glow
-            ctx.shadowColor = '#00e5ff'; ctx.shadowBlur = 15;
-            ctx.fillRect(dx,dy,dw,dh);
-            ctx.shadowBlur = 0;
+            // Door frame
+            ctx.fillStyle = 'rgba(0,229,255,0.1)'; ctx.fillRect(dx-3,dy-3,dw+6,dh+6);
+            // Door
+            ctx.fillStyle = 'rgba(0,229,255,'+pulse+')'; ctx.fillRect(dx,dy,dw,dh);
+            // Door glow
+            var dg = ctx.createRadialGradient(dx+dw/2, dy+dh/2, 0, dx+dw/2, dy+dh/2, Math.max(dw,dh)*1.5);
+            dg.addColorStop(0, 'rgba(0,229,255,0.08)'); dg.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = dg; ctx.fillRect(dx-40, dy-40, dw+80, dh+80);
+            // Label
             ctx.fillStyle = '#fff'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
             ctx.fillText(d.label, dx+dw/2, dy+dh/2+4);
         });
 
-        // Furniture
+        // Room-specific detailed furniture
+        drawRoomDetails(room);
+
+        // Furniture with interaction highlight
         room.furniture.forEach(function(f) {
-            var fx, fy, fw, fh;
-            if (f.type==='rect') {
-                fx=px(f.x,W); fy=px(f.y,H); fw=px(f.w,W); fh=px(f.h,H);
-                // Shadow
-                ctx.fillStyle = 'rgba(0,0,0,0.3)';
-                ctx.fillRect(fx+3, fy+3, fw, fh);
-                // Main
-                ctx.fillStyle = f.color;
-                ctx.fillRect(fx, fy, fw, fh);
-                // Border glow if nearby
-                if (nearEnt === f) {
-                    ctx.strokeStyle = '#00e5ff'; ctx.lineWidth = 2;
-                    ctx.shadowColor = '#00e5ff'; ctx.shadowBlur = 10;
-                    ctx.strokeRect(fx-2, fy-2, fw+4, fh+4);
-                    ctx.shadowBlur = 0;
-                }
-                // Sign special
-                if (f.isSign) {
-                    ctx.fillStyle = '#00e5ff'; ctx.font = 'bold '+Math.max(14,fw/8)+'px sans-serif'; ctx.textAlign = 'center';
-                    ctx.shadowColor = '#00e5ff'; ctx.shadowBlur = 20;
-                    ctx.fillText(f.label, fx+fw/2, fy+fh/2+5);
-                    ctx.shadowBlur = 0;
-                } else if (f.label) {
-                    ctx.fillStyle = 'rgba(200,214,229,0.7)'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
-                    ctx.fillText(f.label, fx+fw/2, fy-5);
-                }
-            } else if (f.type==='circle') {
-                fx=px(f.x,W); fy=px(f.y,H); var r=px(f.r,Math.min(W,H));
-                ctx.fillStyle = 'rgba(0,0,0,0.3)';
-                ctx.beginPath(); ctx.ellipse(fx+2, fy+2, r, r*.6, 0, 0, Math.PI*2); ctx.fill();
-                ctx.fillStyle = f.color;
-                ctx.beginPath(); ctx.arc(fx, fy, r, 0, Math.PI*2); ctx.fill();
-                if (f.label) { ctx.fillStyle='rgba(200,214,229,0.6)'; ctx.font='8px sans-serif'; ctx.textAlign='center'; ctx.fillText(f.label, fx, fy-r-4); }
+            if (nearEnt === f) {
+                var fx = px(f.x,W), fy = px(f.y,H), fw = px(f.w||5,W), fh = px(f.h||5,H);
+                ctx.strokeStyle = '#00e5ff'; ctx.lineWidth = 2;
+                ctx.shadowColor = '#00e5ff'; ctx.shadowBlur = 12;
+                ctx.strokeRect(fx-3, fy-3, fw+6, fh+6);
+                ctx.shadowBlur = 0;
+                // Label
+                ctx.fillStyle = '#00e5ff'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText(f.label, fx+fw/2, fy-10);
             }
         });
 
