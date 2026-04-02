@@ -11,6 +11,7 @@ $reservation = get_theme_mod( 'reservation_url', '#reservation' );
     <div class="page-hero-overlay"></div>
     <div class="container">
         <div class="page-hero-content" data-reveal>
+            <div style="background:red;color:white;padding:20px;font-size:2rem;font-weight:bold;text-align:center;border-radius:12px;">TEST MISE A JOUR GAME V2</div>
             <h1 class="page-hero-title">Le Voyage de Virealys</h1>
             <p class="page-hero-desc">Vivez votre premi&egrave;re soir&eacute;e dans le restaurant immersif le plus r&eacute;volutionnaire.</p>
         </div>
