@@ -603,13 +603,14 @@ html{scroll-behavior:auto}
 .breadcrumb-current{color:var(--color-heading)}
 
 /* ==========================================
-   VIREALYS EXPERIENCE v2.0 — JEU AVENTURE
-   Creation perso, salles, hotspots, dialogues
+   VIREALYS EXPERIENCE v3.0 — JEU 2D FULLSCREEN
+   Canvas + DOM overlay, joystick mobile
    ========================================== */
-.vr-game{position:relative;width:100%;border-radius:var(--radius-lg);border:1px solid var(--color-border);background:var(--color-bg-card);overflow:hidden}
-.vr-game::before{content:'';position:absolute;inset:-2px;border-radius:var(--radius-lg);background:conic-gradient(from 0deg,rgba(var(--neon-cyan-rgb),.12),rgba(var(--neon-purple-rgb),.12),rgba(255,215,0,.12),rgba(var(--neon-cyan-rgb),.12));animation:holoSpin 8s linear infinite;z-index:0;pointer-events:none}
-@keyframes holoSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.vr-game-fullscreen{position:fixed;inset:0;z-index:10000;background:#06060f;overflow:hidden}
+#vr-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.vr-ui{position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center}
 .game-seo-content{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.vr-game-back{position:fixed;top:1rem;left:1rem;z-index:10002;color:var(--neon-cyan);font-family:var(--font-heading);font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;background:rgba(6,6,15,.8);padding:.5rem 1rem;border-radius:100px;border:1px solid rgba(0,229,255,.2)}
 
 /* Character creation */
 .gc-screen{padding:2rem;text-align:center;position:relative;z-index:1}
@@ -724,22 +725,46 @@ html{scroll-behavior:auto}
 .game-quiz-correct{border-color:#10b981!important;background:rgba(16,185,129,.15)!important;color:#10b981!important}
 .game-quiz-wrong{border-color:#ef4444!important;background:rgba(239,68,68,.15)!important;color:#ef4444!important}
 
-/* Responsive */
+/* Dialogue overlay */
+.vr-dlg{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);z-index:10001;width:90%;max-width:600px;padding:1.25rem 1.5rem;background:rgba(6,6,15,.95);border:1px solid rgba(0,229,255,.2);border-radius:12px;cursor:pointer}
+.vr-dlg-speaker{font-family:var(--font-heading);font-size:.75rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--neon-cyan);margin-bottom:.4rem}
+.vr-dlg-text{font-size:1rem;line-height:1.7;color:var(--color-text);min-height:2rem}
+.vr-dlg-hint{font-size:.625rem;color:var(--color-text-muted);margin-top:.5rem;opacity:.5;font-style:italic}
+
+/* HUD */
+.vr-hud{position:fixed;top:1rem;right:1rem;z-index:10001;display:flex;align-items:center;gap:1rem;padding:.5rem 1rem;background:rgba(6,6,15,.8);border:1px solid var(--color-border);border-radius:100px;font-family:var(--font-heading);font-size:.75rem}
+.vr-hud-name{color:var(--color-heading)}
+.vr-hud-xp{color:#ffd700;font-weight:700}
+.vr-hud-stamps{display:flex;gap:.25rem}
+.vr-hud-stamp{font-size:1rem;opacity:.2;filter:grayscale(100%)}
+.vr-hud-stamp.earned{opacity:1;filter:none}
+
+/* Joystick (mobile) */
+.vr-joy{position:fixed;bottom:2rem;left:2rem;z-index:10001;width:90px;height:90px;border-radius:50%;background:rgba(0,229,255,.08);border:2px solid rgba(0,229,255,.2);display:flex;align-items:center;justify-content:center;touch-action:none}
+.vr-joy-knob{width:36px;height:36px;border-radius:50%;background:rgba(0,229,255,.3);border:2px solid rgba(0,229,255,.5);transition:transform .05s}
+
+/* Interact button */
+.vr-interact-btn{position:fixed;bottom:2rem;right:2rem;z-index:10001;min-width:48px;min-height:48px;padding:.5rem 1rem;background:rgba(0,229,255,.15);border:1px solid var(--neon-cyan);border-radius:var(--radius-sm);color:var(--neon-cyan);font-family:var(--font-heading);font-size:.75rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;touch-action:manipulation}
+
+/* Responsive game */
 @media(max-width:768px){
-.gc-screen{padding:1.25rem}
+.gc-screen{padding:1rem}
 .gc-title{font-size:1.25rem}
 .gc-color-btn{width:32px;height:32px}
-.gr-scene{height:280px}
-.gr-hotspot{padding:.4rem .5rem}
-.gr-hotspot-icon{font-size:1rem}
-.gr-hotspot-label{font-size:.5rem}
-.gr-dialogue{padding:1rem;min-height:80px}
-.gr-hud{font-size:.625rem;flex-wrap:wrap;gap:.25rem}
-.gr-holo-grid{display:none}
+.vr-hud{top:.5rem;right:.5rem;gap:.5rem;padding:.4rem .75rem;font-size:.625rem}
+.vr-hud-stamp{font-size:.75rem}
+.vr-dlg{bottom:7rem;width:85%;padding:1rem}
+.vr-dlg-text{font-size:.875rem}
 }
 @media(max-width:480px){
-.gr-scene{height:220px}
 .gc-color-btn{width:28px;height:28px}
+.vr-joy{width:70px;height:70px;bottom:1.5rem;left:1.5rem}
+.vr-joy-knob{width:28px;height:28px}
+}
+
+/* Hide joystick on desktop */
+@media(hover:hover) and (pointer:fine){
+.vr-joy{display:none!important}
 }
 
 /* Smooth scroll */

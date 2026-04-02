@@ -1,38 +1,24 @@
 <?php
 /**
  * Template Name: Le Voyage (Jeu)
- * Description: Aventure interactive — Explorez Virealys
+ * Description: Aventure 2D interactive — Explorez Virealys
  */
-get_header();
+wp_head();
+wp_body_open();
 ?>
+<div id="vr-game" class="vr-game-fullscreen">
+    <p style="color:#c8d6e5;text-align:center;padding:2rem">Chargement...</p>
+</div>
+<a href="<?php echo esc_url( home_url('/') ); ?>" class="vr-game-back" title="Retour">&larr; Retour</a>
 
-<section class="section game-section">
-    <div class="container">
-        <div id="vr-game" class="vr-game" role="application" aria-label="Le Voyage de Virealys">
-            <p>Chargement de l'aventure...</p>
-        </div>
-
-        <article class="game-seo-content">
-            <h2>Le Voyage de Virealys &mdash; Aventure Interactive</h2>
-            <section>
-                <h3>Explorez le restaurant immersif</h3>
-                <p>Virealys est le premier restaurant Slow Food immersif et &eacute;volutif. Explorez ses salles, rencontrez le Chef, le Sommelier, d&eacute;couvrez les 4 zones d'immersion et collectez votre passeport.</p>
-            </section>
-            <section>
-                <h3>Les 4 Zones d'immersion</h3>
-                <p>Zone Origine : gastronomie pure. Zone Voyage : projections murales et accords mets-vins. Zone Immersion : projections 270&deg;. Zone Sensoriel : brume parfum&eacute;e, vibrations, exp&eacute;rience totale.</p>
-            </section>
-            <section>
-                <h3>La Cuisine Slow Food</h3>
-                <p>Produits locaux, circuits courts, respect des saisons. Chaque ingr&eacute;dient raconte une histoire. Le Chef pr&eacute;pare le filet de b&oelig;uf Wagyu, laquage miso et truffe du P&eacute;rigord.</p>
-            </section>
-            <section>
-                <h3>Le Bar &agrave; Cocktails</h3>
-                <p>Le cocktail signature "Constellation" : gin infus&eacute; au thym, tonic artisanal, z&eacute;leste de yuzu. Servi avec une brume glac&eacute;e.</p>
-            </section>
-        </article>
-    </div>
-</section>
-
-<?php get_template_part( 'template-parts/constellation-return' ); ?>
-<?php get_footer(); ?>
+<article class="game-seo-content">
+    <h1>Le Voyage de Virealys — Aventure Interactive</h1>
+    <p>Explorez le premier restaurant Slow Food immersif. D&eacute;couvrez les 4 zones d'immersion, rencontrez le Chef, le Sommelier, visitez la cuisine et le bar. Collectez vos tampons passeport.</p>
+    <h2>Zone Origine</h2><p>Gastronomie pure, lumi&egrave;re tamis&eacute;e, produits locaux &agrave; moins de 50km.</p>
+    <h2>Zone Voyage</h2><p>Projections murales, accords mets-vins, &eacute;vasion sensorielle.</p>
+    <h2>Zone Immersion</h2><p>Projections 270&deg;, son spatial, ambiances saisonni&egrave;res.</p>
+    <h2>Zone Sensoriel</h2><p>Brume parfum&eacute;e, vibrations, exp&eacute;rience totale &agrave; 120&euro;.</p>
+    <h2>La Cuisine</h2><p>Filet de Wagyu, laquage miso, truffe du P&eacute;rigord. Slow Food local et saisonnier.</p>
+    <h2>Le Bar</h2><p>Cocktail Constellation : gin au thym, tonic artisanal, yuzu, brume glac&eacute;e.</p>
+</article>
+<?php wp_footer(); ?>
