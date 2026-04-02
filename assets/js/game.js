@@ -214,9 +214,12 @@
        AVATAR COLORS
        ═══════════════════════════════════════ */
     var AVATAR_OPTIONS = {
-        skin: ['#f4c794', '#d4a373', '#a67c5a', '#6b4226', '#3d2314'],
-        hair: ['#2c1810', '#5a3825', '#c4883f', '#e8c547', '#d44e28', '#1a1a2e', '#e0e0e0'],
-        outfit: ['#00e5ff', '#4d7cff', '#a855f7', '#e040fb', '#10b981', '#f97316', '#ef4444']
+        skin: ['#fce4c0', '#f4c794', '#d4a373', '#a67c5a', '#6b4226', '#3d2314'],
+        hair: ['#2c1810', '#5a3825', '#c4883f', '#e8c547', '#d44e28', '#1a1a2e', '#e0e0e0', '#ff69b4'],
+        hairStyle: ['court', 'long', 'punk', 'boucl\u00e9'],
+        eyes: ['#2c1810', '#1a6b3d', '#2563eb', '#7c3aed', '#92400e'],
+        outfit: ['#00e5ff', '#4d7cff', '#a855f7', '#e040fb', '#10b981', '#f97316', '#ef4444', '#ffd700'],
+        accessory: ['aucun', 'lunettes', 'chapeau', 'boucles']
     };
 
     /* ═══════════════════════════════════════
@@ -226,7 +229,7 @@
         phase: 'creation',
         room: 'creation',
         playerName: '',
-        avatar: { skin: 0, hair: 0, outfit: 0 },
+        avatar: { skin: 0, hair: 0, hairStyle: 0, eyes: 0, outfit: 0, accessory: 0 },
         xp: 0,
         stamps: [],
         visited: [],
@@ -269,12 +272,24 @@
                     '<div class="gc-colors" id="gc-skin"></div>' +
                 '</div>' +
                 '<div class="gc-field">' +
-                    '<label class="gc-label">Cheveux</label>' +
+                    '<label class="gc-label">Couleur des yeux</label>' +
+                    '<div class="gc-colors" id="gc-eyes"></div>' +
+                '</div>' +
+                '<div class="gc-field">' +
+                    '<label class="gc-label">Couleur des cheveux</label>' +
                     '<div class="gc-colors" id="gc-hair"></div>' +
+                '</div>' +
+                '<div class="gc-field">' +
+                    '<label class="gc-label">Coiffure</label>' +
+                    '<div class="gc-options" id="gc-hairStyle"></div>' +
                 '</div>' +
                 '<div class="gc-field">' +
                     '<label class="gc-label">Tenue</label>' +
                     '<div class="gc-colors" id="gc-outfit"></div>' +
+                '</div>' +
+                '<div class="gc-field">' +
+                    '<label class="gc-label">Accessoire</label>' +
+                    '<div class="gc-options" id="gc-accessory"></div>' +
                 '</div>' +
             '</div>' +
             '<button class="game-choice-btn gc-start" id="gc-start">\u2726 Entrer chez Virealys \u2726</button>' +
@@ -294,8 +309,11 @@
     }
 
     function renderColorPickers() {
-        ['skin', 'hair', 'outfit'].forEach(function (type) {
+        // Color-based options
+        ['skin', 'hair', 'eyes', 'outfit'].forEach(function (type) {
             var container = document.getElementById('gc-' + type);
+            if (!container) return;
+            container.innerHTML = ''; // clear before refill
             AVATAR_OPTIONS[type].forEach(function (color, i) {
                 var btn = document.createElement('button');
                 btn.className = 'gc-color-btn' + (state.avatar[type] === i ? ' gc-color-active' : '');
@@ -308,26 +326,57 @@
                 container.appendChild(btn);
             });
         });
+        // Text-based options (hairStyle, accessory)
+        ['hairStyle', 'accessory'].forEach(function (type) {
+            var container = document.getElementById('gc-' + type);
+            if (!container) return;
+            container.innerHTML = '';
+            AVATAR_OPTIONS[type].forEach(function (label, i) {
+                var btn = document.createElement('button');
+                btn.className = 'gc-option-btn' + (state.avatar[type] === i ? ' gc-option-active' : '');
+                btn.textContent = label;
+                btn.addEventListener('click', function () {
+                    state.avatar[type] = i;
+                    renderColorPickers();
+                    updateAvatarPreview();
+                });
+                container.appendChild(btn);
+            });
+        });
+    }
+
+    function getAvatarStyle() {
+        return '--av-skin:' + AVATAR_OPTIONS.skin[state.avatar.skin] +
+            ';--av-hair:' + AVATAR_OPTIONS.hair[state.avatar.hair] +
+            ';--av-eyes:' + AVATAR_OPTIONS.eyes[state.avatar.eyes] +
+            ';--av-outfit:' + AVATAR_OPTIONS.outfit[state.avatar.outfit];
+    }
+
+    function getAvatarClasses() {
+        var hs = AVATAR_OPTIONS.hairStyle[state.avatar.hairStyle] || 'court';
+        var acc = AVATAR_OPTIONS.accessory[state.avatar.accessory] || 'aucun';
+        return 'av-hs-' + hs.replace(/\u00e9/g,'e') + (acc !== 'aucun' ? ' av-acc-' + acc : '');
+    }
+
+    function buildAvatarHTML(size) {
+        var cls = (size === 'sm') ? 'avatar avatar-sm' : 'avatar';
+        return '<div class="' + cls + ' ' + getAvatarClasses() + '" style="' + getAvatarStyle() + '">' +
+            '<div class="av-acc"></div>' +
+            '<div class="av-hair"></div>' +
+            '<div class="av-head"><div class="av-eyes"></div><div class="av-mouth"></div></div>' +
+            '<div class="av-body"></div>' +
+            '<div class="av-legs"></div>' +
+        '</div>';
     }
 
     function updateAvatarPreview() {
         var el = document.getElementById('gc-avatar');
         if (!el) return;
-        var s = AVATAR_OPTIONS.skin[state.avatar.skin];
-        var h = AVATAR_OPTIONS.hair[state.avatar.hair];
-        var o = AVATAR_OPTIONS.outfit[state.avatar.outfit];
-        el.innerHTML = '<div class="avatar" style="--av-skin:' + s + ';--av-hair:' + h + ';--av-outfit:' + o + '">' +
-            '<div class="av-hair"></div><div class="av-head"></div><div class="av-body"></div><div class="av-legs"></div>' +
-        '</div>';
+        el.innerHTML = buildAvatarHTML('lg');
     }
 
     function getAvatarHTML() {
-        var s = AVATAR_OPTIONS.skin[state.avatar.skin];
-        var h = AVATAR_OPTIONS.hair[state.avatar.hair];
-        var o = AVATAR_OPTIONS.outfit[state.avatar.outfit];
-        return '<div class="avatar avatar-sm" style="--av-skin:' + s + ';--av-hair:' + h + ';--av-outfit:' + o + '">' +
-            '<div class="av-hair"></div><div class="av-head"></div><div class="av-body"></div><div class="av-legs"></div>' +
-        '</div>';
+        return buildAvatarHTML('sm');
     }
 
     /* ═══════════════════════════════════════
@@ -424,7 +473,7 @@
         document.getElementById('gr-reset').addEventListener('click', function () {
             if (confirm('Recommencer ? Votre progression sera perdue.')) {
                 localStorage.removeItem(SAVE_KEY);
-                state = { phase: 'creation', room: 'creation', playerName: '', avatar: { skin: 0, hair: 0, outfit: 0 }, xp: 0, stamps: [], visited: [], questsDone: [] };
+                state = { phase: 'creation', room: 'creation', playerName: '', avatar: { skin: 0, hair: 0, hairStyle: 0, eyes: 0, outfit: 0, accessory: 0 }, xp: 0, stamps: [], visited: [], questsDone: [] };
                 renderCreation();
             }
         });

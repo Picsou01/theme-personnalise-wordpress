@@ -626,20 +626,50 @@ html{scroll-behavior:auto}
 .gc-color-active{border-color:var(--color-white)!important;box-shadow:0 0 12px rgba(255,255,255,.3);transform:scale(1.15)}
 .gc-start{max-width:300px;margin:0 auto;text-align:center;font-size:1rem;padding:1rem 2rem}
 
-/* Avatar CSS */
-.avatar{display:flex;flex-direction:column;align-items:center;width:60px}
-.avatar-sm{width:40px}
-.av-hair{width:32px;height:12px;background:var(--av-hair);border-radius:8px 8px 0 0;position:relative;z-index:2}
-.av-head{width:28px;height:28px;background:var(--av-skin);border-radius:50%;position:relative;z-index:1;margin-top:-4px}
-.av-head::before{content:'';position:absolute;top:10px;left:6px;width:4px;height:4px;background:var(--color-bg);border-radius:50%;box-shadow:12px 0 0 var(--color-bg)}
-.av-body{width:32px;height:24px;background:var(--av-outfit);border-radius:4px;margin-top:2px}
-.av-legs{width:24px;height:10px;background:var(--av-skin);border-radius:0 0 4px 4px;margin-top:1px;position:relative}
-.av-legs::before{content:'';position:absolute;top:0;left:50%;width:2px;height:100%;background:var(--color-bg);transform:translateX(-50%)}
-.avatar-sm .av-hair{width:22px;height:8px}
-.avatar-sm .av-head{width:20px;height:20px;margin-top:-3px}
-.avatar-sm .av-head::before{top:7px;left:4px;width:3px;height:3px;box-shadow:9px 0 0 var(--color-bg)}
-.avatar-sm .av-body{width:22px;height:16px}
-.avatar-sm .av-legs{width:16px;height:7px}
+/* Avatar CSS — detailed character */
+.avatar{display:flex;flex-direction:column;align-items:center;width:80px;position:relative}
+.avatar-sm{width:50px}
+.av-acc{position:absolute;top:-2px;z-index:10;width:0;height:0}
+.av-hair{width:40px;height:14px;background:var(--av-hair);border-radius:10px 10px 0 0;position:relative;z-index:3}
+.av-head{width:36px;height:36px;background:var(--av-skin);border-radius:50%;position:relative;z-index:2;margin-top:-5px}
+.av-eyes{position:absolute;top:12px;left:8px;width:6px;height:6px;background:var(--av-eyes,#2c1810);border-radius:50%;box-shadow:14px 0 0 var(--av-eyes,#2c1810)}
+.av-eyes::after{content:'';position:absolute;top:1px;left:1px;width:2px;height:2px;background:white;border-radius:50%;box-shadow:14px 0 0 white}
+.av-mouth{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:8px;height:3px;border-bottom:2px solid rgba(0,0,0,.3);border-radius:0 0 4px 4px}
+.av-body{width:38px;height:28px;background:var(--av-outfit);border-radius:6px 6px 2px 2px;margin-top:3px;position:relative}
+.av-body::before{content:'';position:absolute;top:4px;left:50%;transform:translateX(-50%);width:6px;height:6px;border:1px solid rgba(255,255,255,.2);border-radius:50%}
+.av-legs{display:flex;gap:4px;margin-top:2px}
+.av-legs::before,.av-legs::after{content:'';display:block;width:14px;height:14px;background:var(--av-skin);border-radius:3px}
+
+/* Hair styles */
+.av-hs-court .av-hair{height:10px;border-radius:8px 8px 0 0}
+.av-hs-long .av-hair{height:20px;border-radius:10px 10px 2px 2px;width:44px}
+.av-hs-long .av-hair::after{content:'';position:absolute;bottom:-20px;left:0;width:10px;height:20px;background:var(--av-hair);border-radius:0 0 4px 4px}
+.av-hs-long .av-hair::before{content:'';position:absolute;bottom:-20px;right:0;width:10px;height:20px;background:var(--av-hair);border-radius:0 0 4px 4px}
+.av-hs-punk .av-hair{height:22px;border-radius:4px;width:30px;clip-path:polygon(0% 100%,10% 0%,30% 40%,50% 0%,70% 40%,90% 0%,100% 100%)}
+.av-hs-boucle .av-hair{height:16px;border-radius:50%;width:44px}
+
+/* Accessories */
+.av-acc-lunettes .av-head::after{content:'';position:absolute;top:10px;left:4px;width:10px;height:8px;border:2px solid rgba(255,255,255,.6);border-radius:50%;box-shadow:14px 0 0 rgba(255,255,255,.1);z-index:5}
+.av-acc-lunettes .av-head::before{content:'';position:absolute;top:13px;left:14px;width:8px;height:1px;background:rgba(255,255,255,.4);z-index:6}
+.av-acc-chapeau .av-acc{width:48px;height:12px;background:var(--av-outfit);border-radius:4px;position:absolute;top:-6px;left:50%;transform:translateX(-50%);z-index:10}
+.av-acc-chapeau .av-acc::before{content:'';position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:28px;height:14px;background:var(--av-outfit);border-radius:6px 6px 0 0}
+.av-acc-boucles .av-head::after{content:'';position:absolute;top:15px;left:-5px;width:6px;height:6px;border-radius:50%;background:#ffd700;box-shadow:35px 0 0 #ffd700;z-index:5}
+
+/* Avatar small variants */
+.avatar-sm .av-hair{width:28px;height:10px}
+.avatar-sm .av-head{width:24px;height:24px;margin-top:-3px}
+.avatar-sm .av-eyes{top:8px;left:5px;width:4px;height:4px;box-shadow:10px 0 0 var(--av-eyes,#2c1810)}
+.avatar-sm .av-eyes::after{width:1px;height:1px;box-shadow:10px 0 0 white}
+.avatar-sm .av-mouth{bottom:5px;width:5px}
+.avatar-sm .av-body{width:26px;height:18px}
+.avatar-sm .av-legs::before,.avatar-sm .av-legs::after{width:10px;height:10px}
+.avatar-sm .av-hs-long .av-hair{width:30px}
+
+/* Option buttons (hairStyle, accessory) */
+.gc-options{display:flex;gap:.5rem;flex-wrap:wrap}
+.gc-option-btn{padding:.5rem 1rem;background:rgba(var(--neon-cyan-rgb),.04);border:1px solid rgba(var(--neon-cyan-rgb),.15);border-radius:var(--radius-sm);color:var(--color-text);font-family:var(--font-body);font-size:.8125rem;cursor:pointer;transition:all .2s;touch-action:manipulation;text-transform:capitalize;min-height:40px}
+.gc-option-btn:hover{border-color:var(--neon-cyan);background:rgba(var(--neon-cyan-rgb),.08)}
+.gc-option-active{border-color:var(--neon-cyan)!important;background:rgba(var(--neon-cyan-rgb),.15)!important;color:var(--color-white)!important;box-shadow:0 0 12px rgba(var(--neon-cyan-rgb),.2)}
 
 /* Room renderer */
 .gr-container{position:relative;z-index:1;display:flex;flex-direction:column;gap:1rem;padding:1rem}
