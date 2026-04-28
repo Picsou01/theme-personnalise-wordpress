@@ -834,3 +834,172 @@ html{scroll-behavior:smooth}
 [data-reveal]{transition-duration:.3s}
 img[data-src]{filter:blur(4px);transition:filter .2s ease}
 }
+
+/* ==========================================
+   VIREALYS v11 — Constellation product system
+   ========================================== */
+:root{
+--vr-ink:#08100f;
+--vr-night:#060b10;
+--vr-night-2:#0b1416;
+--vr-cream:#f7efe2;
+--vr-paper:#ead8bf;
+--vr-muted:#aebbb6;
+--vr-aqua:#7dd3c7;
+--vr-gold:#d6a05f;
+--vr-terracotta:#8b3a0e;
+--vr-fox:#c77936;
+--vr-lilac:#b694ff;
+--vr-border:rgba(247,239,226,.14);
+--vr-shadow:0 20px 70px rgba(0,0,0,.34);
+}
+html{scroll-padding-top:96px}
+body{background:var(--vr-night);color:#dce7e2}
+.v-site-nav{position:fixed;z-index:1100;top:max(.8rem,env(safe-area-inset-top));left:50%;width:min(1120px,calc(100% - 2rem));transform:translateX(-50%);display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:1rem;padding:.55rem .65rem .55rem 1rem;background:rgba(8,16,15,.72);border:1px solid rgba(247,239,226,.12);border-radius:999px;box-shadow:0 12px 44px rgba(0,0,0,.32);backdrop-filter:blur(18px)}
+.v-site-brand{display:inline-flex;align-items:center;color:var(--vr-cream);text-decoration:none}
+.v-site-nav .logo-text,.footer-brand .logo-text{background:linear-gradient(135deg,#fff6e9,var(--vr-gold),var(--vr-aqua));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:0}
+.v-site-nav-links{display:flex;align-items:center;justify-content:center;gap:.35rem}
+.v-site-nav-links a{padding:.55rem .8rem;border-radius:999px;color:#d8e4df;font-size:.84rem;text-decoration:none}
+.v-site-nav-links a:hover,.v-site-nav-links a:focus-visible{background:rgba(247,239,226,.08);color:var(--vr-cream)}
+.v-site-actions{display:flex;align-items:center;gap:.45rem}
+.v-nav-cta{display:inline-flex;align-items:center;min-height:40px;padding:0 1rem;border-radius:999px;background:var(--vr-cream);color:var(--vr-ink);font-family:var(--font-heading);font-size:.8rem;font-weight:700;text-decoration:none}
+.v-menu-button{width:42px;height:42px;display:grid;place-items:center;border:1px solid rgba(247,239,226,.16);border-radius:999px;background:rgba(247,239,226,.07);color:var(--vr-cream);cursor:pointer}
+.v-menu-button:hover,.v-menu-button:focus-visible{border-color:rgba(125,211,199,.55);color:var(--vr-aqua)}
+.v-menu-button.active .dock-menu-icon span:nth-child(1){transform:translateY(5.5px) rotate(45deg)}
+.v-menu-button.active .dock-menu-icon span:nth-child(2){opacity:0}
+.v-menu-button.active .dock-menu-icon span:nth-child(3){transform:translateY(-5.5px) rotate(-45deg)}
+.floating-logo{display:none}
+.vr-constellation-hub{height:100svh;min-height:720px;background:radial-gradient(circle at 50% 54%,rgba(125,211,199,.08),transparent 28%),linear-gradient(180deg,#020607 0%,#08100f 56%,#0c1513 100%);isolation:isolate}
+.constellation-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,11,16,.08),rgba(6,11,16,.34) 58%,rgba(6,11,16,.78));pointer-events:none}
+.constellation-stars-css{opacity:.72}
+.constellation-nebula{filter:blur(70px);opacity:.34}
+.constellation-hero{padding-top:clamp(6rem,14vh,9rem)}
+.constellation-hero-content{max-width:780px}
+.v-eyebrow,.section-label{display:inline-flex;align-items:center;letter-spacing:0;text-transform:none;color:var(--vr-gold)}
+.v-eyebrow{margin-bottom:.7rem;font-family:var(--font-heading);font-weight:700}
+.constellation-title{font-size:clamp(2.35rem,6vw,5.8rem);line-height:.98;letter-spacing:0;max-width:900px;margin-inline:auto;background:linear-gradient(135deg,#fffaf2 0%,#e7d0ad 42%,#9fe1d7 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.constellation-subtitle{font-size:clamp(1rem,1.8vw,1.24rem);max-width:650px;margin:.85rem auto 1.25rem;color:#b9c7c2}
+.constellation-actions,.v-actions{display:flex;justify-content:center;gap:.75rem;flex-wrap:wrap}
+.constellation-hint{margin-top:1rem;color:#81918b;font-size:.82rem}
+.constellation-lines{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none}
+.constellation-link-line{stroke:rgba(214,160,95,.18);stroke-width:1.2}
+.constellation-node{width:72px;height:72px;border:1px solid color-mix(in srgb,var(--node-color),transparent 35%);background:radial-gradient(circle at 40% 30%,rgba(255,255,255,.15),rgba(8,16,15,.84) 58%);box-shadow:0 0 0 1px rgba(255,255,255,.04),0 18px 50px rgba(0,0,0,.35)}
+.constellation-node-icon{color:var(--node-color)}
+.constellation-node-dot{background:var(--node-color)}
+.constellation-node-label{top:78px;color:#f3eadc;text-shadow:0 2px 16px rgba(0,0,0,.65);font-size:.8rem}
+.constellation-node-expand{top:92px;width:240px;min-height:118px;padding:1rem;background:rgba(8,16,15,.88);border:1px solid rgba(247,239,226,.12);border-radius:10px;box-shadow:var(--vr-shadow);backdrop-filter:blur(18px)}
+.constellation-node-summary{color:#c6d1cc;font-size:.82rem;line-height:1.55}
+.constellation-node-cta{margin-top:.7rem;color:var(--node-color);font-size:.78rem;font-weight:700}
+.constellation-mobile-list{gap:.7rem}
+.constellation-mobile-card{border-radius:10px;background:rgba(8,16,15,.86);border-color:rgba(247,239,226,.12)}
+.v-home-section{background:var(--vr-night);overflow:hidden}
+.v-home-section:nth-of-type(even){background:#0b1412}
+.v-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,.9fr);gap:clamp(2rem,6vw,5rem);align-items:center}
+.v-copy .section-title,.v-home-section .section-title{letter-spacing:0;color:#fff7eb}
+.v-copy .section-desc,.v-home-section .section-desc{color:#b7c3be;font-size:1.02rem}
+.v-principles{display:grid;gap:1rem}
+.v-principles article,.v-zone-card,.v-menu-card,.v-country-board,.v-reservation-panel{border:1px solid var(--vr-border);background:linear-gradient(180deg,rgba(247,239,226,.06),rgba(247,239,226,.025));border-radius:8px;box-shadow:0 14px 44px rgba(0,0,0,.18)}
+.v-principles article{padding:1.25rem}
+.v-principles strong,.v-zone-index{display:inline-flex;color:var(--vr-gold);font-family:var(--font-heading);font-size:.78rem;margin-bottom:.5rem}
+.v-principles h3,.v-zone-card h3,.v-menu-card h3,.v-country-board h3{font-size:1.12rem;color:#fff7eb;margin-bottom:.45rem;letter-spacing:0}
+.v-principles p,.v-zone-card p,.v-country-board p{color:#b9c6c0;font-size:.92rem;line-height:1.65}
+.v-zone-grid,.v-menu-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem}
+.v-zone-card{position:relative;min-height:270px;padding:1.35rem;display:flex;flex-direction:column;justify-content:space-between}
+.v-zone-card::before{content:'';position:absolute;inset:auto 1.1rem 1rem 1.1rem;height:3px;border-radius:999px;background:var(--vr-aqua)}
+.v-zone-card[data-zone="origin"]::before{background:#9bbf7a}
+.v-zone-card[data-zone="voyage"]::before{background:var(--vr-gold)}
+.v-zone-card[data-zone="immersion"]::before{background:#8bd3ff}
+.v-zone-card[data-zone="sensoriel"]::before{background:var(--vr-lilac)}
+.v-zone-meta{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1rem;padding-bottom:.8rem}
+.v-zone-meta span,.v-loop-steps span{display:inline-flex;align-items:center;min-height:30px;padding:.28rem .65rem;border:1px solid rgba(247,239,226,.13);border-radius:999px;color:#eadfce;font-size:.75rem}
+.v-split-passport{grid-template-columns:minmax(320px,.9fr) minmax(0,1fr)}
+.v-passport-visual{min-height:440px;display:grid;place-items:center;position:relative}
+.v-passport-visual::before{content:'';position:absolute;width:min(86%,520px);aspect-ratio:1;border:1px solid rgba(214,160,95,.22);border-radius:50%;background:conic-gradient(from 20deg,transparent,rgba(125,211,199,.18),transparent,rgba(214,160,95,.2),transparent);filter:drop-shadow(0 24px 50px rgba(0,0,0,.35))}
+.v-passport-card{position:relative;width:min(100%,430px);padding:1.25rem;border-radius:14px;background:linear-gradient(135deg,rgba(247,239,226,.13),rgba(125,211,199,.06)),#091312;border:1px solid rgba(247,239,226,.18);box-shadow:var(--vr-shadow);transform:rotate(-3deg)}
+.v-passport-top,.v-passport-stamps,.v-reservation-panel{display:flex;gap:.55rem;flex-wrap:wrap}
+.v-passport-top{justify-content:space-between;color:#d7c5a6;font-size:.74rem;font-weight:700}
+.v-passport-code{margin:1.4rem 0;padding:1rem;border:1px dashed rgba(247,239,226,.22);border-radius:8px;color:#fff7eb;font-family:var(--font-heading);font-size:1.4rem;text-align:center}
+.v-passport-stamps span{flex:1 1 42%;padding:.7rem;border-radius:8px;background:rgba(247,239,226,.06);color:#889891;text-align:center;font-size:.78rem}
+.v-passport-stamps .earned{background:rgba(125,211,199,.15);color:#dffdf7}
+.v-passport-reward{margin-top:1rem;padding:1rem;border-radius:8px;background:rgba(214,160,95,.12);border:1px solid rgba(214,160,95,.2)}
+.v-passport-reward small{display:block;color:#b9c6c0;margin-bottom:.25rem}
+.v-passport-reward strong{color:#fff7eb}
+.v-loop-steps{display:flex;flex-wrap:wrap;gap:.55rem;margin-top:1.35rem}
+.v-country-board{padding:1.5rem;border-color:rgba(214,160,95,.24);background:linear-gradient(135deg,rgba(214,160,95,.11),rgba(125,211,199,.04))}
+.v-country-board>span{display:inline-flex;margin-bottom:1rem;color:var(--vr-gold);font-weight:700}
+.v-game-orbit{position:relative;min-height:420px;border:1px solid rgba(247,239,226,.12);border-radius:18px;background:radial-gradient(circle at 50% 50%,rgba(125,211,199,.14),transparent 27%),linear-gradient(180deg,rgba(247,239,226,.04),rgba(247,239,226,.02));overflow:hidden}
+.v-game-orbit::before,.v-game-orbit::after{content:'';position:absolute;inset:14%;border:1px solid rgba(214,160,95,.22);border-radius:50%}
+.v-game-orbit::after{inset:27%;border-color:rgba(125,211,199,.25)}
+.v-orbit-dot{position:absolute;width:72px;height:72px;border-radius:50%;background:rgba(247,239,226,.08);border:1px solid rgba(247,239,226,.18);box-shadow:0 0 44px rgba(125,211,199,.16)}
+.dot-a{left:18%;top:23%}.dot-b{right:18%;top:31%}.dot-c{left:42%;bottom:16%}
+.v-boat-mark{position:absolute;left:50%;top:50%;width:86px;height:44px;transform:translate(-50%,-50%) rotate(-18deg);border-radius:50% 50% 42% 42%;background:linear-gradient(90deg,#5b351e,#d6a05f,#5b351e);box-shadow:0 16px 36px rgba(0,0,0,.34)}
+.v-boat-mark::before{content:'';position:absolute;left:50%;top:8px;width:28px;height:28px;transform:translateX(-50%);border-radius:50%;background:#08100f;border:2px solid rgba(247,239,226,.35)}
+.v-menu-card{padding:1.25rem;min-height:225px}
+.v-menu-card strong{display:block;margin:.2rem 0 1rem;color:var(--vr-gold);font-size:1.6rem;font-family:var(--font-heading)}
+.v-menu-card ul{list-style:none;margin:0;padding:0;display:grid;gap:.55rem}
+.v-menu-card li{color:#b9c6c0;font-size:.88rem}
+.v-menu-card li::before{content:'+';color:var(--vr-aqua);margin-right:.45rem}
+.v-reservation-shell{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,.65fr);gap:2rem;align-items:center;padding:2rem;border:1px solid rgba(247,239,226,.12);border-radius:12px;background:linear-gradient(135deg,rgba(247,239,226,.08),rgba(125,211,199,.04))}
+.v-reservation-panel{padding:1rem;align-items:center;justify-content:flex-start}
+.v-reservation-panel span{display:inline-flex;align-items:center;min-height:40px;padding:0 .75rem;border-radius:8px;background:rgba(8,16,15,.58);color:#e7dcca;font-size:.84rem}
+.footer-note{margin-top:.8rem;color:#96a49e;font-size:.86rem;line-height:1.6}
+
+/* Game v11 */
+.vr-game-root{position:fixed;inset:0;z-index:10000;background:#06100f;overflow:hidden;color:#e7f2ed;font-family:var(--font-body)}
+.vr-game-loading{color:#c8d6e5;text-align:center;padding-top:40vh}
+.vr-game-shell{position:absolute;inset:0;overflow:hidden;background:radial-gradient(circle at 50% 48%,rgba(125,211,199,.12),transparent 32%),linear-gradient(180deg,#06100f,#071819 56%,#09120f)}
+.vr-game-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.vg-topbar,.vg-mission,.vg-passport,.vg-dock-card,.vg-bottom{position:fixed;z-index:10004;border:1px solid rgba(247,239,226,.15);background:rgba(8,16,15,.72);box-shadow:0 16px 44px rgba(0,0,0,.24);backdrop-filter:blur(16px)}
+.vg-topbar{top:max(1rem,env(safe-area-inset-top));left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:.8rem;min-height:48px;padding:.4rem .7rem;border-radius:999px}
+.vg-brand{font-family:var(--font-heading);font-weight:800;color:#fff7eb}
+.vg-chip{display:inline-flex;align-items:center;min-height:32px;padding:0 .65rem;border-radius:999px;background:rgba(247,239,226,.08);color:#dce7e2;font-size:.78rem}
+.vg-mission{left:1rem;top:5.4rem;width:min(320px,calc(100vw - 2rem));padding:1rem;border-radius:10px}
+.vg-mission h2,.vg-passport h2,.vg-dock-card h2{font-size:1rem;letter-spacing:0;margin-bottom:.45rem;color:#fff7eb}
+.vg-mission p,.vg-dock-card p{font-size:.86rem;line-height:1.55;color:#b9c6c0}
+.vg-progress{height:8px;margin-top:.8rem;border-radius:999px;background:rgba(247,239,226,.09);overflow:hidden}
+.vg-progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--vr-gold),var(--vr-aqua))}
+.vg-passport{right:1rem;top:5.4rem;width:min(330px,calc(100vw - 2rem));padding:1rem;border-radius:10px}
+.vg-stamps{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.7rem}
+.vg-stamp{padding:.55rem;border-radius:8px;border:1px solid rgba(247,239,226,.12);color:#81918b;font-size:.76rem;text-align:center}
+.vg-stamp.earned{color:#fff7eb;background:rgba(125,211,199,.14);border-color:rgba(125,211,199,.28)}
+.vg-rewards{display:grid;gap:.4rem;margin-top:.8rem}
+.vg-reward{display:flex;justify-content:space-between;gap:.6rem;color:#c8d6e5;font-size:.76rem}
+.vg-bottom{left:50%;bottom:max(1rem,env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;align-items:center;gap:.5rem;padding:.5rem;border-radius:999px}
+.vg-button{min-height:42px;padding:0 .9rem;border:1px solid rgba(247,239,226,.15);border-radius:999px;background:rgba(247,239,226,.07);color:#fff7eb;font-family:var(--font-heading);font-weight:700;cursor:pointer}
+.vg-button.primary{background:var(--vr-cream);color:var(--vr-ink)}
+.vg-button:hover,.vg-button:focus-visible{border-color:rgba(125,211,199,.55)}
+.vg-dock-card{left:50%;bottom:6rem;transform:translateX(-50%);width:min(560px,calc(100vw - 2rem));padding:1.1rem;border-radius:12px;display:none}
+.vg-dock-card.open{display:block}
+.vg-dock-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem}
+.vg-toast{position:fixed;z-index:10005;left:50%;top:50%;transform:translate(-50%,-50%) scale(.96);max-width:min(420px,calc(100vw - 2rem));padding:1rem 1.1rem;border-radius:12px;background:#fff7eb;color:#08100f;box-shadow:var(--vr-shadow);opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease}
+.vg-toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.vg-joy{position:fixed;z-index:10004;left:1.25rem;bottom:1.25rem;width:96px;height:96px;border-radius:50%;border:1px solid rgba(247,239,226,.16);background:rgba(8,16,15,.5);display:none;touch-action:none}
+.vg-joy span{position:absolute;left:50%;top:50%;width:38px;height:38px;margin:-19px 0 0 -19px;border-radius:50%;background:rgba(125,211,199,.45);border:1px solid rgba(247,239,226,.32)}
+
+@media(max-width:980px){
+.v-site-nav{grid-template-columns:auto auto;width:calc(100% - 1rem);top:.5rem}
+.v-site-nav-links{display:none}
+.v-nav-cta{display:none}
+.vr-constellation-hub{min-height:760px}
+.constellation-hero{padding-top:5rem}
+.constellation-title{font-size:clamp(2rem,10vw,3.4rem)}
+.v-split,.v-split-passport,.v-reservation-shell{grid-template-columns:1fr}
+.v-zone-grid,.v-menu-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.vg-mission{top:auto;bottom:7rem;left:1rem;width:calc(100vw - 2rem);max-width:420px}
+.vg-passport{display:none}
+.vg-joy{display:block}
+}
+@media(max-width:620px){
+.vr-constellation-hub{height:auto;min-height:100svh;padding-bottom:1.5rem}
+.constellation-mobile-list{position:relative;bottom:auto;margin-top:1.5rem;max-height:none}
+.constellation-actions .btn{width:100%}
+.v-zone-grid,.v-menu-grid{grid-template-columns:1fr}
+.v-home-section{padding:3rem 0}
+.v-passport-card{transform:none}
+.v-game-orbit{min-height:320px}
+.vg-topbar{left:.6rem;right:.6rem;transform:none;justify-content:space-between;overflow-x:auto}
+.vg-chip:nth-of-type(n+3){display:none}
+.vg-bottom{left:.6rem;right:.6rem;transform:none;justify-content:center;border-radius:14px;flex-wrap:wrap}
+.vg-button{flex:1 1 auto}
+.vg-dock-card{bottom:8.4rem}
+}

@@ -769,11 +769,15 @@
         function open() {
             if (overlay) overlay.classList.add('open');
             if (btn) btn.classList.add('active');
+            if (btn) btn.setAttribute('aria-expanded', 'true');
+            if (overlay) overlay.setAttribute('aria-hidden', 'false');
             document.body.style.overflow = 'hidden';
         }
         function close() {
             if (overlay) overlay.classList.remove('open');
             if (btn) btn.classList.remove('active');
+            if (btn) btn.setAttribute('aria-expanded', 'false');
+            if (overlay) overlay.setAttribute('aria-hidden', 'true');
             document.body.style.overflow = '';
         }
 

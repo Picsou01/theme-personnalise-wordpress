@@ -22,9 +22,8 @@
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
 
-<!-- Floating Logo -->
-<div class="floating-logo" id="floating-logo">
-    <a href="<?php echo esc_url( home_url( '/' ) ); ?>" aria-label="<?php bloginfo( 'name' ); ?>">
+<header class="v-site-nav" id="v-site-nav">
+    <a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="v-site-brand" aria-label="<?php bloginfo( 'name' ); ?>">
         <?php if ( has_custom_logo() ) : ?>
             <?php
             $custom_logo_id = get_theme_mod( 'custom_logo' );
@@ -35,7 +34,18 @@
             <span class="logo-text">VIREALYS</span>
         <?php endif; ?>
     </a>
-</div>
+    <nav class="v-site-nav-links" aria-label="<?php esc_attr_e( 'Navigation rapide', 'virealys' ); ?>">
+        <a href="<?php echo esc_url( home_url( '/#zones' ) ); ?>"><?php esc_html_e( 'Zones', 'virealys' ); ?></a>
+        <a href="<?php echo esc_url( home_url( '/#passeport' ) ); ?>"><?php esc_html_e( 'Passeport', 'virealys' ); ?></a>
+        <a href="<?php echo esc_url( home_url( '/#menus' ) ); ?>"><?php esc_html_e( 'Menus', 'virealys' ); ?></a>
+    </nav>
+    <div class="v-site-actions">
+        <a href="<?php echo esc_url( home_url( '/#reservation' ) ); ?>" class="v-nav-cta"><?php esc_html_e( 'Reserver', 'virealys' ); ?></a>
+        <button class="v-menu-button" id="nav-dock-menu-btn" type="button" aria-label="<?php esc_attr_e( 'Ouvrir le menu', 'virealys' ); ?>" aria-controls="menu-overlay" aria-expanded="false">
+            <span class="dock-menu-icon" aria-hidden="true"><span></span><span></span><span></span></span>
+        </button>
+    </div>
+</header>
 
 <!-- Full Screen Menu Overlay -->
 <div class="menu-overlay" id="menu-overlay" aria-hidden="true">

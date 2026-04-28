@@ -1,69 +1,90 @@
 <?php
 /**
- * Front page template - Constellation Hub v9.0
- * HyperSpeed: minimal DOM, CSS-only stars, instant images, touch swipe
+ * Front page template - Virealys Constellation OS
  */
 get_header();
 
-$hero_title    = get_theme_mod( 'hero_title', 'Voyagez sans quitter votre table' );
-$hero_subtitle = get_theme_mod( 'hero_subtitle', 'Le premier restaurant Slow Food immersif & évolutif' );
+$reservation_url = get_theme_mod( 'reservation_url', '#reservation' );
+$hero_title      = get_theme_mod( 'hero_title', 'On ne vient pas manger. On vient vivre un monde.' );
+$hero_subtitle   = get_theme_mod( 'hero_subtitle', 'Restaurant Slow Food immersif et evolutif, ou chaque table devient un pays, une scene et un souvenir a collectionner.' );
+
+if ( ! function_exists( 'virealys_front_url' ) ) {
+    function virealys_front_url( $slug, $anchor ) {
+        $page = get_page_by_path( $slug );
+        return $page ? get_permalink( $page ) : home_url( '/#' . $anchor );
+    }
+}
 
 $constellation_pages = array(
     'concept' => array(
-        'title'   => get_theme_mod( 'page_concept_title', 'Le Concept' ),
-        'summary' => get_theme_mod( 'page_concept_summary', 'Gastronomie slow food et technologie immersive fusionnées.' ),
+        'title'   => get_theme_mod( 'page_concept_title', 'Concept' ),
+        'summary' => get_theme_mod( 'page_concept_summary', 'Slow Food, pays evolutifs et technologie invisible autour de la table.' ),
         'icon'    => 'layers',
-        'color'   => '#00e5ff',
-        'x'       => 18, 'y' => 40,
+        'color'   => '#7dd3c7',
+        'x'       => 18,
+        'y'       => 43,
         'level'   => 1,
+        'anchor'  => 'concept',
     ),
     'menus' => array(
-        'title'   => get_theme_mod( 'page_menus_title', 'Nos Formules' ),
-        'summary' => get_theme_mod( 'page_menus_summary', 'Quatre formules du classique à l\'immersion totale.' ),
+        'title'   => get_theme_mod( 'page_menus_title', 'Menus' ),
+        'summary' => get_theme_mod( 'page_menus_summary', 'Quatre niveaux, du repas essentiel a l experience sensorielle.' ),
         'icon'    => 'utensils',
-        'color'   => '#4d7cff',
-        'x'       => 82, 'y' => 40,
+        'color'   => '#d6a05f',
+        'x'       => 82,
+        'y'       => 43,
         'level'   => 1,
+        'anchor'  => 'menus',
     ),
     'ambiances' => array(
-        'title'   => get_theme_mod( 'page_ambiances_title', 'Les Ambiances' ),
-        'summary' => get_theme_mod( 'page_ambiances_summary', 'Quatre univers sensoriels qui changent chaque saison.' ),
+        'title'   => get_theme_mod( 'page_ambiances_title', 'Pays du mois' ),
+        'summary' => get_theme_mod( 'page_ambiances_summary', 'Chaque mois, decor, sons, parfums et brigade changent de destination.' ),
         'icon'    => 'globe',
-        'color'   => '#a855f7',
-        'x'       => 28, 'y' => 70,
+        'color'   => '#8bd3ff',
+        'x'       => 28,
+        'y'       => 72,
         'level'   => 1,
+        'anchor'  => 'pays-du-mois',
     ),
     'zones' => array(
-        'title'   => get_theme_mod( 'page_zones_title', 'Les 4 Zones' ),
-        'summary' => get_theme_mod( 'page_zones_summary', 'Choisissez votre niveau d\'immersion.' ),
+        'title'   => get_theme_mod( 'page_zones_title', '4 Zones' ),
+        'summary' => get_theme_mod( 'page_zones_summary', 'Origine, Voyage, Immersion et Sensorielle: chacun choisit son intensite.' ),
         'icon'    => 'grid',
-        'color'   => '#e040fb',
-        'x'       => 72, 'y' => 70,
+        'color'   => '#b694ff',
+        'x'       => 72,
+        'y'       => 72,
         'level'   => 1,
+        'anchor'  => 'zones',
     ),
     'passeport' => array(
-        'title'   => get_theme_mod( 'page_passeport_title', 'Le Passeport' ),
-        'summary' => get_theme_mod( 'page_passeport_summary', 'Collectionnez les tampons, débloquez des récompenses.' ),
+        'title'   => get_theme_mod( 'page_passeport_title', 'Passeport' ),
+        'summary' => get_theme_mod( 'page_passeport_summary', 'Des tampons virtuels qui debloquent de vraies attentions en salle.' ),
         'icon'    => 'passport',
-        'color'   => '#f97316',
-        'x'       => 50, 'y' => 85,
+        'color'   => '#f4b36b',
+        'x'       => 50,
+        'y'       => 86,
         'level'   => 2,
+        'anchor'  => 'passeport',
     ),
     'reservation' => array(
-        'title'   => get_theme_mod( 'page_reservation_title', 'Réserver' ),
-        'summary' => get_theme_mod( 'page_reservation_summary', 'Réservez votre table immersive.' ),
+        'title'   => get_theme_mod( 'page_reservation_title', 'Reserver' ),
+        'summary' => get_theme_mod( 'page_reservation_summary', 'Choisissez une zone, un pays et un niveau d immersion en quelques gestes.' ),
         'icon'    => 'calendar',
-        'color'   => '#10b981',
-        'x'       => 50, 'y' => 50,
+        'color'   => '#6ee7b7',
+        'x'       => 50,
+        'y'       => 52,
         'level'   => 0,
+        'anchor'  => 'reservation',
     ),
     'voyage-game' => array(
-        'title'   => get_theme_mod( 'page_voyage_game_title', 'Le Voyage' ),
-        'summary' => get_theme_mod( 'page_voyage_game_summary', 'Vivez votre soirée virtuelle chez Virealys.' ),
+        'title'   => get_theme_mod( 'page_voyage_game_title', 'Jeu' ),
+        'summary' => get_theme_mod( 'page_voyage_game_summary', 'Pilotez votre bateau, gagnez des etoiles et convertissez-les au restaurant.' ),
         'icon'    => 'gamepad',
-        'color'   => '#ffd700',
-        'x'       => 50, 'y' => 22,
+        'color'   => '#f9d56e',
+        'x'       => 50,
+        'y'       => 22,
         'level'   => 2,
+        'anchor'  => 'jeu',
     ),
 );
 
@@ -79,95 +100,256 @@ $constellation_links = array(
     array( 'from' => 'zones', 'to' => 'passeport' ),
     array( 'from' => 'voyage-game', 'to' => 'concept' ),
     array( 'from' => 'voyage-game', 'to' => 'reservation' ),
+    array( 'from' => 'voyage-game', 'to' => 'passeport' ),
+);
+
+$zones = array(
+    array( 'name' => 'Origine', 'tag' => 'Slow Food pur', 'desc' => 'Produits locaux, saison, bougie, service attentif. La porte d entree rassurante du concept.', 'price' => '35-45 EUR', 'tone' => 'origin' ),
+    array( 'name' => 'Voyage', 'tag' => 'Pays du mois', 'desc' => 'Decor holographique, musique, accords et narration autour de la destination en cours.', 'price' => '+10 EUR', 'tone' => 'voyage' ),
+    array( 'name' => 'Immersion', 'tag' => 'VR optionnelle', 'desc' => 'Casque leger, son spatialise, scene du plat et table augmentee sans couper du reel.', 'price' => '+20 EUR', 'tone' => 'immersion' ),
+    array( 'name' => 'Sensorielle', 'tag' => 'Experience totale', 'desc' => 'Parfums programmes, textures, illusions gustatives et surprises debloquees par passeport.', 'price' => 'Menu signature', 'tone' => 'sensoriel' ),
+);
+
+$menus = array(
+    array( 'name' => 'Classique', 'price' => '35 EUR', 'items' => array( 'Cuisine de saison', 'Table Origine', 'Passeport cree' ) ),
+    array( 'name' => 'Voyage', 'price' => '45 EUR', 'items' => array( 'Pays du mois', 'Accord boisson', 'Tampon destination' ) ),
+    array( 'name' => 'Immersif', 'price' => '60 EUR', 'items' => array( 'Table augmentee', 'Scene sonore', 'Bonus jeu x2' ) ),
+    array( 'name' => 'Sensoriel', 'price' => '90 EUR', 'items' => array( '7 temps', 'Effets sensoriels', 'Plat cache eligible' ) ),
 );
 ?>
 
-<!-- CONSTELLATION HUB v9.0 -->
-<div class="vr-constellation-hub" id="vr-constellation-hub">
+<section class="vr-constellation-hub" id="vr-constellation-hub" aria-label="<?php esc_attr_e( 'Constellation Virealys', 'virealys' ); ?>">
     <div class="constellation-bg">
         <div class="constellation-stars-css" aria-hidden="true"></div>
         <?php if ( ! wp_is_mobile() ) : ?>
-        <div class="constellation-nebula constellation-nebula-1"></div>
-        <div class="constellation-nebula constellation-nebula-2"></div>
+            <div class="constellation-nebula constellation-nebula-1"></div>
+            <div class="constellation-nebula constellation-nebula-2"></div>
         <?php endif; ?>
     </div>
 
     <div class="constellation-hero">
         <div class="constellation-hero-content" data-reveal>
+            <span class="v-eyebrow"><?php esc_html_e( 'Constellation gastronomique', 'virealys' ); ?></span>
             <h1 class="constellation-title"><?php echo esc_html( $hero_title ); ?></h1>
             <p class="constellation-subtitle"><?php echo esc_html( $hero_subtitle ); ?></p>
-            <p class="constellation-hint"><?php esc_html_e( 'Explorez la constellation', 'virealys' ); ?> <span class="constellation-hint-desktop"><?php esc_html_e( 'ou maintenez le clic droit', 'virealys' ); ?></span></p>
+            <div class="constellation-actions">
+                <a href="#passeport" class="btn btn-glow"><?php esc_html_e( 'Activer le passeport', 'virealys' ); ?></a>
+                <a href="<?php echo esc_url( virealys_front_url( 'voyage-game', 'jeu' ) ); ?>" class="btn btn-ghost"><?php esc_html_e( 'Lancer le jeu', 'virealys' ); ?></a>
+            </div>
+            <p class="constellation-hint"><?php esc_html_e( 'Explorez les astres de l experience', 'virealys' ); ?></p>
         </div>
     </div>
 
-    <?php // v9.1: Desktop-only elements — not rendered on mobile = -4KB HTML + -58 DOM nodes ?>
     <?php if ( ! wp_is_mobile() ) : ?>
-    <svg class="constellation-lines" id="constellation-lines" aria-hidden="true">
-        <?php foreach ( $constellation_links as $link ) :
-            $from = $constellation_pages[ $link['from'] ];
-            $to   = $constellation_pages[ $link['to'] ];
-        ?>
-            <line class="constellation-link-line"
-                  data-from="<?php echo esc_attr( $link['from'] ); ?>"
-                  data-to="<?php echo esc_attr( $link['to'] ); ?>"
-                  x1="<?php echo esc_attr( $from['x'] ); ?>%"
-                  y1="<?php echo esc_attr( $from['y'] ); ?>%"
-                  x2="<?php echo esc_attr( $to['x'] ); ?>%"
-                  y2="<?php echo esc_attr( $to['y'] ); ?>%"
-                  stroke="rgba(0,229,255,0.12)"
-                  stroke-width="1" />
-        <?php endforeach; ?>
-    </svg>
+        <svg class="constellation-lines" id="constellation-lines" aria-hidden="true">
+            <?php foreach ( $constellation_links as $link ) :
+                $from = $constellation_pages[ $link['from'] ];
+                $to   = $constellation_pages[ $link['to'] ];
+                ?>
+                <line class="constellation-link-line"
+                      data-from="<?php echo esc_attr( $link['from'] ); ?>"
+                      data-to="<?php echo esc_attr( $link['to'] ); ?>"
+                      x1="<?php echo esc_attr( $from['x'] ); ?>%"
+                      y1="<?php echo esc_attr( $from['y'] ); ?>%"
+                      x2="<?php echo esc_attr( $to['x'] ); ?>%"
+                      y2="<?php echo esc_attr( $to['y'] ); ?>%" />
+            <?php endforeach; ?>
+        </svg>
 
-    <!-- Desktop constellation nodes -->
-    <div class="constellation-nodes" id="constellation-nodes">
-        <?php foreach ( $constellation_pages as $slug => $page_data ) :
-            $wp_page = get_page_by_path( $slug );
-            $url = $wp_page ? get_permalink( $wp_page ) : home_url( '/' . $slug . '/' );
-            $thumb = $wp_page && has_post_thumbnail( $wp_page ) ? get_the_post_thumbnail_url( $wp_page, 'virealys-card' ) : '';
-            $thumb_sm = $wp_page && has_post_thumbnail( $wp_page ) ? get_the_post_thumbnail_url( $wp_page, 'virealys-card-sm' ) : '';
-        ?>
-            <a href="<?php echo esc_url( $url ); ?>"
-               class="constellation-node"
-               data-page="<?php echo esc_attr( $slug ); ?>"
-               data-level="<?php echo esc_attr( $page_data['level'] ); ?>"
-               style="--node-x:<?php echo esc_attr( $page_data['x'] ); ?>%;--node-y:<?php echo esc_attr( $page_data['y'] ); ?>%;--node-color:<?php echo esc_attr( $page_data['color'] ); ?>">
-                <span class="constellation-node-glow"></span>
-                <span class="constellation-node-ring"></span>
-                <span class="constellation-node-dot"></span>
-                <span class="constellation-node-icon"><?php echo virealys_get_constellation_icon( $page_data['icon'] ); ?></span>
-                <span class="constellation-node-label"><?php echo esc_html( $page_data['title'] ); ?></span>
-                <span class="constellation-node-expand">
-                    <?php if ( $thumb ) : ?>
-                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='267'%3E%3C/svg%3E"
-                             data-src="<?php echo esc_url( $thumb ); ?>"
-                             <?php if ( $thumb_sm ) : ?>data-src-sm="<?php echo esc_url( $thumb_sm ); ?>"<?php endif; ?>
-                             alt="" class="constellation-node-thumb" loading="lazy" decoding="async" width="400" height="267">
-                    <?php endif; ?>
-                    <span class="constellation-node-summary"><?php echo esc_html( $page_data['summary'] ); ?></span>
-                    <span class="constellation-node-cta">Explorer &rarr;</span>
-                </span>
-            </a>
-        <?php endforeach; ?>
-    </div>
+        <div class="constellation-nodes" id="constellation-nodes">
+            <?php foreach ( $constellation_pages as $slug => $page_data ) :
+                $url = virealys_front_url( $slug, $page_data['anchor'] );
+                ?>
+                <a href="<?php echo esc_url( $url ); ?>"
+                   class="constellation-node"
+                   data-page="<?php echo esc_attr( $slug ); ?>"
+                   data-level="<?php echo esc_attr( $page_data['level'] ); ?>"
+                   style="--node-x:<?php echo esc_attr( $page_data['x'] ); ?>%;--node-y:<?php echo esc_attr( $page_data['y'] ); ?>%;--node-color:<?php echo esc_attr( $page_data['color'] ); ?>">
+                    <span class="constellation-node-glow"></span>
+                    <span class="constellation-node-ring"></span>
+                    <span class="constellation-node-dot"></span>
+                    <span class="constellation-node-icon"><?php echo virealys_get_constellation_icon( $page_data['icon'] ); ?></span>
+                    <span class="constellation-node-label"><?php echo esc_html( $page_data['title'] ); ?></span>
+                    <span class="constellation-node-expand">
+                        <span class="constellation-node-summary"><?php echo esc_html( $page_data['summary'] ); ?></span>
+                        <span class="constellation-node-cta"><?php esc_html_e( 'Explorer', 'virealys' ); ?></span>
+                    </span>
+                </a>
+            <?php endforeach; ?>
+        </div>
     <?php endif; ?>
 
-    <!-- Mobile: scrollable card list -->
     <div class="constellation-mobile-list" id="constellation-mobile-list">
-        <?php foreach ( $constellation_pages as $slug => $page_data ) :
-            $wp_page = get_page_by_path( $slug );
-            $url = $wp_page ? get_permalink( $wp_page ) : home_url( '/' . $slug . '/' );
-        ?>
-            <a href="<?php echo esc_url( $url ); ?>" class="constellation-mobile-card" style="--node-color:<?php echo esc_attr( $page_data['color'] ); ?>">
+        <?php foreach ( $constellation_pages as $slug => $page_data ) : ?>
+            <a href="<?php echo esc_url( virealys_front_url( $slug, $page_data['anchor'] ) ); ?>" class="constellation-mobile-card" style="--node-color:<?php echo esc_attr( $page_data['color'] ); ?>">
                 <span class="constellation-mobile-icon"><?php echo virealys_get_constellation_icon( $page_data['icon'] ); ?></span>
                 <span class="constellation-mobile-info">
                     <span class="constellation-mobile-title"><?php echo esc_html( $page_data['title'] ); ?></span>
                     <span class="constellation-mobile-summary"><?php echo esc_html( $page_data['summary'] ); ?></span>
                 </span>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
             </a>
         <?php endforeach; ?>
     </div>
-</div>
+</section>
+
+<section class="section v-home-section v-manifesto" id="concept">
+    <div class="container v-split">
+        <div class="v-copy" data-reveal>
+            <span class="section-label"><?php esc_html_e( 'Le concept', 'virealys' ); ?></span>
+            <h2 class="section-title"><?php esc_html_e( 'Une table, quatre intensites, un monde qui change chaque mois.', 'virealys' ); ?></h2>
+            <p class="section-desc"><?php esc_html_e( 'Virealys melange le calme du Slow Food et une mise en scene immersive qui reste au service du gout. La technologie ne remplace jamais l assiette: elle donne une memoire au repas.', 'virealys' ); ?></p>
+        </div>
+        <div class="v-principles" data-reveal>
+            <article>
+                <strong>01</strong>
+                <h3><?php esc_html_e( 'Cuisine reelle', 'virealys' ); ?></h3>
+                <p><?php esc_html_e( 'Produits locaux, saisonnalite et brigade visible avant tout effet visuel.', 'virealys' ); ?></p>
+            </article>
+            <article>
+                <strong>02</strong>
+                <h3><?php esc_html_e( 'Immersion choisie', 'virealys' ); ?></h3>
+                <p><?php esc_html_e( 'Le client garde la main: naturel, holographique, VR ou sensoriel.', 'virealys' ); ?></p>
+            </article>
+            <article>
+                <strong>03</strong>
+                <h3><?php esc_html_e( 'Retour desire', 'virealys' ); ?></h3>
+                <p><?php esc_html_e( 'Tampons, quetes, plats caches et recompenses de salle creent une vraie boucle de fidelite.', 'virealys' ); ?></p>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section class="section v-home-section v-zones" id="zones">
+    <div class="container">
+        <div class="section-header" data-reveal>
+            <span class="section-label"><?php esc_html_e( 'Les 4 zones', 'virealys' ); ?></span>
+            <h2 class="section-title"><?php esc_html_e( 'Du repas essentiel a l experience totale.', 'virealys' ); ?></h2>
+            <p class="section-desc"><?php esc_html_e( 'Chaque zone a son rythme, son niveau d immersion et ses recompenses dans le passeport.', 'virealys' ); ?></p>
+        </div>
+        <div class="v-zone-grid">
+            <?php foreach ( $zones as $index => $zone ) : ?>
+                <article class="v-zone-card" data-zone="<?php echo esc_attr( $zone['tone'] ); ?>" data-reveal>
+                    <span class="v-zone-index"><?php echo esc_html( str_pad( (string) ( $index + 1 ), 2, '0', STR_PAD_LEFT ) ); ?></span>
+                    <h3><?php echo esc_html( $zone['name'] ); ?></h3>
+                    <p><?php echo esc_html( $zone['desc'] ); ?></p>
+                    <div class="v-zone-meta">
+                        <span><?php echo esc_html( $zone['tag'] ); ?></span>
+                        <span><?php echo esc_html( $zone['price'] ); ?></span>
+                    </div>
+                </article>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+
+<section class="section v-home-section v-passport" id="passeport">
+    <div class="container v-split v-split-passport">
+        <div class="v-passport-visual" data-reveal aria-hidden="true">
+            <div class="v-passport-card">
+                <div class="v-passport-top">
+                    <span>VIREALYS</span>
+                    <span>NIVEAU 03</span>
+                </div>
+                <div class="v-passport-code">VRL-ORIGINE-742</div>
+                <div class="v-passport-stamps">
+                    <span class="earned">Origine</span>
+                    <span class="earned">Voyage</span>
+                    <span>Immersion</span>
+                    <span>Sensoriel</span>
+                </div>
+                <div class="v-passport-reward">
+                    <small><?php esc_html_e( 'Prochaine recompense reelle', 'virealys' ); ?></small>
+                    <strong><?php esc_html_e( 'Cocktail Constellation offert', 'virealys' ); ?></strong>
+                </div>
+            </div>
+        </div>
+        <div class="v-copy" data-reveal>
+            <span class="section-label"><?php esc_html_e( 'Passeport virtuel + reel', 'virealys' ); ?></span>
+            <h2 class="section-title"><?php esc_html_e( 'Le jeu donne des etoiles. Le restaurant les transforme en souvenirs.', 'virealys' ); ?></h2>
+            <p class="section-desc"><?php esc_html_e( 'Le passeport relie le site, le jeu et la salle. Les quetes virtuelles donnent des tampons, les visites reelles les valident, puis les recompenses debloquent de nouveaux objectifs.', 'virealys' ); ?></p>
+            <div class="v-loop-steps">
+                <span><?php esc_html_e( 'Jouer', 'virealys' ); ?></span>
+                <span><?php esc_html_e( 'Collecter', 'virealys' ); ?></span>
+                <span><?php esc_html_e( 'Reserver', 'virealys' ); ?></span>
+                <span><?php esc_html_e( 'Scanner en salle', 'virealys' ); ?></span>
+                <span><?php esc_html_e( 'Debloquer', 'virealys' ); ?></span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section v-home-section v-country" id="pays-du-mois">
+    <div class="container v-split">
+        <div class="v-copy" data-reveal>
+            <span class="section-label"><?php esc_html_e( 'Pays du mois', 'virealys' ); ?></span>
+            <h2 class="section-title"><?php esc_html_e( 'Japon nocturne, produits locaux, service lyonnais.', 'virealys' ); ?></h2>
+            <p class="section-desc"><?php esc_html_e( 'La destination change regulierement pour que le restaurant ne soit jamais repetitif. Le jeu annonce les ingredients a chercher, la salle revele leur version gastronomique.', 'virealys' ); ?></p>
+        </div>
+        <div class="v-country-board" data-reveal>
+            <span><?php esc_html_e( 'Quete active', 'virealys' ); ?></span>
+            <h3><?php esc_html_e( 'La route du yuzu', 'virealys' ); ?></h3>
+            <p><?php esc_html_e( 'Collectez yuzu, shiso et riz nacre dans le jeu. En salle, le QR du passeport debloque un amuse-bouche secret si la reservation est faite cette semaine.', 'virealys' ); ?></p>
+        </div>
+    </div>
+</section>
+
+<section class="section v-home-section v-game-promo" id="jeu">
+    <div class="container v-split">
+        <div class="v-game-orbit" data-reveal aria-hidden="true">
+            <span class="v-orbit-dot dot-a"></span>
+            <span class="v-orbit-dot dot-b"></span>
+            <span class="v-orbit-dot dot-c"></span>
+            <span class="v-boat-mark"></span>
+        </div>
+        <div class="v-copy" data-reveal>
+            <span class="section-label"><?php esc_html_e( 'Le Voyage des Saveurs', 'virealys' ); ?></span>
+            <h2 class="section-title"><?php esc_html_e( 'Un jeu bateau pense pour donner envie de venir, pas juste pour distraire.', 'virealys' ); ?></h2>
+            <p class="section-desc"><?php esc_html_e( 'Chaque ile correspond a une zone du restaurant. Les ingredients recoltes ouvrent des recettes virtuelles, puis des avantages reels valides par le passeport.', 'virealys' ); ?></p>
+            <div class="v-actions">
+                <a href="<?php echo esc_url( virealys_front_url( 'voyage-game', 'jeu' ) ); ?>" class="btn btn-glow btn-lg"><?php esc_html_e( 'Jouer maintenant', 'virealys' ); ?></a>
+                <a href="#reservation" class="btn btn-outline btn-lg"><?php esc_html_e( 'Transformer mes gains', 'virealys' ); ?></a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section v-home-section v-menus" id="menus">
+    <div class="container">
+        <div class="section-header" data-reveal>
+            <span class="section-label"><?php esc_html_e( 'Menus', 'virealys' ); ?></span>
+            <h2 class="section-title"><?php esc_html_e( 'Un prix lisible, une experience modulable.', 'virealys' ); ?></h2>
+        </div>
+        <div class="v-menu-grid">
+            <?php foreach ( $menus as $menu ) : ?>
+                <article class="v-menu-card" data-reveal>
+                    <h3><?php echo esc_html( $menu['name'] ); ?></h3>
+                    <strong><?php echo esc_html( $menu['price'] ); ?></strong>
+                    <ul>
+                        <?php foreach ( $menu['items'] as $item ) : ?>
+                            <li><?php echo esc_html( $item ); ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </article>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+
+<section class="section v-home-section v-reservation" id="reservation">
+    <div class="container v-reservation-shell" data-reveal>
+        <div>
+            <span class="section-label"><?php esc_html_e( 'Reservation', 'virealys' ); ?></span>
+            <h2 class="section-title"><?php esc_html_e( 'Choisissez votre voyage en moins d une minute.', 'virealys' ); ?></h2>
+            <p class="section-desc"><?php esc_html_e( 'Le vrai tunnel de reservation doit connecter date, zone, allergies, passeport et recompense eligible. Cette page prepare deja le parcours.', 'virealys' ); ?></p>
+        </div>
+        <div class="v-reservation-panel">
+            <span><?php esc_html_e( '1. Zone', 'virealys' ); ?></span>
+            <span><?php esc_html_e( '2. Date', 'virealys' ); ?></span>
+            <span><?php esc_html_e( '3. Passeport', 'virealys' ); ?></span>
+            <a href="<?php echo esc_url( $reservation_url ); ?>" class="btn btn-glow"><?php esc_html_e( 'Reserver', 'virealys' ); ?></a>
+        </div>
+    </div>
+</section>
 
 <?php get_footer(); ?>

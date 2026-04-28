@@ -5,7 +5,7 @@
  */
 
 if ( ! defined( 'VIREALYS_VERSION' ) ) {
-    define( 'VIREALYS_VERSION', '10.0.0' );
+    define( 'VIREALYS_VERSION', '11.0.0' );
 }
 
 /* ── THEME SETUP ── */
@@ -25,10 +25,10 @@ function virealys_setup() {
     add_theme_support( 'editor-styles' );
     add_theme_support( 'align-wide' );
     add_theme_support( 'editor-color-palette', array(
-        array( 'name' => 'Neon Cyan', 'slug' => 'neon-cyan', 'color' => '#00e5ff' ),
-        array( 'name' => 'Neon Blue', 'slug' => 'neon-blue', 'color' => '#4d7cff' ),
-        array( 'name' => 'Neon Purple', 'slug' => 'neon-purple', 'color' => '#a855f7' ),
-        array( 'name' => 'Dark BG', 'slug' => 'dark-bg', 'color' => '#06060f' ),
+        array( 'name' => 'Aqua doux', 'slug' => 'aqua-doux', 'color' => '#7dd3c7' ),
+        array( 'name' => 'Ocre renard', 'slug' => 'ocre-renard', 'color' => '#c77936' ),
+        array( 'name' => 'Terracotta', 'slug' => 'terracotta', 'color' => '#8b3a0e' ),
+        array( 'name' => 'Nuit profonde', 'slug' => 'nuit-profonde', 'color' => '#06060f' ),
     ) );
 }
 add_action( 'after_setup_theme', 'virealys_setup' );
@@ -53,7 +53,7 @@ function virealys_disable_embeds() { wp_deregister_script( 'wp-embed' ); }
 add_action( 'wp_footer', 'virealys_disable_embeds' );
 
 function virealys_dequeue_bloat() {
-    if ( ! is_admin() ) wp_deregister_script( 'jquery' );
+    // Keep jQuery available for booking, payment and loyalty plugins.
     wp_dequeue_style( 'wp-block-library' );
     wp_dequeue_style( 'wp-block-library-theme' );
     wp_dequeue_style( 'wc-blocks-style' );
@@ -198,12 +198,90 @@ function virealys_game_scripts() {
     if ( is_page_template( 'templates/template-game.php' ) ) {
         wp_enqueue_script( 'virealys-game', get_template_directory_uri() . '/assets/js/game.js', array(), VIREALYS_VERSION, true );
         wp_localize_script( 'virealys-game', 'vrGame', array(
-            'reservation_url' => get_theme_mod( 'reservation_url', '#reservation' ),
+            'reservation_url' => get_theme_mod( 'reservation_url', home_url( '/#reservation' ) ),
             'home_url'        => home_url( '/' ),
+            'passport_url'    => home_url( '/#passeport' ),
+            'monthly_country' => get_theme_mod( 'monthly_country', 'Japon nocturne' ),
+            'ajax_url'        => admin_url( 'admin-ajax.php' ),
+            'nonce'           => wp_create_nonce( 'virealys_passport_nonce' ),
+            'is_logged_in'    => is_user_logged_in(),
+            'saved_passport'  => virealys_get_saved_passport(),
+            'rewards'         => array(
+                array( 'stars' => 120, 'label' => 'Cocktail Constellation -50%' ),
+                array( 'stars' => 260, 'label' => 'Amuse-bouche secret offert' ),
+                array( 'stars' => 520, 'label' => 'Acces prioritaire Pays du mois' ),
+            ),
         ) );
     }
 }
 add_action( 'wp_enqueue_scripts', 'virealys_game_scripts' );
+
+/* ── PASSPORT SYNC ── */
+
+function virealys_get_saved_passport() {
+    if ( ! is_user_logged_in() ) return null;
+    $raw = get_user_meta( get_current_user_id(), 'virealys_passport_v11', true );
+    if ( ! is_string( $raw ) || $raw === '' ) return null;
+    $passport = json_decode( $raw, true );
+    return is_array( $passport ) ? $passport : null;
+}
+
+function virealys_sanitize_passport_list( $items, $limit = 40 ) {
+    $items = is_array( $items ) ? $items : array();
+    $items = array_filter( $items, 'is_scalar' );
+    $items = array_map( function( $item ) {
+        return sanitize_key( (string) $item );
+    }, $items );
+    $items = array_filter( $items );
+    $items = array_values( array_unique( $items ) );
+    return array_slice( $items, 0, $limit );
+}
+
+function virealys_sanitize_passport( $passport ) {
+    $boat = isset( $passport['boat'] ) && is_array( $passport['boat'] ) ? $passport['boat'] : array();
+    $selected = isset( $passport['selected'] ) ? sanitize_key( $passport['selected'] ) : '';
+
+    return array(
+        'boat'       => array(
+            'x'     => max( 70, min( 1530, (float) ( $boat['x'] ?? 800 ) ) ),
+            'y'     => max( 70, min( 830, (float) ( $boat['y'] ?? 475 ) ) ),
+            'angle' => max( -7, min( 7, (float) ( $boat['angle'] ?? -0.35 ) ) ),
+        ),
+        'stars'      => max( 0, min( 99999, absint( $passport['stars'] ?? 0 ) ) ),
+        'cargo'      => virealys_sanitize_passport_list( $passport['cargo'] ?? array(), 80 ),
+        'stamps'     => virealys_sanitize_passport_list( $passport['stamps'] ?? array(), 20 ),
+        'rewards'    => virealys_sanitize_passport_list( $passport['rewards'] ?? array(), 30 ),
+        'visited'    => virealys_sanitize_passport_list( $passport['visited'] ?? array(), 30 ),
+        'selected'   => $selected ?: null,
+        'muted'      => ! empty( $passport['muted'] ),
+        'updated_at' => max( 0, absint( $passport['updated_at'] ?? time() ) ),
+    );
+}
+
+function virealys_ajax_sync_passport() {
+    check_ajax_referer( 'virealys_passport_nonce', 'nonce' );
+
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error( array( 'message' => 'Connectez-vous pour synchroniser le passeport.' ), 401 );
+    }
+
+    $raw = isset( $_POST['passport'] ) ? wp_unslash( $_POST['passport'] ) : '';
+    $passport = json_decode( $raw, true );
+    if ( ! is_array( $passport ) ) {
+        wp_send_json_error( array( 'message' => 'Passeport invalide.' ), 400 );
+    }
+
+    $safe = virealys_sanitize_passport( $passport );
+    update_user_meta( get_current_user_id(), 'virealys_passport_v11', wp_json_encode( $safe ) );
+
+    wp_send_json_success( array( 'passport' => $safe ) );
+}
+add_action( 'wp_ajax_virealys_sync_passport', 'virealys_ajax_sync_passport' );
+
+function virealys_ajax_sync_passport_guest() {
+    wp_send_json_error( array( 'message' => 'Le passeport invite reste local.' ), 401 );
+}
+add_action( 'wp_ajax_nopriv_virealys_sync_passport', 'virealys_ajax_sync_passport_guest' );
 
 /* ── INLINE CRITICAL JS (reveals + menu + lazy images) ── */
 
@@ -257,7 +335,7 @@ add_action( 'template_redirect', 'virealys_start_minify', 0 );
 
 function virealys_seo() {
     $name = get_bloginfo( 'name' );
-    $desc = 'Virealys — Le premier restaurant Slow Food immersif & évolutif. Gastronomie locale, projections 270°, 4 ambiances sensorielles.';
+    $desc = 'Virealys - restaurant Slow Food immersif et evolutif. 4 zones, pays du mois, passeport numerique et recompenses virtuelles converties en attentions reelles.';
     $url  = is_front_page() ? home_url( '/' ) : get_permalink();
     $img  = get_theme_mod( 'hero_bg', get_template_directory_uri() . '/screenshot.png' );
     $title = wp_get_document_title();
@@ -381,14 +459,24 @@ function virealys_get_page_url( $slug ) {
 }
 
 function virealys_overlay_fallback_menu() {
-    $pages = array( 'concept' => 'Le Concept', 'menus' => 'Nos Menus', 'ambiances' => 'Ambiances', 'zones' => 'Les Zones', 'passeport' => 'Passeport' );
+    $pages = array(
+        '#concept'       => 'Le Concept',
+        '#zones'         => 'Les 4 Zones',
+        '#pays-du-mois'  => 'Pays du mois',
+        '#passeport'     => 'Passeport',
+        'voyage-game'    => 'Le Jeu',
+        '#reservation'   => 'Reserver',
+    );
     echo '<ul class="overlay-nav-list">';
-    foreach ( $pages as $s => $l ) echo '<li><a href="' . esc_url( virealys_get_page_url( $s ) ) . '" class="nav-link overlay-nav-link">' . esc_html( $l ) . '</a></li>';
+    foreach ( $pages as $s => $l ) {
+        $url = str_starts_with( $s, '#' ) ? home_url( '/' . $s ) : virealys_get_page_url( $s );
+        echo '<li><a href="' . esc_url( $url ) . '" class="nav-link overlay-nav-link">' . esc_html( $l ) . '</a></li>';
+    }
     echo '</ul>';
 }
 
 function virealys_footer_fallback() {
-    $links = array( 'concept' => 'Le Concept', 'menus' => 'Nos Menus', 'zones' => 'Les Zones', 'passeport' => 'Passeport', 'contact' => 'Contact' );
+    $links = array( 'concept' => 'Le Concept', 'menus' => 'Nos Menus', 'zones' => 'Les Zones', 'passeport' => 'Passeport', 'voyage-game' => 'Le Jeu' );
     echo '<ul class="footer-links">';
     foreach ( $links as $s => $l ) echo '<li><a href="' . esc_url( virealys_get_page_url( $s ) ) . '">' . esc_html( $l ) . '</a></li>';
     echo '</ul>';
@@ -398,21 +486,24 @@ function virealys_footer_fallback() {
 
 function virealys_customizer( $wp ) {
     $wp->add_section( 'virealys_hero', array( 'title' => 'Hero / Accueil', 'priority' => 30 ) );
-    $wp->add_setting( 'hero_title', array( 'default' => 'Voyagez sans quitter votre table', 'sanitize_callback' => 'sanitize_text_field' ) );
+    $wp->add_setting( 'hero_title', array( 'default' => 'On ne vient pas manger. On vient vivre un monde.', 'sanitize_callback' => 'sanitize_text_field' ) );
     $wp->add_control( 'hero_title', array( 'label' => 'Titre constellation', 'section' => 'virealys_hero' ) );
-    $wp->add_setting( 'hero_subtitle', array( 'default' => 'Le premier restaurant Slow Food immersif & évolutif', 'sanitize_callback' => 'sanitize_text_field' ) );
+    $wp->add_setting( 'hero_subtitle', array( 'default' => 'Restaurant Slow Food immersif et evolutif, ou chaque table devient un pays, une scene et un souvenir a collectionner.', 'sanitize_callback' => 'sanitize_text_field' ) );
     $wp->add_control( 'hero_subtitle', array( 'label' => 'Sous-titre', 'section' => 'virealys_hero' ) );
     $wp->add_setting( 'hero_bg', array( 'sanitize_callback' => 'esc_url_raw' ) );
     $wp->add_control( new WP_Customize_Image_Control( $wp, 'hero_bg', array( 'label' => 'Image Hero', 'section' => 'virealys_hero' ) ) );
+    $wp->add_setting( 'monthly_country', array( 'default' => 'Japon nocturne', 'sanitize_callback' => 'sanitize_text_field' ) );
+    $wp->add_control( 'monthly_country', array( 'label' => 'Pays du mois', 'section' => 'virealys_hero' ) );
 
     $wp->add_section( 'virealys_constellation', array( 'title' => 'Constellation - Textes', 'priority' => 32 ) );
     $pages = array(
-        'concept' => array( 'Concept', 'Gastronomie slow food et technologie immersive fusionnées.' ),
-        'menus' => array( 'Nos Formules', 'Quatre formules du classique à l\'immersion totale.' ),
-        'ambiances' => array( 'Les Ambiances', 'Quatre univers sensoriels qui changent chaque saison.' ),
-        'zones' => array( 'Les 4 Zones', 'Choisissez votre niveau d\'immersion.' ),
-        'passeport' => array( 'Le Passeport', 'Collectionnez les tampons, débloquez des récompenses.' ),
-        'reservation' => array( 'Réserver', 'Réservez votre table immersive.' ),
+        'concept' => array( 'Concept', 'Slow Food, pays evolutifs et technologie invisible autour de la table.' ),
+        'menus' => array( 'Menus', 'Quatre niveaux, du repas essentiel a l experience sensorielle.' ),
+        'ambiances' => array( 'Pays du mois', 'Chaque mois, decor, sons, parfums et brigade changent de destination.' ),
+        'zones' => array( 'Les 4 Zones', 'Origine, Voyage, Immersion et Sensorielle: chacun choisit son intensite.' ),
+        'passeport' => array( 'Passeport', 'Des tampons virtuels qui debloquent de vraies attentions en salle.' ),
+        'reservation' => array( 'Reserver', 'Choisissez une zone, un pays et un niveau d immersion en quelques gestes.' ),
+        'voyage_game' => array( 'Jeu', 'Pilotez votre bateau, gagnez des etoiles et convertissez-les au restaurant.' ),
     );
     foreach ( $pages as $slug => $d ) {
         $wp->add_setting( 'page_' . $slug . '_title', array( 'default' => $d[0], 'sanitize_callback' => 'sanitize_text_field' ) );

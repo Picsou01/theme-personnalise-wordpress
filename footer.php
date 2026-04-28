@@ -6,7 +6,8 @@
         <div class="footer-grid">
             <div class="footer-col footer-brand">
                 <a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="logo-text">VIREALYS</a>
-                <p class="footer-tagline"><?php echo esc_html( get_theme_mod( 'footer_tagline', 'Voyagez sans quitter votre table.' ) ); ?></p>
+                <p class="footer-tagline"><?php echo esc_html( get_theme_mod( 'footer_tagline', 'On ne vient pas manger. On vient vivre un monde.' ) ); ?></p>
+                <p class="footer-note">Slow Food, pays evolutifs, passeport numerique et recompenses a debloquer en salle.</p>
                 <div class="footer-social">
                     <?php if ( get_theme_mod( 'instagram_url' ) ) : ?>
                         <a href="<?php echo esc_url( get_theme_mod( 'instagram_url' ) ); ?>" target="_blank" rel="noopener" aria-label="Instagram">
@@ -28,15 +29,13 @@
 
             <div class="footer-col">
                 <h4>Explorer</h4>
-                <?php
-                wp_nav_menu( array(
-                    'theme_location' => 'footer',
-                    'container'      => false,
-                    'menu_class'     => 'footer-links',
-                    'fallback_cb'    => 'virealys_footer_fallback',
-                    'depth'          => 1,
-                ) );
-                ?>
+                <ul class="footer-links">
+                    <li><a href="<?php echo esc_url( home_url( '/#zones' ) ); ?>">Les 4 zones</a></li>
+                    <li><a href="<?php echo esc_url( home_url( '/#pays-du-mois' ) ); ?>">Pays du mois</a></li>
+                    <li><a href="<?php echo esc_url( home_url( '/#passeport' ) ); ?>">Passeport</a></li>
+                    <li><a href="<?php echo esc_url( home_url( '/#jeu' ) ); ?>">Jeu</a></li>
+                    <li><a href="<?php echo esc_url( home_url( '/#reservation' ) ); ?>">Reservation</a></li>
+                </ul>
             </div>
 
             <div class="footer-col">
@@ -55,7 +54,7 @@
             </div>
 
             <div class="footer-col">
-                <h4>Contact</h4>
+                <h4>Acces</h4>
                 <ul class="footer-links">
                     <?php if ( get_theme_mod( 'phone_number' ) ) : ?>
                         <li><a href="tel:<?php echo esc_attr( get_theme_mod( 'phone_number' ) ); ?>"><?php echo esc_html( get_theme_mod( 'phone_number' ) ); ?></a></li>
@@ -64,6 +63,7 @@
                     <?php if ( get_theme_mod( 'address' ) ) : ?>
                         <li><?php echo esc_html( get_theme_mod( 'address' ) ); ?></li>
                     <?php endif; ?>
+                    <li><a href="<?php echo esc_url( home_url( '/#reservation' ) ); ?>">Transformer une recompense</a></li>
                 </ul>
             </div>
         </div>
