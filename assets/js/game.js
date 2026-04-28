@@ -102,6 +102,13 @@
         { stars: 900, id: 'table', label: 'Table immersive recommandee' }
     ];
 
+    var REAL_LOOP = [
+        { label: 'Reserver une zone', done: function () { return state.stamps.length > 0; } },
+        { label: 'Presenter le code passeport', done: function () { return state.rewards.length > 0; } },
+        { label: 'Debloquer une attention en salle', done: function () { return state.realRewards.length > 0; } },
+        { label: 'Revenir pour une nouvelle route', done: function () { return state.stamps.length >= 4; } }
+    ];
+
     var canvas, ctx, root, ui = {}, W = 1, H = 1, DPR = 1, scale = 1, ox = 0, oy = 0;
     var keys = {}, frame = 0, nearIsland = null, toastTimer = 0;
     var joy = { active: false, x: 0, y: 0, dx: 0, dy: 0 };
@@ -111,6 +118,7 @@
         cargo: [],
         stamps: [],
         rewards: [],
+        realRewards: [],
         visited: [],
         selected: null,
         muted: false,
@@ -137,6 +145,15 @@
                 try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) {}
             }
         }
+        normalizeState();
+    }
+
+    function normalizeState() {
+        state.cargo = Array.isArray(state.cargo) ? state.cargo : [];
+        state.stamps = Array.isArray(state.stamps) ? state.stamps : [];
+        state.rewards = Array.isArray(state.rewards) ? state.rewards : [];
+        state.realRewards = Array.isArray(state.realRewards) ? state.realRewards : [];
+        state.visited = Array.isArray(state.visited) ? state.visited : [];
     }
 
     function save() {
@@ -190,6 +207,18 @@
         return 'VRL-' + String(hash).padStart(4, '0') + '-' + state.stamps.length + state.rewards.length;
     }
 
+    function realRewardFor(island) {
+        if (!island) return '';
+        var map = {
+            origine: 'Mise en bouche ingredient local',
+            voyage: 'Visa ' + monthlyCountry + ' et bonus etoiles en salle',
+            immersion: 'Priorite casque VR doux',
+            sensoriel: 'Surprise sensorielle au dessert',
+            bar: 'Cocktail Constellation -50%'
+        };
+        return map[island.id] || island.reward;
+    }
+
     function build() {
         root = $('vr-game');
         if (!root) return;
@@ -199,6 +228,7 @@
             '<div class="vg-topbar"><span class="vg-brand">VIREALYS</span><span class="vg-chip" id="vg-stars">0 etoile</span><span class="vg-chip" id="vg-cargo">0 ingredient</span><span class="vg-chip" id="vg-code">VRL-0000-00</span><span class="vg-chip" id="vg-sync">local</span></div>' +
             '<aside class="vg-mission"><h2>Quete du jour</h2><p id="vg-mission-text"></p><div class="vg-progress"><span id="vg-progress"></span></div></aside>' +
             '<aside class="vg-passport"><h2>Passeport</h2><div class="vg-stamps" id="vg-stamps"></div><div class="vg-rewards" id="vg-rewards"></div></aside>' +
+            '<aside class="vg-service"><h2>En salle</h2><div id="vg-loop"></div><div class="vg-service-code" id="vg-service-code">VRL-0000</div></aside>' +
             '<div class="vg-dock-card" id="vg-dock"><h2 id="vg-dock-title"></h2><p id="vg-dock-text"></p><div class="vg-dock-actions"><button class="vg-button primary" id="vg-validate">Valider le tampon</button><a class="vg-button" id="vg-book" href="' + reservationUrl + '">Reserver pour convertir</a></div></div>' +
             '<div class="vg-bottom"><button class="vg-button primary" id="vg-dock-btn">Accoster</button><button class="vg-button" id="vg-passport-btn">Code passeport</button><button class="vg-button" id="vg-reset">Recommencer</button></div>' +
             '<div class="vg-joy" id="vg-joy"><span id="vg-joy-knob"></span></div>' +
@@ -215,6 +245,8 @@
         ui.progress = $('vg-progress');
         ui.stamps = $('vg-stamps');
         ui.rewards = $('vg-rewards');
+        ui.loop = $('vg-loop');
+        ui.serviceCode = $('vg-service-code');
         ui.dock = $('vg-dock');
         ui.dockTitle = $('vg-dock-title');
         ui.dockText = $('vg-dock-text');
@@ -355,7 +387,8 @@
         if (firstVisit) {
             state.stamps.push(island.id);
             state.stars += 40 + state.cargo.length * 4;
-            toast('Tampon ajoute au passeport: ' + island.name);
+            if (!has(state.realRewards, island.id)) state.realRewards.push(island.id);
+            toast('Tampon ajoute: ' + island.name + '. En salle: ' + realRewardFor(island) + '.');
         } else {
             state.stars += 12;
             toast('Route revisitee: +12 etoiles. Revenez avec un nouveau code en salle.');
@@ -384,6 +417,7 @@
             cargo: [],
             stamps: [],
             rewards: [],
+            realRewards: [],
             visited: [],
             selected: null,
             muted: false,
@@ -397,6 +431,7 @@
         ui.stars.textContent = state.stars + (state.stars > 1 ? ' etoiles' : ' etoile');
         ui.cargo.textContent = state.cargo.length + ' ingredient' + (state.cargo.length > 1 ? 's' : '');
         ui.code.textContent = passportCode();
+        if (ui.serviceCode) ui.serviceCode.textContent = passportCode();
         updateSyncText();
         var active = ISLANDS.find(function (x) { return !has(state.stamps, x.id); }) || ISLANDS[0];
         ui.mission.textContent = 'Rejoignez ' + active.name + ', collectez trois ingredients, puis validez le tampon pour transformer vos etoiles en recompense reelle.';
@@ -411,6 +446,12 @@
             var ok = has(state.rewards, reward.id);
             return '<div class="vg-reward"><span>' + reward.label + '</span><strong>' + (ok ? 'pret' : reward.stars + '*') + '</strong></div>';
         }).join('');
+
+        if (ui.loop) {
+            ui.loop.innerHTML = REAL_LOOP.map(function (step) {
+                return '<div class="vg-loop-step ' + (step.done() ? 'done' : '') + '"><span></span><strong>' + step.label + '</strong></div>';
+            }).join('');
+        }
     }
 
     function toast(msg) {
@@ -423,6 +464,7 @@
     function draw() {
         ctx.clearRect(0, 0, W, H);
         drawWater();
+        drawRestaurantPier();
         drawRoutes();
         ISLANDS.forEach(drawIsland);
         INGREDIENTS.forEach(drawIngredient);
@@ -476,6 +518,46 @@
         });
         ctx.stroke();
         ctx.setLineDash([]);
+        ctx.restore();
+    }
+
+    function drawRestaurantPier() {
+        var x = sx(800), y = sy(475), r = ss(122);
+        ctx.save();
+        ctx.fillStyle = 'rgba(247,239,226,.07)';
+        ctx.strokeStyle = 'rgba(214,160,95,.36)';
+        ctx.lineWidth = Math.max(1, ss(2));
+        ctx.beginPath();
+        ctx.ellipse(x, y, r * 1.22, r * .58, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.strokeStyle = 'rgba(125,211,199,.24)';
+        ctx.setLineDash([ss(8), ss(10)]);
+        ctx.beginPath();
+        ctx.arc(x, y, r * .75, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        for (var i = 0; i < 5; i++) {
+            var a = -Math.PI * .85 + i * Math.PI * .42;
+            var tx = x + Math.cos(a) * r * .75;
+            var ty = y + Math.sin(a) * r * .35;
+            ctx.fillStyle = 'rgba(8,16,15,.72)';
+            ctx.strokeStyle = 'rgba(247,239,226,.28)';
+            ctx.beginPath();
+            ctx.ellipse(tx, ty, ss(22), ss(12), 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+        }
+
+        ctx.fillStyle = '#fff7eb';
+        ctx.font = '700 ' + Math.max(12, ss(15)) + 'px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Restaurant reel', x, y - r * .58);
+        ctx.font = Math.max(10, ss(11)) + 'px sans-serif';
+        ctx.fillStyle = '#b9c6c0';
+        ctx.fillText('ramenez le code passeport en salle', x, y - r * .42);
         ctx.restore();
     }
 
@@ -560,6 +642,10 @@
         ctx.strokeStyle = 'rgba(255,255,255,.75)';
         ctx.lineWidth = Math.max(1, ss(2));
         ctx.stroke();
+        ctx.font = '700 ' + Math.max(9, ss(11)) + 'px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#fff7eb';
+        ctx.fillText(item.label, x, y - r - ss(8));
         ctx.restore();
     }
 

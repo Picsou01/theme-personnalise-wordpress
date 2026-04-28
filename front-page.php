@@ -21,8 +21,8 @@ $constellation_pages = array(
         'summary' => get_theme_mod( 'page_concept_summary', 'Slow Food, pays evolutifs et technologie invisible autour de la table.' ),
         'icon'    => 'layers',
         'color'   => '#7dd3c7',
-        'x'       => 18,
-        'y'       => 43,
+        'x'       => 14,
+        'y'       => 50,
         'level'   => 1,
         'anchor'  => 'concept',
     ),
@@ -31,8 +31,8 @@ $constellation_pages = array(
         'summary' => get_theme_mod( 'page_menus_summary', 'Quatre niveaux, du repas essentiel a l experience sensorielle.' ),
         'icon'    => 'utensils',
         'color'   => '#d6a05f',
-        'x'       => 82,
-        'y'       => 43,
+        'x'       => 86,
+        'y'       => 50,
         'level'   => 1,
         'anchor'  => 'menus',
     ),
@@ -42,7 +42,7 @@ $constellation_pages = array(
         'icon'    => 'globe',
         'color'   => '#8bd3ff',
         'x'       => 28,
-        'y'       => 72,
+        'y'       => 77,
         'level'   => 1,
         'anchor'  => 'pays-du-mois',
     ),
@@ -52,7 +52,7 @@ $constellation_pages = array(
         'icon'    => 'grid',
         'color'   => '#b694ff',
         'x'       => 72,
-        'y'       => 72,
+        'y'       => 77,
         'level'   => 1,
         'anchor'  => 'zones',
     ),
@@ -62,7 +62,7 @@ $constellation_pages = array(
         'icon'    => 'passport',
         'color'   => '#f4b36b',
         'x'       => 50,
-        'y'       => 86,
+        'y'       => 93,
         'level'   => 2,
         'anchor'  => 'passeport',
     ),
@@ -72,7 +72,7 @@ $constellation_pages = array(
         'icon'    => 'calendar',
         'color'   => '#6ee7b7',
         'x'       => 50,
-        'y'       => 52,
+        'y'       => 55,
         'level'   => 0,
         'anchor'  => 'reservation',
     ),
@@ -82,7 +82,7 @@ $constellation_pages = array(
         'icon'    => 'gamepad',
         'color'   => '#f9d56e',
         'x'       => 50,
-        'y'       => 22,
+        'y'       => 7,
         'level'   => 2,
         'anchor'  => 'jeu',
     ),
@@ -141,41 +141,49 @@ $menus = array(
     </div>
 
     <?php if ( ! wp_is_mobile() ) : ?>
-        <svg class="constellation-lines" id="constellation-lines" aria-hidden="true">
-            <?php foreach ( $constellation_links as $link ) :
-                $from = $constellation_pages[ $link['from'] ];
-                $to   = $constellation_pages[ $link['to'] ];
-                ?>
-                <line class="constellation-link-line"
-                      data-from="<?php echo esc_attr( $link['from'] ); ?>"
-                      data-to="<?php echo esc_attr( $link['to'] ); ?>"
-                      x1="<?php echo esc_attr( $from['x'] ); ?>%"
-                      y1="<?php echo esc_attr( $from['y'] ); ?>%"
-                      x2="<?php echo esc_attr( $to['x'] ); ?>%"
-                      y2="<?php echo esc_attr( $to['y'] ); ?>%" />
-            <?php endforeach; ?>
-        </svg>
+        <div class="constellation-map" aria-label="<?php esc_attr_e( 'Carte constellation Virealys', 'virealys' ); ?>">
+            <div class="constellation-orbit orbit-one" aria-hidden="true"></div>
+            <div class="constellation-orbit orbit-two" aria-hidden="true"></div>
+            <div class="constellation-core" aria-hidden="true">
+                <span>V</span>
+                <small><?php esc_html_e( 'passeport vivant', 'virealys' ); ?></small>
+            </div>
+            <svg class="constellation-lines" id="constellation-lines" aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <?php foreach ( $constellation_links as $link ) :
+                    $from = $constellation_pages[ $link['from'] ];
+                    $to   = $constellation_pages[ $link['to'] ];
+                    ?>
+                    <line class="constellation-link-line"
+                          data-from="<?php echo esc_attr( $link['from'] ); ?>"
+                          data-to="<?php echo esc_attr( $link['to'] ); ?>"
+                          x1="<?php echo esc_attr( $from['x'] ); ?>"
+                          y1="<?php echo esc_attr( $from['y'] ); ?>"
+                          x2="<?php echo esc_attr( $to['x'] ); ?>"
+                          y2="<?php echo esc_attr( $to['y'] ); ?>" />
+                <?php endforeach; ?>
+            </svg>
 
-        <div class="constellation-nodes" id="constellation-nodes">
-            <?php foreach ( $constellation_pages as $slug => $page_data ) :
-                $url = virealys_front_url( $slug, $page_data['anchor'] );
-                ?>
-                <a href="<?php echo esc_url( $url ); ?>"
-                   class="constellation-node"
-                   data-page="<?php echo esc_attr( $slug ); ?>"
-                   data-level="<?php echo esc_attr( $page_data['level'] ); ?>"
-                   style="--node-x:<?php echo esc_attr( $page_data['x'] ); ?>%;--node-y:<?php echo esc_attr( $page_data['y'] ); ?>%;--node-color:<?php echo esc_attr( $page_data['color'] ); ?>">
-                    <span class="constellation-node-glow"></span>
-                    <span class="constellation-node-ring"></span>
-                    <span class="constellation-node-dot"></span>
-                    <span class="constellation-node-icon"><?php echo virealys_get_constellation_icon( $page_data['icon'] ); ?></span>
-                    <span class="constellation-node-label"><?php echo esc_html( $page_data['title'] ); ?></span>
-                    <span class="constellation-node-expand">
-                        <span class="constellation-node-summary"><?php echo esc_html( $page_data['summary'] ); ?></span>
-                        <span class="constellation-node-cta"><?php esc_html_e( 'Explorer', 'virealys' ); ?></span>
-                    </span>
-                </a>
-            <?php endforeach; ?>
+            <div class="constellation-nodes" id="constellation-nodes">
+                <?php foreach ( $constellation_pages as $slug => $page_data ) :
+                    $url = virealys_front_url( $slug, $page_data['anchor'] );
+                    ?>
+                    <a href="<?php echo esc_url( $url ); ?>"
+                       class="constellation-node"
+                       data-page="<?php echo esc_attr( $slug ); ?>"
+                       data-level="<?php echo esc_attr( $page_data['level'] ); ?>"
+                       style="--node-x:<?php echo esc_attr( $page_data['x'] ); ?>%;--node-y:<?php echo esc_attr( $page_data['y'] ); ?>%;--node-color:<?php echo esc_attr( $page_data['color'] ); ?>">
+                        <span class="constellation-node-glow"></span>
+                        <span class="constellation-node-ring"></span>
+                        <span class="constellation-node-dot"></span>
+                        <span class="constellation-node-icon"><?php echo virealys_get_constellation_icon( $page_data['icon'] ); ?></span>
+                        <span class="constellation-node-label"><?php echo esc_html( $page_data['title'] ); ?></span>
+                        <span class="constellation-node-expand">
+                            <span class="constellation-node-summary"><?php echo esc_html( $page_data['summary'] ); ?></span>
+                            <span class="constellation-node-cta"><?php esc_html_e( 'Explorer', 'virealys' ); ?></span>
+                        </span>
+                    </a>
+                <?php endforeach; ?>
+            </div>
         </div>
     <?php endif; ?>
 

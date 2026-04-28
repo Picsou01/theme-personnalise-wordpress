@@ -5,7 +5,23 @@
 get_header();
 ?>
 
-<section class="section section-page">
+<section class="v-page-hero">
+    <div class="container v-page-hero-grid">
+        <div data-reveal>
+            <span class="section-label"><?php esc_html_e( 'Carnet de bord', 'virealys' ); ?></span>
+            <h1 class="v-page-title"><?php esc_html_e( 'Les routes Virealys', 'virealys' ); ?></h1>
+            <p class="v-page-desc"><?php esc_html_e( 'Actualites, pays du mois, quetes du passeport et evolutions du restaurant.', 'virealys' ); ?></p>
+        </div>
+        <div class="v-page-mini-map" data-reveal aria-hidden="true">
+            <span class="v-mini-star">News</span>
+            <span class="v-mini-star">Pays</span>
+            <span class="v-mini-star">Visa</span>
+            <span class="v-mini-star">Jeu</span>
+        </div>
+    </div>
+</section>
+
+<section class="section section-page v-page-body">
     <div class="container">
         <?php if ( have_posts() ) : ?>
             <div class="posts-grid">

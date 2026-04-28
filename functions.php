@@ -1,11 +1,11 @@
 <?php
 /**
  * Virealys - Functions & Definitions
- * v10.0 — Clean HyperSpeed
+ * v12.0 - Constellation Orbit
  */
 
 if ( ! defined( 'VIREALYS_VERSION' ) ) {
-    define( 'VIREALYS_VERSION', '11.0.0' );
+    define( 'VIREALYS_VERSION', '12.0.0' );
 }
 
 /* ── THEME SETUP ── */
@@ -94,6 +94,7 @@ function virealys_critical_css() {
     h1,h2,h3,h4,h5,h6{font-family:var(--font-heading);color:var(--color-heading);font-weight:600;line-height:1.2}
     .container{width:100%;max-width:var(--container-width);margin:0 auto;padding:0 clamp(1.25rem,4vw,2.5rem)}
     .site-main{position:relative;z-index:1}
+    .v-site-nav{display:none}
     .floating-logo{position:fixed;top:1rem;left:1.25rem;z-index:1000;background:rgba(6,6,15,.75);border:1px solid rgba(0,229,255,.1);border-radius:100px;padding:.4rem 1rem}
     .floating-logo a{display:flex;align-items:center;text-decoration:none}
     .logo-text{font-family:var(--font-heading);font-size:.875rem;font-weight:700;letter-spacing:.15em;background:var(--gradient-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
@@ -171,6 +172,16 @@ function virealys_scripts() {
         'nonce'     => wp_create_nonce( 'virealys_nonce' ),
         'theme_url' => get_template_directory_uri(),
         'home_url'  => home_url( '/' ),
+        'routes'    => array(
+            'concept'           => home_url( '/#concept' ),
+            'menus'             => home_url( '/#menus' ),
+            'zones'             => home_url( '/#zones' ),
+            'ambiances'         => home_url( '/#pays-du-mois' ),
+            'passeport'         => home_url( '/#passeport' ),
+            'reservation'       => home_url( '/#reservation' ),
+            'voyage-game'       => virealys_get_page_url( 'voyage-game' ),
+            '__constellation__' => home_url( '/' ),
+        ),
     ) );
 }
 add_action( 'wp_enqueue_scripts', 'virealys_scripts' );
@@ -251,6 +262,7 @@ function virealys_sanitize_passport( $passport ) {
         'cargo'      => virealys_sanitize_passport_list( $passport['cargo'] ?? array(), 80 ),
         'stamps'     => virealys_sanitize_passport_list( $passport['stamps'] ?? array(), 20 ),
         'rewards'    => virealys_sanitize_passport_list( $passport['rewards'] ?? array(), 30 ),
+        'realRewards'=> virealys_sanitize_passport_list( $passport['realRewards'] ?? array(), 30 ),
         'visited'    => virealys_sanitize_passport_list( $passport['visited'] ?? array(), 30 ),
         'selected'   => $selected ?: null,
         'muted'      => ! empty( $passport['muted'] ),
