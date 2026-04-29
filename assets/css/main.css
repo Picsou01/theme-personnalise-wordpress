@@ -973,17 +973,22 @@ body{background:var(--vr-night);color:#dce7e2}
 .vg-rewards{display:grid;gap:.4rem;margin-top:.8rem}
 .vg-reward{display:flex;justify-content:space-between;gap:.6rem;color:#c8d6e5;font-size:.76rem}
 .vg-service{right:1rem;bottom:5.8rem;width:min(330px,calc(100vw - 2rem));padding:1rem;border-radius:10px}
-.vg-loop-step{display:flex;align-items:center;gap:.5rem;padding:.42rem 0;color:#8fa09a;font-size:.78rem}
+.vg-loop-step{display:grid;grid-template-columns:10px minmax(0,1fr) auto;align-items:center;gap:.5rem;padding:.5rem 0;color:#8fa09a;font-size:.78rem;border-bottom:1px solid rgba(247,239,226,.07)}
 .vg-loop-step span{width:10px;height:10px;border-radius:50%;border:1px solid rgba(247,239,226,.25)}
 .vg-loop-step strong{flex:1;font-weight:700}
 .vg-loop-step em{font-style:normal;color:#d6a05f;font-size:.72rem}
+.vg-loop-step small{grid-column:2/4;color:#aebbb6;font-size:.68rem;line-height:1.35}
 .vg-loop-step.done{color:#fff7eb}
 .vg-loop-step.done span{background:var(--vr-aqua);border-color:var(--vr-aqua);box-shadow:0 0 16px rgba(125,211,199,.45)}
+.vg-upgrade-box{margin-top:.7rem;padding:.7rem;border:1px solid rgba(125,211,199,.14);border-radius:8px;background:rgba(125,211,199,.05);display:grid;gap:.45rem}
+.vg-upgrade-box .vg-button{width:100%;min-height:36px}
+.vg-upgrade-box small{color:#b9c6c0;font-size:.7rem;line-height:1.45}
 .vg-service-code{margin-top:.7rem;padding:.7rem;border:1px dashed rgba(214,160,95,.35);border-radius:8px;color:#fff7eb;text-align:center;font-family:var(--font-heading);font-size:.92rem}
 .vg-bottom{left:50%;bottom:max(1rem,env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;align-items:center;gap:.5rem;padding:.5rem;border-radius:999px}
 .vg-button{min-height:42px;padding:0 .9rem;border:1px solid rgba(247,239,226,.15);border-radius:999px;background:rgba(247,239,226,.07);color:#fff7eb;font-family:var(--font-heading);font-weight:700;cursor:pointer}
 .vg-button.primary{background:var(--vr-cream);color:var(--vr-ink)}
 .vg-button:hover,.vg-button:focus-visible{border-color:rgba(125,211,199,.55)}
+.vg-button:disabled{opacity:.55;cursor:not-allowed}
 .vg-dock-card{left:50%;bottom:6rem;transform:translateX(-50%);width:min(560px,calc(100vw - 2rem));padding:1.1rem;border-radius:12px;display:none}
 .vg-dock-card.open{display:block}
 .vg-dock-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem}
@@ -1042,6 +1047,12 @@ html{scroll-padding-top:0}
 .constellation-core{position:absolute;left:50%;top:55%;z-index:4;width:116px;height:116px;display:grid;place-items:center;text-align:center;transform:translate(-50%,-50%);border-radius:50%;border:1px solid rgba(247,239,226,.24);background:radial-gradient(circle at 45% 28%,rgba(247,239,226,.18),rgba(8,16,15,.88) 58%);box-shadow:0 0 70px rgba(125,211,199,.12),inset 0 0 32px rgba(214,160,95,.05)}
 .constellation-core span{font-family:var(--font-heading);font-size:2.4rem;font-weight:800;color:#fff7eb;line-height:1}
 .constellation-core small{display:block;margin-top:-1.3rem;font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(247,239,226,.58)}
+.constellation-ledger{position:absolute;left:50%;top:55%;z-index:5;width:48%;height:48%;transform:translate(-50%,-50%);pointer-events:none}
+.constellation-ledger span{position:absolute;display:inline-flex;align-items:center;justify-content:center;min-width:54px;height:24px;padding:0 .6rem;border:1px solid rgba(247,239,226,.12);border-radius:999px;background:rgba(8,16,15,.68);color:rgba(247,239,226,.58);font-family:var(--font-heading);font-size:.58rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;box-shadow:0 10px 26px rgba(0,0,0,.22)}
+.constellation-ledger span:nth-child(1){left:50%;top:0;transform:translate(-50%,-50%)}
+.constellation-ledger span:nth-child(2){right:0;top:50%;transform:translate(50%,-50%)}
+.constellation-ledger span:nth-child(3){left:50%;bottom:0;transform:translate(-50%,50%)}
+.constellation-ledger span:nth-child(4){left:0;top:50%;transform:translate(-50%,-50%)}
 .constellation-lines{inset:0;z-index:3}
 .constellation-link-line{stroke:rgba(214,160,95,.3);stroke-width:.22;vector-effect:non-scaling-stroke}
 .constellation-nodes{position:absolute;inset:0;z-index:6}

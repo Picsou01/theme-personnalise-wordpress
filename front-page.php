@@ -78,13 +78,33 @@ $constellation_pages = array(
     ),
     'voyage-game' => array(
         'title'   => get_theme_mod( 'page_voyage_game_title', 'Jeu' ),
-        'summary' => get_theme_mod( 'page_voyage_game_summary', 'Pilotez votre bateau, gagnez des etoiles et convertissez-les au restaurant.' ),
+        'summary' => get_theme_mod( 'page_voyage_game_summary', 'Servez des commandes, montez l aura du passeport et revenez debloquer du reel.' ),
         'icon'    => 'gamepad',
         'color'   => '#f9d56e',
         'x'       => 50,
         'y'       => 7,
         'level'   => 2,
         'anchor'  => 'jeu',
+    ),
+    'saisons' => array(
+        'title'   => get_theme_mod( 'page_saisons_title', 'Saisons' ),
+        'summary' => get_theme_mod( 'page_saisons_summary', 'Les services successifs font evoluer le jeu, la carte et les envies de retour.' ),
+        'icon'    => 'star',
+        'color'   => '#fff1a8',
+        'x'       => 28,
+        'y'       => 23,
+        'level'   => 2,
+        'anchor'  => 'univers-jeu',
+    ),
+    'recompenses' => array(
+        'title'   => get_theme_mod( 'page_recompenses_title', 'Recompenses' ),
+        'summary' => get_theme_mod( 'page_recompenses_summary', 'Les visas virtuels deviennent cocktails, surprises et attentions validees en salle.' ),
+        'icon'    => 'passport',
+        'color'   => '#ffd0a1',
+        'x'       => 72,
+        'y'       => 23,
+        'level'   => 2,
+        'anchor'  => 'passeport',
     ),
 );
 
@@ -101,6 +121,11 @@ $constellation_links = array(
     array( 'from' => 'voyage-game', 'to' => 'concept' ),
     array( 'from' => 'voyage-game', 'to' => 'reservation' ),
     array( 'from' => 'voyage-game', 'to' => 'passeport' ),
+    array( 'from' => 'voyage-game', 'to' => 'saisons' ),
+    array( 'from' => 'saisons', 'to' => 'recompenses' ),
+    array( 'from' => 'saisons', 'to' => 'ambiances' ),
+    array( 'from' => 'recompenses', 'to' => 'passeport' ),
+    array( 'from' => 'recompenses', 'to' => 'reservation' ),
 );
 
 $zones = array(
@@ -147,6 +172,12 @@ $menus = array(
             <div class="constellation-core" aria-hidden="true">
                 <span>V</span>
                 <small><?php esc_html_e( 'passeport vivant', 'virealys' ); ?></small>
+            </div>
+            <div class="constellation-ledger" aria-hidden="true">
+                <span>jeu</span>
+                <span>table</span>
+                <span>visa</span>
+                <span>retour</span>
             </div>
             <svg class="constellation-lines" id="constellation-lines" aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none">
                 <?php foreach ( $constellation_links as $link ) :
@@ -312,8 +343,8 @@ $menus = array(
         </div>
         <div class="v-copy" data-reveal>
             <span class="section-label"><?php esc_html_e( 'Le Voyage des Saveurs', 'virealys' ); ?></span>
-            <h2 class="section-title"><?php esc_html_e( 'Un jeu bateau pense pour donner envie de venir, pas juste pour distraire.', 'virealys' ); ?></h2>
-            <p class="section-desc"><?php esc_html_e( 'Chaque ile correspond a une zone du restaurant. Les ingredients recoltes ouvrent des recettes virtuelles, puis des avantages reels valides par le passeport.', 'virealys' ); ?></p>
+            <h2 class="section-title"><?php esc_html_e( 'Un jeu-passeport qui commence en ligne et se termine a table.', 'virealys' ); ?></h2>
+            <p class="section-desc"><?php esc_html_e( 'Chaque ile correspond a une zone du restaurant. Les commandes servies, les visas et les upgrades ouvrent des avantages reels valides par le passeport.', 'virealys' ); ?></p>
             <div class="v-actions">
                 <a href="<?php echo esc_url( virealys_front_url( 'voyage-game', 'jeu' ) ); ?>" class="btn btn-glow btn-lg"><?php esc_html_e( 'Jouer maintenant', 'virealys' ); ?></a>
                 <a href="#reservation" class="btn btn-outline btn-lg"><?php esc_html_e( 'Transformer mes gains', 'virealys' ); ?></a>
@@ -327,24 +358,24 @@ $menus = array(
         <div class="section-header" data-reveal>
             <span class="section-label"><?php esc_html_e( 'Univers persistant', 'virealys' ); ?></span>
             <h2 class="section-title"><?php esc_html_e( 'Le jeu devient le prologue du repas.', 'virealys' ); ?></h2>
-            <p class="section-desc"><?php esc_html_e( 'Chaque partie construit une raison concrete de venir: recette a finaliser, code passeport, attention en salle et nouvelle route a debloquer.', 'virealys' ); ?></p>
+            <p class="section-desc"><?php esc_html_e( 'Chaque partie construit une raison concrete de venir: commande a servir, recette a maitriser, visa a depenser, code passeport et nouvelle soiree a debloquer.', 'virealys' ); ?></p>
         </div>
         <div class="v-template-grid">
             <article class="v-template-card" data-reveal>
-                <strong><?php esc_html_e( 'Recettes signatures', 'virealys' ); ?></strong>
-                <p><?php esc_html_e( 'Le joueur recolte des ingredients, compose un plat virtuel puis le relie a une recompense reelle.', 'virealys' ); ?></p>
+                <strong><?php esc_html_e( 'Commandes en salle', 'virealys' ); ?></strong>
+                <p><?php esc_html_e( 'Les tables virtuelles demandent des plats precis: les servir donne visas, aura et recompenses reelles.', 'virealys' ); ?></p>
             </article>
             <article class="v-template-card" data-reveal>
-                <strong><?php esc_html_e( 'Aura du passeport', 'virealys' ); ?></strong>
-                <p><?php esc_html_e( 'La reputation augmente avec les plats servis et donne un statut visible avant la reservation.', 'virealys' ); ?></p>
+                <strong><?php esc_html_e( 'Maitrise de recettes', 'virealys' ); ?></strong>
+                <p><?php esc_html_e( 'Les recettes peuvent etre rejouees et maitrisees, pour transformer le jeu en progression longue.', 'virealys' ); ?></p>
             </article>
             <article class="v-template-card" data-reveal>
-                <strong><?php esc_html_e( 'Service vivant', 'virealys' ); ?></strong>
-                <p><?php esc_html_e( 'La tension du service monte doucement: plus le joueur agit bien, plus le restaurant devient desirable.', 'virealys' ); ?></p>
+                <strong><?php esc_html_e( 'Brigade a ameliorer', 'virealys' ); ?></strong>
+                <p><?php esc_html_e( 'Les visas financent la mise en place, le sommelier holographique et les couches de service.', 'virealys' ); ?></p>
             </article>
             <article class="v-template-card" data-reveal>
-                <strong><?php esc_html_e( 'Boucle retour', 'virealys' ); ?></strong>
-                <p><?php esc_html_e( 'Une visite valide le code et relance une autre route, pour eviter le site vitrine mort.', 'virealys' ); ?></p>
+                <strong><?php esc_html_e( 'Saisons de retour', 'virealys' ); ?></strong>
+                <p><?php esc_html_e( 'Une soiree complete relance de nouvelles commandes et cree une raison naturelle de revenir.', 'virealys' ); ?></p>
             </article>
         </div>
     </div>

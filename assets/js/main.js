@@ -311,7 +311,7 @@
 
         var totalItems = allPages.length;
         var angleStep = (2 * Math.PI) / totalItems;
-        var startAngle = Math.PI / 2 - 6 * angleStep;
+        var startAngle = Math.PI / 2 - (totalItems - 1) * angleStep;
 
         radialItems = [];
 

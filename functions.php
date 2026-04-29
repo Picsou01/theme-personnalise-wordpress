@@ -5,7 +5,7 @@
  */
 
 if ( ! defined( 'VIREALYS_VERSION' ) ) {
-    define( 'VIREALYS_VERSION', '12.1.0' );
+    define( 'VIREALYS_VERSION', '12.2.0' );
 }
 
 /* ── THEME SETUP ── */
@@ -274,8 +274,12 @@ function virealys_sanitize_passport( $passport ) {
         'reputation' => max( 0, min( 9999, absint( $passport['reputation'] ?? 0 ) ) ),
         'heat'       => max( 0, min( 100, absint( $passport['heat'] ?? 18 ) ) ),
         'chapter'    => max( 1, min( 99, absint( $passport['chapter'] ?? 1 ) ) ),
+        'tokens'     => max( 0, min( 999, absint( $passport['tokens'] ?? 0 ) ) ),
+        'serviceDay' => max( 1, min( 999, absint( $passport['serviceDay'] ?? 1 ) ) ),
+        'seasonXp'   => max( 0, min( 99999, absint( $passport['seasonXp'] ?? 0 ) ) ),
         'activeRecipe' => is_scalar( $passport['activeRecipe'] ?? '' ) ? sanitize_key( (string) $passport['activeRecipe'] ) : '',
         'inventory'  => virealys_sanitize_passport_inventory( $passport['inventory'] ?? array() ),
+        'servedCounts' => virealys_sanitize_passport_inventory( $passport['servedCounts'] ?? array() ),
         'cargo'      => virealys_sanitize_passport_list( $passport['cargo'] ?? array(), 80 ),
         'stamps'     => virealys_sanitize_passport_list( $passport['stamps'] ?? array(), 20 ),
         'dishes'     => virealys_sanitize_passport_list( $passport['dishes'] ?? array(), 30 ),
@@ -283,6 +287,8 @@ function virealys_sanitize_passport( $passport ) {
         'realRewards'=> virealys_sanitize_passport_list( $passport['realRewards'] ?? array(), 30 ),
         'visited'    => virealys_sanitize_passport_list( $passport['visited'] ?? array(), 30 ),
         'discovered' => virealys_sanitize_passport_list( $passport['discovered'] ?? array(), 80 ),
+        'contractsDone' => virealys_sanitize_passport_list( $passport['contractsDone'] ?? array(), 300 ),
+        'upgrades'   => virealys_sanitize_passport_list( $passport['upgrades'] ?? array(), 20 ),
         'selected'   => $selected ?: null,
         'muted'      => ! empty( $passport['muted'] ),
         'updated_at' => max( 0, absint( $passport['updated_at'] ?? time() ) ),
@@ -534,7 +540,9 @@ function virealys_customizer( $wp ) {
         'zones' => array( 'Les 4 Zones', 'Origine, Voyage, Immersion et Sensorielle: chacun choisit son intensite.' ),
         'passeport' => array( 'Passeport', 'Des tampons virtuels qui debloquent de vraies attentions en salle.' ),
         'reservation' => array( 'Reserver', 'Choisissez une zone, un pays et un niveau d immersion en quelques gestes.' ),
-        'voyage_game' => array( 'Jeu', 'Pilotez votre bateau, gagnez des etoiles et convertissez-les au restaurant.' ),
+        'voyage_game' => array( 'Jeu', 'Servez des commandes, montez l aura du passeport et revenez debloquer du reel.' ),
+        'saisons' => array( 'Saisons', 'Les services successifs font evoluer le jeu, la carte et les envies de retour.' ),
+        'recompenses' => array( 'Recompenses', 'Les visas virtuels deviennent cocktails, surprises et attentions validees en salle.' ),
     );
     foreach ( $pages as $slug => $d ) {
         $wp->add_setting( 'page_' . $slug . '_title', array( 'default' => $d[0], 'sanitize_callback' => 'sanitize_text_field' ) );

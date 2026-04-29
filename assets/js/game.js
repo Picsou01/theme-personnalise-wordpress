@@ -56,6 +56,21 @@
         { stars: 900, id: 'table', label: 'Table immersive recommandee' }
     ];
 
+    var CONTRACTS = [
+        { id: 'duo_voyage', label: 'Duo Voyage', recipe: 'nacre_yuzu', brief: 'Deux convives veulent commencer par le pays du mois.', reward: 'Mocktail yuzu partage', stars: 85, reputation: 12, tokens: 1 },
+        { id: 'table_producteurs', label: 'Table Producteurs', recipe: 'terre_truffe', brief: 'Une table locale cherche une preuve de terroir.', reward: 'Accord huile/pain offert', stars: 95, reputation: 14, tokens: 1 },
+        { id: 'salon_vr', label: 'Salon VR douce', recipe: 'orbite_miso', brief: 'Une equipe reserve la sequence immersive.', reward: 'Passage VR prioritaire', stars: 115, reputation: 18, tokens: 2 },
+        { id: 'anniversaire', label: 'Anniversaire Sensoriel', recipe: 'songe_lavande', brief: 'Une surprise parfumee doit finir la soiree.', reward: 'Dessert cache active', stars: 130, reputation: 20, tokens: 2 },
+        { id: 'afterwork', label: 'Afterwork Constellation', recipe: 'constellation_bar', brief: 'Le bar veut un moment social qui donne envie de revenir.', reward: 'Cocktail signature -50%', stars: 145, reputation: 24, tokens: 2 }
+    ];
+
+    var UPGRADES = [
+        { id: 'mise', label: 'Mise en place', cost: 2, text: 'Collectes plus rentables et service plus propre.' },
+        { id: 'sommelier', label: 'Sommelier holographique', cost: 4, text: 'Chaque plat servi gagne plus d aura.' },
+        { id: 'brigade', label: 'Brigade synchronisee', cost: 6, text: 'La pression de service monte moins vite.' },
+        { id: 'atelier', label: 'Atelier constellation', cost: 9, text: 'Les commandes completent plus vite la saison.' }
+    ];
+
     var canvas, ctx, root, ui = {}, W = 1, H = 1, DPR = 1, scale = 1, ox = 0, oy = 0;
     var keys = {}, frame = 0, nearIsland = null, toastTimer = 0, lastHeatTick = 0;
     var joy = { active: false, x: 0, y: 0, dx: 0, dy: 0 };
@@ -74,6 +89,12 @@
         realRewards: [],
         visited: [],
         discovered: [],
+        tokens: 0,
+        serviceDay: 1,
+        seasonXp: 0,
+        contractsDone: [],
+        upgrades: [],
+        servedCounts: {},
         selected: null,
         updated_at: 0
     };
@@ -87,6 +108,19 @@
     function islandById(id) { return ISLANDS.find(function (i) { return i.id === id; }); }
     function itemById(id) { return INGREDIENTS.find(function (i) { return i.id === id; }); }
     function count(id) { return Number(state.inventory[id] || 0); }
+    function served(id) { return Number((state.servedCounts && state.servedCounts[id]) || 0); }
+    function hasUpgrade(id) { return has(state.upgrades, id); }
+    function seasonLevel() { return Math.floor(Number(state.seasonXp || 0) / 260) + 1; }
+    function contractKey(contract) { return 'J' + state.serviceDay + '-' + contract.id; }
+    function activeContracts() {
+        return [0, 1, 2].map(function (slot) {
+            return CONTRACTS[(state.serviceDay + slot - 1) % CONTRACTS.length];
+        });
+    }
+    function contractDone(contract) { return has(state.contractsDone, contractKey(contract)); }
+    function nextUpgrade() {
+        return UPGRADES.find(function (upgrade) { return !hasUpgrade(upgrade.id); });
+    }
 
     function load() {
         var saved = null;
@@ -112,10 +146,16 @@
         state.realRewards = Array.isArray(state.realRewards) ? state.realRewards : [];
         state.visited = Array.isArray(state.visited) ? state.visited : [];
         state.discovered = Array.isArray(state.discovered) ? state.discovered : [];
+        state.contractsDone = Array.isArray(state.contractsDone) ? state.contractsDone : [];
+        state.upgrades = Array.isArray(state.upgrades) ? state.upgrades : [];
+        state.servedCounts = state.servedCounts && typeof state.servedCounts === 'object' ? state.servedCounts : {};
+        state.tokens = Number(state.tokens || 0);
+        state.serviceDay = Math.max(1, Number(state.serviceDay || 1));
+        state.seasonXp = Number(state.seasonXp || 0);
         state.reputation = Number(state.reputation || 0);
         state.heat = Number(state.heat || 18);
         state.chapter = Number(state.chapter || 1);
-        if (!findRecipe(state.activeRecipe) || has(state.dishes, state.activeRecipe)) state.activeRecipe = nextRecipe().id;
+        if (!findRecipe(state.activeRecipe)) state.activeRecipe = nextRecipe().id;
     }
 
     function save() {
@@ -152,10 +192,10 @@
     }
 
     function passportCode() {
-        var raw = [state.stamps.join('-') || 'START', state.dishes.join('-') || 'NO-DISH', state.stars, state.reputation].join('|');
+        var raw = [state.stamps.join('-') || 'START', state.dishes.join('-') || 'NO-DISH', state.stars, state.reputation, state.tokens, state.serviceDay, seasonLevel()].join('|');
         var hash = 0;
         for (var i = 0; i < raw.length; i++) hash = (hash * 31 + raw.charCodeAt(i)) % 9973;
-        return 'VRL-' + String(hash).padStart(4, '0') + '-' + state.dishes.length + state.rewards.length;
+        return 'VRL-' + String(hash).padStart(4, '0') + '-' + seasonLevel() + state.rewards.length;
     }
 
     function nextRecipe() {
@@ -178,11 +218,11 @@
         root.innerHTML = '' +
             '<div class="vr-game-shell">' +
             '<canvas class="vr-game-canvas" id="vg-canvas"></canvas>' +
-            '<div class="vg-topbar"><span class="vg-brand">VIREALYS</span><span class="vg-chip" id="vg-stars">0 etoile</span><span class="vg-chip" id="vg-rep">Aura 0</span><span class="vg-chip" id="vg-heat">Service calme</span><span class="vg-chip" id="vg-code">VRL-0000</span><span class="vg-chip" id="vg-sync">local</span></div>' +
+            '<div class="vg-topbar"><span class="vg-brand">VIREALYS</span><span class="vg-chip" id="vg-stars">0 etoile</span><span class="vg-chip" id="vg-rep">Aura 0</span><span class="vg-chip" id="vg-day">Jour 1</span><span class="vg-chip" id="vg-season">Saison 1</span><span class="vg-chip" id="vg-tokens">0 visa</span><span class="vg-chip" id="vg-heat">Service calme</span><span class="vg-chip" id="vg-code">VRL-0000</span><span class="vg-chip" id="vg-sync">local</span></div>' +
             '<aside class="vg-mission"><h2>Mission vivante</h2><p id="vg-mission-text"></p><div class="vg-progress"><span id="vg-progress"></span></div></aside>' +
             '<aside class="vg-recipe"><h2>Plat signature</h2><div id="vg-recipe-card"></div><div id="vg-inventory"></div></aside>' +
             '<aside class="vg-passport"><h2>Passeport</h2><div class="vg-stamps" id="vg-stamps"></div><div class="vg-rewards" id="vg-rewards"></div></aside>' +
-            '<aside class="vg-service"><h2>En salle</h2><div id="vg-loop"></div><div class="vg-service-code" id="vg-service-code">VRL-0000</div></aside>' +
+            '<aside class="vg-service"><h2>Commandes en salle</h2><div id="vg-loop"></div><div class="vg-upgrade-box"><button class="vg-button" id="vg-upgrade">Ameliorer</button><small id="vg-upgrade-next"></small></div><div class="vg-service-code" id="vg-service-code">VRL-0000</div></aside>' +
             '<div class="vg-dock-card" id="vg-dock"><h2 id="vg-dock-title"></h2><p id="vg-dock-text"></p><div class="vg-dock-actions"><button class="vg-button primary" id="vg-validate">Servir</button><a class="vg-button" id="vg-book" href="' + reservationUrl + '">Reserver pour convertir</a></div></div>' +
             '<div class="vg-bottom"><button class="vg-button primary" id="vg-dock-btn">Accoster</button><button class="vg-button" id="vg-cycle">Changer recette</button><button class="vg-button" id="vg-passport-btn">Code passeport</button><button class="vg-button" id="vg-reset">Recommencer</button></div>' +
             '<div class="vg-joy" id="vg-joy"><span id="vg-joy-knob"></span></div>' +
@@ -193,6 +233,9 @@
         ctx = canvas.getContext('2d');
         ui.stars = $('vg-stars');
         ui.rep = $('vg-rep');
+        ui.day = $('vg-day');
+        ui.season = $('vg-season');
+        ui.tokens = $('vg-tokens');
         ui.heat = $('vg-heat');
         ui.code = $('vg-code');
         ui.sync = $('vg-sync');
@@ -204,6 +247,8 @@
         ui.rewards = $('vg-rewards');
         ui.loop = $('vg-loop');
         ui.serviceCode = $('vg-service-code');
+        ui.upgrade = $('vg-upgrade');
+        ui.upgradeNext = $('vg-upgrade-next');
         ui.dock = $('vg-dock');
         ui.dockTitle = $('vg-dock-title');
         ui.dockText = $('vg-dock-text');
@@ -215,6 +260,7 @@
         $('vg-cycle').addEventListener('click', cycleRecipe);
         $('vg-passport-btn').addEventListener('click', showPassportCode);
         $('vg-reset').addEventListener('click', reset);
+        ui.upgrade.addEventListener('click', buyUpgrade);
         bindControls();
         resize();
         window.addEventListener('resize', resize);
@@ -296,7 +342,7 @@
 
         if (frame - lastHeatTick > 90) {
             lastHeatTick = frame;
-            state.heat = clamp(state.heat + 0.28 - Math.min(state.reputation, 100) * 0.002, 0, 100);
+            state.heat = clamp(state.heat + 0.28 - Math.min(state.reputation, 100) * 0.002 - (hasUpgrade('brigade') ? 0.12 : 0), 0, 100);
         }
 
         nearIsland = null;
@@ -316,9 +362,10 @@
     function collect(item) {
         state.inventory[item.id] = count(item.id) + 1;
         if (!has(state.discovered, item.id)) state.discovered.push(item.id);
-        state.stars += item.value;
-        state.heat = clamp(state.heat + 1.4, 0, 100);
-        item.cooldown = frame + 620 + Math.floor(Math.random() * 360);
+        state.stars += item.value + (hasUpgrade('mise') ? 4 : 0);
+        state.seasonXp += 2;
+        state.heat = clamp(state.heat + (hasUpgrade('mise') ? 0.8 : 1.4), 0, 100);
+        item.cooldown = frame + (hasUpgrade('atelier') ? 450 : 620) + Math.floor(Math.random() * 360);
         unlockRewards();
         toast(item.label + ' collecte. Stock: ' + count(item.id));
         save();
@@ -331,6 +378,47 @@
                 toast('Recompense debloquee: ' + reward.label);
             }
         });
+    }
+
+    function completeContracts(recipe) {
+        var completed = [];
+        activeContracts().forEach(function (contract) {
+            if (contract.recipe !== recipe.id || contractDone(contract)) return;
+            state.contractsDone.push(contractKey(contract));
+            state.stars += contract.stars;
+            state.tokens += contract.tokens;
+            state.reputation = clamp(state.reputation + contract.reputation, 0, 999);
+            state.seasonXp += 45 + (hasUpgrade('atelier') ? 20 : 0);
+            completed.push(contract);
+        });
+
+        if (completed.length && activeContracts().every(contractDone)) {
+            state.serviceDay += 1;
+            state.tokens += 2;
+            state.seasonXp += 90 + (hasUpgrade('atelier') ? 40 : 0);
+            state.heat = clamp(state.heat - 22, 0, 100);
+            toast('Soiree validee. Nouveau service, +2 visas et une constellation plus forte.');
+        }
+        return completed;
+    }
+
+    function buyUpgrade() {
+        var upgrade = nextUpgrade();
+        if (!upgrade) {
+            toast('Toutes les ameliorations de brigade sont actives.');
+            return;
+        }
+        if (state.tokens < upgrade.cost) {
+            toast(upgrade.label + ' demande ' + upgrade.cost + ' visas. Servez des commandes en salle.');
+            return;
+        }
+        state.tokens -= upgrade.cost;
+        state.upgrades.push(upgrade.id);
+        state.reputation = clamp(state.reputation + 10, 0, 999);
+        state.seasonXp += 35;
+        toast('Amelioration active: ' + upgrade.label + '.');
+        save();
+        updateUI();
     }
 
     function dock() {
@@ -351,7 +439,7 @@
         var island = ISLANDS.find(function (x) { return x.id === state.selected; });
         if (!island) return;
         var recipe = recipeById(state.activeRecipe);
-        if (recipe.island === island.id && canCook(recipe) && !has(state.dishes, recipe.id)) {
+        if (recipe.island === island.id && canCook(recipe)) {
             serveRecipe(recipe, island);
         } else {
             stampIsland(island);
@@ -363,17 +451,25 @@
     }
 
     function serveRecipe(recipe, island) {
+        var firstServe = !has(state.dishes, recipe.id);
+        var beforeSeason = seasonLevel();
         consume(recipe);
-        state.dishes.push(recipe.id);
+        if (firstServe) state.dishes.push(recipe.id);
+        state.servedCounts[recipe.id] = served(recipe.id) + 1;
         if (!has(state.stamps, island.id)) state.stamps.push(island.id);
         if (!has(state.visited, island.id)) state.visited.push(island.id);
         if (!has(state.realRewards, recipe.id)) state.realRewards.push(recipe.id);
-        state.stars += recipe.stars + Math.max(0, Math.round(35 - state.heat / 3));
-        state.reputation = clamp(state.reputation + recipe.reputation, 0, 999);
-        state.heat = clamp(state.heat - 28, 0, 100);
+        state.stars += recipe.stars + Math.max(0, Math.round(35 - state.heat / 3)) + (hasUpgrade('sommelier') ? 28 : 0);
+        state.reputation = clamp(state.reputation + recipe.reputation + (hasUpgrade('sommelier') ? 7 : 0), 0, 999);
+        state.seasonXp += 32 + recipe.chapter * 10 + (firstServe ? 35 : 0);
+        state.heat = clamp(state.heat - (hasUpgrade('mise') ? 36 : 28), 0, 100);
         state.chapter = Math.max(state.chapter, recipe.chapter + 1);
+        var completed = completeContracts(recipe);
         state.activeRecipe = nextRecipe().id;
-        toast(recipe.name + ' servi. En salle: ' + recipe.real + '.');
+        var mastery = served(recipe.id) >= 3 ? ' Maitrise acquise: bonus de retour active.' : '';
+        var contractText = completed.length ? ' Commande validee: ' + completed.map(function (c) { return c.label; }).join(', ') + '.' : '';
+        var seasonText = seasonLevel() > beforeSeason ? ' Saison ' + seasonLevel() + ' debloquee.' : '';
+        toast(recipe.name + ' servi. En salle: ' + recipe.real + '.' + contractText + seasonText + mastery);
     }
 
     function stampIsland(island) {
@@ -391,18 +487,11 @@
 
     function cycleRecipe() {
         var current = RECIPES.indexOf(recipeById(state.activeRecipe));
-        for (var i = 1; i <= RECIPES.length; i++) {
-            var next = RECIPES[(current + i) % RECIPES.length];
-            if (!has(state.dishes, next.id)) {
-                state.activeRecipe = next.id;
-                toast('Nouvelle recette active: ' + next.name);
-                updateUI();
-                save();
-                return;
-            }
-        }
-        state.activeRecipe = RECIPES[0].id;
-        toast('Saison complete. Continuez pour monter l aura du passeport.');
+        var next = RECIPES[(current + 1) % RECIPES.length];
+        state.activeRecipe = next.id;
+        toast('Recette active: ' + next.name + (served(next.id) ? ' - deja maitrisee x' + served(next.id) : ''));
+        updateUI();
+        save();
     }
 
     function showPassportCode() {
@@ -429,6 +518,12 @@
             realRewards: [],
             visited: [],
             discovered: [],
+            tokens: 0,
+            serviceDay: 1,
+            seasonXp: 0,
+            contractsDone: [],
+            upgrades: [],
+            servedCounts: {},
             selected: null,
             updated_at: 0
         };
@@ -444,6 +539,9 @@
         var recipe = recipeById(state.activeRecipe);
         ui.stars.textContent = state.stars + (state.stars > 1 ? ' etoiles' : ' etoile');
         ui.rep.textContent = 'Aura ' + state.reputation;
+        ui.day.textContent = 'Jour ' + state.serviceDay;
+        ui.season.textContent = 'Saison ' + seasonLevel();
+        ui.tokens.textContent = state.tokens + (state.tokens > 1 ? ' visas' : ' visa');
         ui.heat.textContent = state.heat > 68 ? 'Service intense' : (state.heat > 38 ? 'Service vivant' : 'Service calme');
         ui.code.textContent = passportCode();
         if (ui.serviceCode) ui.serviceCode.textContent = passportCode();
@@ -451,17 +549,18 @@
 
         var missing = Object.keys(recipe.needs).filter(function (id) { return count(id) < recipe.needs[id]; });
         var island = islandById(recipe.island);
+        var contractTarget = activeContracts().find(function (contract) { return contract.recipe === recipe.id && !contractDone(contract); });
         ui.mission.textContent = missing.length
             ? 'Composez ' + recipe.name + ' pour ' + island.name + '. Il manque: ' + missing.map(function (id) { return itemById(id).label; }).join(', ') + '.'
-            : 'Tous les ingredients sont prets. Accostez a ' + island.name + ' pour servir le plat et debloquer une recompense reelle.';
-        ui.progress.style.width = Math.round((state.dishes.length / RECIPES.length) * 100) + '%';
+            : 'Tous les ingredients sont prets. Accostez a ' + island.name + ' pour servir ' + (contractTarget ? contractTarget.label : 'la route libre') + ' et alimenter le passeport reel.';
+        ui.progress.style.width = Math.round((state.seasonXp % 260) / 260 * 100) + '%';
 
         ui.recipe.innerHTML = '<strong>' + recipe.name + '</strong><p>' + recipe.brief + '</p><div class="vg-needs">' +
             Object.keys(recipe.needs).map(function (id) {
                 var item = itemById(id);
                 var ok = count(id) >= recipe.needs[id];
                 return '<span class="' + (ok ? 'ready' : '') + '">' + item.label + ' ' + count(id) + '/' + recipe.needs[id] + '</span>';
-            }).join('') + '</div><small>Chapitre ' + recipe.chapter + ' - ' + island.name + '</small>';
+            }).join('') + '</div><small>Chapitre ' + recipe.chapter + ' - ' + island.name + ' - maitrise x' + served(recipe.id) + '</small>';
 
         var inventoryItems = INGREDIENTS.filter(function (item) { return count(item.id) > 0; });
         ui.inventory.innerHTML = inventoryItems.length
@@ -477,14 +576,16 @@
             return '<div class="vg-reward"><span>' + reward.label + '</span><strong>' + (ok ? 'pret' : reward.stars + '*') + '</strong></div>';
         }).join('');
 
-        ui.loop.innerHTML = [
-            ['Recettes servies', state.dishes.length + '/' + RECIPES.length, state.dishes.length > 0],
-            ['Code presente en salle', state.rewards.length + ' bonus', state.rewards.length > 0],
-            ['Reputation immersive', state.reputation + ' aura', state.reputation >= 50],
-            ['Retour desirable', state.dishes.length >= 4 ? 'route rare' : 'en cours', state.dishes.length >= 4]
-        ].map(function (step) {
-            return '<div class="vg-loop-step ' + (step[2] ? 'done' : '') + '"><span></span><strong>' + step[0] + '</strong><em>' + step[1] + '</em></div>';
+        ui.loop.innerHTML = activeContracts().map(function (contract) {
+            var done = contractDone(contract);
+            var r = recipeById(contract.recipe);
+            return '<div class="vg-loop-step ' + (done ? 'done' : '') + '"><span></span><strong>' + contract.label + '</strong><em>' + (done ? contract.reward : r.name) + '</em><small>' + contract.brief + '</small></div>';
         }).join('');
+
+        var upgrade = nextUpgrade();
+        ui.upgrade.disabled = !upgrade;
+        ui.upgrade.textContent = upgrade ? 'Ameliorer - ' + upgrade.cost + ' visas' : 'Brigade complete';
+        ui.upgradeNext.textContent = upgrade ? upgrade.label + ': ' + upgrade.text : 'Toutes les couches de progression sont actives.';
     }
 
     function toast(msg) {
@@ -499,6 +600,7 @@
         drawWater();
         drawRestaurantPier();
         drawRoutes();
+        drawContracts();
         ISLANDS.forEach(drawIsland);
         INGREDIENTS.forEach(drawIngredient);
         drawBoat();
@@ -549,6 +651,35 @@
             ctx.stroke();
         });
         ctx.setLineDash([]);
+        ctx.restore();
+    }
+
+    function drawContracts() {
+        ctx.save();
+        activeContracts().forEach(function (contract, idx) {
+            var recipe = recipeById(contract.recipe);
+            var island = islandById(recipe.island);
+            if (!island) return;
+            var done = contractDone(contract);
+            var x = sx(island.x + (idx - 1) * 28);
+            var y = sy(island.y - island.r - 54);
+            var w = ss(178), h = ss(46);
+            ctx.fillStyle = done ? 'rgba(125,211,199,.20)' : 'rgba(8,16,15,.78)';
+            ctx.strokeStyle = done ? 'rgba(125,211,199,.72)' : 'rgba(247,239,226,.24)';
+            ctx.lineWidth = Math.max(1, ss(1.2));
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(x - w / 2, y - h / 2, w, h, ss(10));
+            else ctx.rect(x - w / 2, y - h / 2, w, h);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = done ? 'rgba(247,239,226,.95)' : 'rgba(255,247,235,.88)';
+            ctx.font = Math.max(10, ss(12)) + 'px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(contract.label, x, y - ss(5));
+            ctx.fillStyle = done ? 'rgba(125,211,199,.95)' : 'rgba(214,160,95,.95)';
+            ctx.font = Math.max(9, ss(10)) + 'px sans-serif';
+            ctx.fillText(done ? 'servi' : recipe.name, x, y + ss(12));
+        });
         ctx.restore();
     }
 
