@@ -1,11 +1,11 @@
 <?php
 /**
  * Virealys - Functions & Definitions
- * v12.0 - Constellation Orbit
+ * v12.1 - Constellation Orbit
  */
 
 if ( ! defined( 'VIREALYS_VERSION' ) ) {
-    define( 'VIREALYS_VERSION', '12.0.0' );
+    define( 'VIREALYS_VERSION', '12.1.0' );
 }
 
 /* ── THEME SETUP ── */
@@ -248,6 +248,18 @@ function virealys_sanitize_passport_list( $items, $limit = 40 ) {
     return array_slice( $items, 0, $limit );
 }
 
+function virealys_sanitize_passport_inventory( $items ) {
+    $items = is_array( $items ) ? $items : array();
+    $safe = array();
+    foreach ( $items as $key => $value ) {
+        if ( ! is_scalar( $key ) ) continue;
+        $id = sanitize_key( (string) $key );
+        if ( $id === '' ) continue;
+        $safe[ $id ] = max( 0, min( 99, absint( $value ) ) );
+    }
+    return $safe;
+}
+
 function virealys_sanitize_passport( $passport ) {
     $boat = isset( $passport['boat'] ) && is_array( $passport['boat'] ) ? $passport['boat'] : array();
     $selected = isset( $passport['selected'] ) ? sanitize_key( $passport['selected'] ) : '';
@@ -259,11 +271,18 @@ function virealys_sanitize_passport( $passport ) {
             'angle' => max( -7, min( 7, (float) ( $boat['angle'] ?? -0.35 ) ) ),
         ),
         'stars'      => max( 0, min( 99999, absint( $passport['stars'] ?? 0 ) ) ),
+        'reputation' => max( 0, min( 9999, absint( $passport['reputation'] ?? 0 ) ) ),
+        'heat'       => max( 0, min( 100, absint( $passport['heat'] ?? 18 ) ) ),
+        'chapter'    => max( 1, min( 99, absint( $passport['chapter'] ?? 1 ) ) ),
+        'activeRecipe' => is_scalar( $passport['activeRecipe'] ?? '' ) ? sanitize_key( (string) $passport['activeRecipe'] ) : '',
+        'inventory'  => virealys_sanitize_passport_inventory( $passport['inventory'] ?? array() ),
         'cargo'      => virealys_sanitize_passport_list( $passport['cargo'] ?? array(), 80 ),
         'stamps'     => virealys_sanitize_passport_list( $passport['stamps'] ?? array(), 20 ),
+        'dishes'     => virealys_sanitize_passport_list( $passport['dishes'] ?? array(), 30 ),
         'rewards'    => virealys_sanitize_passport_list( $passport['rewards'] ?? array(), 30 ),
         'realRewards'=> virealys_sanitize_passport_list( $passport['realRewards'] ?? array(), 30 ),
         'visited'    => virealys_sanitize_passport_list( $passport['visited'] ?? array(), 30 ),
+        'discovered' => virealys_sanitize_passport_list( $passport['discovered'] ?? array(), 80 ),
         'selected'   => $selected ?: null,
         'muted'      => ! empty( $passport['muted'] ),
         'updated_at' => max( 0, absint( $passport['updated_at'] ?? time() ) ),

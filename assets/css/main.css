@@ -944,20 +944,28 @@ body{background:var(--vr-night);color:#dce7e2}
 .v-reservation-panel span{display:inline-flex;align-items:center;min-height:40px;padding:0 .75rem;border-radius:8px;background:rgba(8,16,15,.58);color:#e7dcca;font-size:.84rem}
 .footer-note{margin-top:.8rem;color:#96a49e;font-size:.86rem;line-height:1.6}
 
-/* Game v11 */
+/* Game v12 */
 .vr-game-root{position:fixed;inset:0;z-index:10000;background:#06100f;overflow:hidden;color:#e7f2ed;font-family:var(--font-body)}
 .vr-game-loading{color:#c8d6e5;text-align:center;padding-top:40vh}
 .vr-game-shell{position:absolute;inset:0;overflow:hidden;background:radial-gradient(circle at 50% 48%,rgba(125,211,199,.12),transparent 32%),linear-gradient(180deg,#06100f,#071819 56%,#09120f)}
 .vr-game-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-.vg-topbar,.vg-mission,.vg-passport,.vg-service,.vg-dock-card,.vg-bottom{position:fixed;z-index:10004;border:1px solid rgba(247,239,226,.15);background:rgba(8,16,15,.72);box-shadow:0 16px 44px rgba(0,0,0,.24);backdrop-filter:blur(16px)}
+.vg-topbar,.vg-mission,.vg-recipe,.vg-passport,.vg-service,.vg-dock-card,.vg-bottom{position:fixed;z-index:10004;border:1px solid rgba(247,239,226,.15);background:rgba(8,16,15,.72);box-shadow:0 16px 44px rgba(0,0,0,.24);backdrop-filter:blur(16px)}
 .vg-topbar{top:max(1rem,env(safe-area-inset-top));left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:.8rem;min-height:48px;padding:.4rem .7rem;border-radius:999px}
 .vg-brand{font-family:var(--font-heading);font-weight:800;color:#fff7eb}
 .vg-chip{display:inline-flex;align-items:center;min-height:32px;padding:0 .65rem;border-radius:999px;background:rgba(247,239,226,.08);color:#dce7e2;font-size:.78rem}
 .vg-mission{left:1rem;top:5.4rem;width:min(320px,calc(100vw - 2rem));padding:1rem;border-radius:10px}
-.vg-mission h2,.vg-passport h2,.vg-service h2,.vg-dock-card h2{font-size:1rem;letter-spacing:0;margin-bottom:.45rem;color:#fff7eb}
+.vg-mission h2,.vg-recipe h2,.vg-passport h2,.vg-service h2,.vg-dock-card h2{font-size:1rem;letter-spacing:0;margin-bottom:.45rem;color:#fff7eb}
 .vg-mission p,.vg-dock-card p{font-size:.86rem;line-height:1.55;color:#b9c6c0}
 .vg-progress{height:8px;margin-top:.8rem;border-radius:999px;background:rgba(247,239,226,.09);overflow:hidden}
 .vg-progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--vr-gold),var(--vr-aqua))}
+.vg-recipe{left:1rem;bottom:5.8rem;width:min(360px,calc(100vw - 2rem));padding:1rem;border-radius:10px}
+.vg-recipe strong{display:block;color:#fff7eb;font-family:var(--font-heading);margin-bottom:.25rem}
+.vg-recipe p{color:#b9c6c0;font-size:.82rem;line-height:1.45;margin:0 0 .7rem}
+.vg-recipe small{display:block;margin-top:.65rem;color:rgba(247,239,226,.52);font-size:.72rem}
+.vg-needs,#vg-inventory{display:flex;flex-wrap:wrap;gap:.4rem}
+.vg-needs span,#vg-inventory span{display:inline-flex;align-items:center;min-height:28px;padding:0 .55rem;border:1px solid rgba(247,239,226,.14);border-radius:999px;color:#aebbb6;font-size:.72rem}
+.vg-needs span.ready{color:#08100f;background:var(--vr-cream);border-color:var(--vr-cream)}
+#vg-inventory{margin-top:.8rem;padding-top:.75rem;border-top:1px solid rgba(247,239,226,.1)}
 .vg-passport{right:1rem;top:5.4rem;width:min(330px,calc(100vw - 2rem));padding:1rem;border-radius:10px}
 .vg-stamps{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.7rem}
 .vg-stamp{padding:.55rem;border-radius:8px;border:1px solid rgba(247,239,226,.12);color:#81918b;font-size:.76rem;text-align:center}
@@ -967,6 +975,8 @@ body{background:var(--vr-night);color:#dce7e2}
 .vg-service{right:1rem;bottom:5.8rem;width:min(330px,calc(100vw - 2rem));padding:1rem;border-radius:10px}
 .vg-loop-step{display:flex;align-items:center;gap:.5rem;padding:.42rem 0;color:#8fa09a;font-size:.78rem}
 .vg-loop-step span{width:10px;height:10px;border-radius:50%;border:1px solid rgba(247,239,226,.25)}
+.vg-loop-step strong{flex:1;font-weight:700}
+.vg-loop-step em{font-style:normal;color:#d6a05f;font-size:.72rem}
 .vg-loop-step.done{color:#fff7eb}
 .vg-loop-step.done span{background:var(--vr-aqua);border-color:var(--vr-aqua);box-shadow:0 0 16px rgba(125,211,199,.45)}
 .vg-service-code{margin-top:.7rem;padding:.7rem;border:1px dashed rgba(214,160,95,.35);border-radius:8px;color:#fff7eb;text-align:center;font-family:var(--font-heading);font-size:.92rem}
@@ -992,7 +1002,7 @@ body{background:var(--vr-night);color:#dce7e2}
 .v-split,.v-split-passport,.v-reservation-shell{grid-template-columns:1fr}
 .v-zone-grid,.v-menu-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 .vg-mission{top:auto;bottom:7rem;left:1rem;width:calc(100vw - 2rem);max-width:420px}
-.vg-passport,.vg-service{display:none}
+.vg-passport,.vg-service,.vg-recipe{display:none}
 .vg-joy{display:block}
 }
 @media(max-width:620px){
@@ -1087,13 +1097,15 @@ html{scroll-padding-top:86px}
 .v-template-card{padding:1.1rem;border:1px solid rgba(247,239,226,.12);border-radius:10px;background:rgba(247,239,226,.045)}
 .v-template-card strong{display:block;color:var(--vr-gold);font-family:var(--font-heading);margin-bottom:.35rem}
 .v-template-card p{color:#b9c6c0;font-size:.92rem;line-height:1.6}
+.v-game-depth .v-template-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.v-game-depth .v-template-card{min-height:190px;background:linear-gradient(180deg,rgba(247,239,226,.055),rgba(125,211,199,.025))}
 .contact-info-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
 .contact-card{border-radius:10px;background:rgba(247,239,226,.045);border-color:rgba(247,239,226,.12)}
 @media(max-width:980px){
 .v-page-hero-grid,.v-page-layout{grid-template-columns:1fr}
 .v-page-title{max-width:11ch}
 .v-page-side{position:relative;top:auto}
-.v-template-grid,.contact-info-grid{grid-template-columns:1fr 1fr}
+.v-template-grid,.v-game-depth .v-template-grid,.contact-info-grid{grid-template-columns:1fr 1fr}
 }
 @media(max-width:620px){
 .v-page-hero{padding-top:6.4rem}

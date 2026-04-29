@@ -28,9 +28,10 @@
 
 <article style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden">
     <h1>Le Voyage des Saveurs</h1>
-    <p>Jeu interactif Virealys reliant constellation virtuelle, passeport numerique et recompenses utilisables au restaurant.</p>
+    <p>Jeu interactif Virealys reliant constellation virtuelle, recettes signatures, passeport numerique et recompenses utilisables au restaurant.</p>
     <h2>Boucle de fidelite</h2><p>Le joueur collecte des ingredients, gagne des etoiles, debloque des tampons, reserve puis valide son code en salle.</p>
-    <h2>Zones</h2><p>Origine, Voyage, Immersion et Sensorielle deviennent des iles a explorer.</p>
+    <h2>Profondeur de jeu</h2><p>Inventaire, aura, tension de service, plats signatures et routes mensuelles donnent une progression persistante.</p>
+    <h2>Zones</h2><p>Origine, Voyage, Immersion, Sensorielle et Bar deviennent des iles a explorer.</p>
 </article>
 
 <?php wp_footer(); ?>

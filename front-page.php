@@ -322,6 +322,34 @@ $menus = array(
     </div>
 </section>
 
+<section class="section v-home-section v-game-depth" id="univers-jeu">
+    <div class="container">
+        <div class="section-header" data-reveal>
+            <span class="section-label"><?php esc_html_e( 'Univers persistant', 'virealys' ); ?></span>
+            <h2 class="section-title"><?php esc_html_e( 'Le jeu devient le prologue du repas.', 'virealys' ); ?></h2>
+            <p class="section-desc"><?php esc_html_e( 'Chaque partie construit une raison concrete de venir: recette a finaliser, code passeport, attention en salle et nouvelle route a debloquer.', 'virealys' ); ?></p>
+        </div>
+        <div class="v-template-grid">
+            <article class="v-template-card" data-reveal>
+                <strong><?php esc_html_e( 'Recettes signatures', 'virealys' ); ?></strong>
+                <p><?php esc_html_e( 'Le joueur recolte des ingredients, compose un plat virtuel puis le relie a une recompense reelle.', 'virealys' ); ?></p>
+            </article>
+            <article class="v-template-card" data-reveal>
+                <strong><?php esc_html_e( 'Aura du passeport', 'virealys' ); ?></strong>
+                <p><?php esc_html_e( 'La reputation augmente avec les plats servis et donne un statut visible avant la reservation.', 'virealys' ); ?></p>
+            </article>
+            <article class="v-template-card" data-reveal>
+                <strong><?php esc_html_e( 'Service vivant', 'virealys' ); ?></strong>
+                <p><?php esc_html_e( 'La tension du service monte doucement: plus le joueur agit bien, plus le restaurant devient desirable.', 'virealys' ); ?></p>
+            </article>
+            <article class="v-template-card" data-reveal>
+                <strong><?php esc_html_e( 'Boucle retour', 'virealys' ); ?></strong>
+                <p><?php esc_html_e( 'Une visite valide le code et relance une autre route, pour eviter le site vitrine mort.', 'virealys' ); ?></p>
+            </article>
+        </div>
+    </div>
+</section>
+
 <section class="section v-home-section v-menus" id="menus">
     <div class="container">
         <div class="section-header" data-reveal>

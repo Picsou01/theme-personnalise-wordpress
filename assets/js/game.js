@@ -1,98 +1,52 @@
 /**
- * Virealys v11 - Le Voyage des Saveurs
- * Canvas game linking virtual passport rewards to real restaurant visits.
+ * Virealys v12 - Le Voyage des Saveurs
+ * A restaurant-linked canvas game: sail, collect, compose dishes, validate the passport in-room.
  */
 (function () {
     'use strict';
 
     var SAVE_KEY = 'virealys_passport_v11';
     var WORLD = { w: 1600, h: 900 };
-    var BOAT_SPEED = 3.9;
-    var DOCK_DIST = 105;
-    var PICKUP_DIST = 42;
+    var BOAT_SPEED = 4.1;
+    var DOCK_DIST = 112;
+    var PICKUP_DIST = 44;
 
     var config = window.vrGame || {};
     var reservationUrl = config.reservation_url || '#reservation';
-    var homeUrl = config.home_url || '/';
     var monthlyCountry = config.monthly_country || 'Japon nocturne';
     var ajaxUrl = config.ajax_url || '';
     var nonce = config.nonce || '';
     var serverReady = !!config.is_logged_in;
-    var syncStatus = serverReady ? 'compte connecte' : 'local';
+    var syncStatus = serverReady ? 'compte connecte' : 'passeport local';
     var serverSaveTimer = 0;
 
     var ISLANDS = [
-        {
-            id: 'origine',
-            name: 'Ile Origine',
-            zone: 'Slow Food pur',
-            x: 265,
-            y: 585,
-            r: 95,
-            color: '#9bbf7a',
-            accent: '#d6a05f',
-            reward: 'Herbes de saison: amuse-bouche secret',
-            text: 'Ici, chaque ingredient virtuel correspond a un produit reel de saison.'
-        },
-        {
-            id: 'voyage',
-            name: 'Ile Voyage',
-            zone: monthlyCountry,
-            x: 438,
-            y: 230,
-            r: 108,
-            color: '#d6a05f',
-            accent: '#7dd3c7',
-            reward: 'Tampon pays du mois: bonus etoiles x2 en salle',
-            text: 'La destination mensuelle change les quetes, les parfums et les accords.'
-        },
-        {
-            id: 'immersion',
-            name: 'Ile Immersion',
-            zone: 'VR douce',
-            x: 1035,
-            y: 238,
-            r: 118,
-            color: '#8bd3ff',
-            accent: '#b694ff',
-            reward: 'Essai VR prioritaire si vous reservez cette semaine',
-            text: 'Le casque ouvre le monde du plat sans couper le lien avec la table.'
-        },
-        {
-            id: 'sensoriel',
-            name: 'Ile Sensorielle',
-            zone: 'Experience totale',
-            x: 1258,
-            y: 626,
-            r: 112,
-            color: '#b694ff',
-            accent: '#f4b36b',
-            reward: 'Acces a une surprise sensorielle au prochain repas',
-            text: 'Les illusions de texture restent un jeu: l assiette, elle, reste vraie.'
-        },
-        {
-            id: 'bar',
-            name: 'Ponton Constellation',
-            zone: 'Bar',
-            x: 790,
-            y: 725,
-            r: 86,
-            color: '#f4b36b',
-            accent: '#7dd3c7',
-            reward: 'Cocktail Constellation -50%',
-            text: 'Convertissez vos etoiles en attentions simples, lisibles, desirables.'
-        }
+        { id: 'origine', name: 'Ile Origine', zone: 'Slow Food pur', x: 265, y: 585, r: 95, color: '#9bbf7a', accent: '#d6a05f', reward: 'Mise en bouche ingredient local', text: 'La route des producteurs: ce que vous recoltez ici existe dans la vraie assiette.' },
+        { id: 'voyage', name: 'Ile Voyage', zone: monthlyCountry, x: 438, y: 230, r: 108, color: '#d6a05f', accent: '#7dd3c7', reward: 'Visa pays du mois', text: 'La destination mensuelle modifie les recettes, les sons, les parfums et les bonus en salle.' },
+        { id: 'immersion', name: 'Ile Immersion', zone: 'VR douce', x: 1035, y: 238, r: 118, color: '#8bd3ff', accent: '#b694ff', reward: 'Priorite casque VR', text: 'Le virtuel raconte le plat sans remplacer la conversation a table.' },
+        { id: 'sensoriel', name: 'Ile Sensorielle', zone: 'Experience totale', x: 1258, y: 626, r: 112, color: '#b694ff', accent: '#f4b36b', reward: 'Surprise sensorielle', text: 'Les etoiles ouvrent des effets de service: parfum, texture, lumiere et plat cache.' },
+        { id: 'bar', name: 'Ponton Constellation', zone: 'Bar', x: 790, y: 725, r: 86, color: '#f4b36b', accent: '#7dd3c7', reward: 'Cocktail Constellation -50%', text: 'Le ponton transforme les gains virtuels en attentions simples et desirables.' }
     ];
 
     var INGREDIENTS = [
-        { id: 'yuzu', label: 'Yuzu', x: 515, y: 365, color: '#f7d45b', value: 18 },
-        { id: 'shiso', label: 'Shiso', x: 345, y: 495, color: '#91c96f', value: 16 },
-        { id: 'riz', label: 'Riz nacre', x: 610, y: 175, color: '#f7efe2', value: 14 },
-        { id: 'truffe', label: 'Truffe', x: 1040, y: 415, color: '#4a3526', value: 24 },
-        { id: 'miso', label: 'Miso', x: 1180, y: 310, color: '#c77936', value: 20 },
-        { id: 'lavande', label: 'Lavande', x: 1330, y: 500, color: '#b694ff', value: 18 },
-        { id: 'thym', label: 'Thym', x: 720, y: 610, color: '#9bbf7a', value: 14 },
-        { id: 'agrume', label: 'Agrume', x: 900, y: 670, color: '#f4b36b', value: 16 }
+        { id: 'yuzu', label: 'Yuzu', x: 515, y: 365, color: '#f7d45b', value: 18, home: 'voyage' },
+        { id: 'shiso', label: 'Shiso', x: 345, y: 495, color: '#91c96f', value: 16, home: 'origine' },
+        { id: 'riz', label: 'Riz nacre', x: 610, y: 175, color: '#f7efe2', value: 14, home: 'voyage' },
+        { id: 'truffe', label: 'Truffe', x: 1040, y: 415, color: '#4a3526', value: 24, home: 'origine' },
+        { id: 'miso', label: 'Miso', x: 1180, y: 310, color: '#c77936', value: 20, home: 'immersion' },
+        { id: 'lavande', label: 'Lavande', x: 1330, y: 500, color: '#b694ff', value: 18, home: 'sensoriel' },
+        { id: 'thym', label: 'Thym', x: 720, y: 610, color: '#9bbf7a', value: 14, home: 'bar' },
+        { id: 'agrume', label: 'Agrume', x: 900, y: 670, color: '#f4b36b', value: 16, home: 'bar' },
+        { id: 'algue', label: 'Algue bleue', x: 1450, y: 310, color: '#7dd3c7', value: 22, home: 'sensoriel' },
+        { id: 'poivre', label: 'Poivre lune', x: 210, y: 245, color: '#d7c5a6', value: 20, home: 'origine' }
+    ];
+
+    var RECIPES = [
+        { id: 'nacre_yuzu', chapter: 1, island: 'voyage', name: 'Nacre de yuzu', brief: 'Un premier visa aromatique pour le pays du mois.', needs: { yuzu: 1, shiso: 1, riz: 1 }, stars: 90, reputation: 16, real: 'Amuse-bouche yuzu si le code est presente en salle' },
+        { id: 'terre_truffe', chapter: 1, island: 'origine', name: 'Terre de producteurs', brief: 'Rendre le virtuel credible par le terroir.', needs: { truffe: 1, thym: 1, poivre: 1 }, stars: 105, reputation: 18, real: 'Accord pain/huile signature offert' },
+        { id: 'orbite_miso', chapter: 2, island: 'immersion', name: 'Orbite miso VR', brief: 'Une assiette augmentee mais toujours lisible.', needs: { miso: 1, algue: 1, riz: 1 }, stars: 130, reputation: 22, real: 'Acces prioritaire a la sequence VR douce' },
+        { id: 'songe_lavande', chapter: 2, island: 'sensoriel', name: 'Songe lavande', brief: 'Une route sensorielle pour donner envie de revenir.', needs: { lavande: 1, agrume: 1, yuzu: 1 }, stars: 150, reputation: 25, real: 'Effet parfum et dessert cache' },
+        { id: 'constellation_bar', chapter: 3, island: 'bar', name: 'Constellation bar', brief: 'Transformer le voyage en moment social.', needs: { agrume: 1, thym: 1, poivre: 1 }, stars: 170, reputation: 30, real: 'Cocktail Constellation -50%' }
     ];
 
     var REWARDS = [
@@ -102,33 +56,37 @@
         { stars: 900, id: 'table', label: 'Table immersive recommandee' }
     ];
 
-    var REAL_LOOP = [
-        { label: 'Reserver une zone', done: function () { return state.stamps.length > 0; } },
-        { label: 'Presenter le code passeport', done: function () { return state.rewards.length > 0; } },
-        { label: 'Debloquer une attention en salle', done: function () { return state.realRewards.length > 0; } },
-        { label: 'Revenir pour une nouvelle route', done: function () { return state.stamps.length >= 4; } }
-    ];
-
     var canvas, ctx, root, ui = {}, W = 1, H = 1, DPR = 1, scale = 1, ox = 0, oy = 0;
-    var keys = {}, frame = 0, nearIsland = null, toastTimer = 0;
+    var keys = {}, frame = 0, nearIsland = null, toastTimer = 0, lastHeatTick = 0;
     var joy = { active: false, x: 0, y: 0, dx: 0, dy: 0 };
     var state = {
         boat: { x: 800, y: 475, angle: -0.35 },
         stars: 0,
+        reputation: 0,
+        heat: 18,
+        chapter: 1,
+        activeRecipe: 'nacre_yuzu',
+        inventory: {},
         cargo: [],
         stamps: [],
+        dishes: [],
         rewards: [],
         realRewards: [],
         visited: [],
+        discovered: [],
         selected: null,
-        muted: false,
         updated_at: 0
     };
 
     function $(id) { return document.getElementById(id); }
     function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
     function dist(a, b, x, y) { var dx = a - x, dy = b - y; return Math.sqrt(dx * dx + dy * dy); }
-    function has(arr, id) { return arr.indexOf(id) !== -1; }
+    function has(arr, id) { return Array.isArray(arr) && arr.indexOf(id) !== -1; }
+    function findRecipe(id) { return RECIPES.find(function (r) { return r.id === id; }); }
+    function recipeById(id) { return findRecipe(id) || RECIPES[0]; }
+    function islandById(id) { return ISLANDS.find(function (i) { return i.id === id; }); }
+    function itemById(id) { return INGREDIENTS.find(function (i) { return i.id === id; }); }
+    function count(id) { return Number(state.inventory[id] || 0); }
 
     function load() {
         var saved = null;
@@ -136,24 +94,28 @@
             saved = JSON.parse(localStorage.getItem(SAVE_KEY));
             if (saved && saved.boat) state = Object.assign(state, saved);
         } catch (e) {}
-
         if (config.saved_passport && config.saved_passport.boat) {
             var serverStamp = Number(config.saved_passport.updated_at || 0);
             var localStamp = saved ? Number(saved.updated_at || 0) : 0;
-            if (!saved || serverStamp > localStamp) {
-                state = Object.assign(state, config.saved_passport);
-                try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) {}
-            }
+            if (!saved || serverStamp > localStamp) state = Object.assign(state, config.saved_passport);
         }
         normalizeState();
     }
 
     function normalizeState() {
+        state.inventory = state.inventory && typeof state.inventory === 'object' ? state.inventory : {};
         state.cargo = Array.isArray(state.cargo) ? state.cargo : [];
+        state.cargo.forEach(function (id) { state.inventory[id] = Math.max(1, count(id)); });
         state.stamps = Array.isArray(state.stamps) ? state.stamps : [];
+        state.dishes = Array.isArray(state.dishes) ? state.dishes : [];
         state.rewards = Array.isArray(state.rewards) ? state.rewards : [];
         state.realRewards = Array.isArray(state.realRewards) ? state.realRewards : [];
         state.visited = Array.isArray(state.visited) ? state.visited : [];
+        state.discovered = Array.isArray(state.discovered) ? state.discovered : [];
+        state.reputation = Number(state.reputation || 0);
+        state.heat = Number(state.heat || 18);
+        state.chapter = Number(state.chapter || 1);
+        if (!findRecipe(state.activeRecipe) || has(state.dishes, state.activeRecipe)) state.activeRecipe = nextRecipe().id;
     }
 
     function save() {
@@ -179,44 +141,35 @@
         body.set('action', 'virealys_sync_passport');
         body.set('nonce', nonce);
         body.set('passport', JSON.stringify(state));
-
         fetch(ajaxUrl, {
             method: 'POST',
             credentials: 'same-origin',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
             body: body.toString()
-        }).then(function (res) {
-            return res.json();
-        }).then(function (json) {
-            syncStatus = json && json.success ? 'sync compte' : 'passeport local';
-            updateSyncText();
-        }).catch(function () {
-            syncStatus = 'passeport local';
-            updateSyncText();
-        });
-    }
-
-    function updateSyncText() {
-        if (ui.sync) ui.sync.textContent = syncStatus;
+        }).then(function (res) { return res.json(); })
+            .then(function (json) { syncStatus = json && json.success ? 'sync compte' : 'passeport local'; updateSyncText(); })
+            .catch(function () { syncStatus = 'passeport local'; updateSyncText(); });
     }
 
     function passportCode() {
-        var raw = (state.stamps.join('-') || 'START') + '-' + state.stars;
+        var raw = [state.stamps.join('-') || 'START', state.dishes.join('-') || 'NO-DISH', state.stars, state.reputation].join('|');
         var hash = 0;
         for (var i = 0; i < raw.length; i++) hash = (hash * 31 + raw.charCodeAt(i)) % 9973;
-        return 'VRL-' + String(hash).padStart(4, '0') + '-' + state.stamps.length + state.rewards.length;
+        return 'VRL-' + String(hash).padStart(4, '0') + '-' + state.dishes.length + state.rewards.length;
     }
 
-    function realRewardFor(island) {
-        if (!island) return '';
-        var map = {
-            origine: 'Mise en bouche ingredient local',
-            voyage: 'Visa ' + monthlyCountry + ' et bonus etoiles en salle',
-            immersion: 'Priorite casque VR doux',
-            sensoriel: 'Surprise sensorielle au dessert',
-            bar: 'Cocktail Constellation -50%'
-        };
-        return map[island.id] || island.reward;
+    function nextRecipe() {
+        return RECIPES.find(function (r) { return !has(state.dishes, r.id); }) || RECIPES[0];
+    }
+
+    function canCook(recipe) {
+        return Object.keys(recipe.needs).every(function (id) { return count(id) >= recipe.needs[id]; });
+    }
+
+    function consume(recipe) {
+        Object.keys(recipe.needs).forEach(function (id) {
+            state.inventory[id] = Math.max(0, count(id) - recipe.needs[id]);
+        });
     }
 
     function build() {
@@ -225,12 +178,13 @@
         root.innerHTML = '' +
             '<div class="vr-game-shell">' +
             '<canvas class="vr-game-canvas" id="vg-canvas"></canvas>' +
-            '<div class="vg-topbar"><span class="vg-brand">VIREALYS</span><span class="vg-chip" id="vg-stars">0 etoile</span><span class="vg-chip" id="vg-cargo">0 ingredient</span><span class="vg-chip" id="vg-code">VRL-0000-00</span><span class="vg-chip" id="vg-sync">local</span></div>' +
-            '<aside class="vg-mission"><h2>Quete du jour</h2><p id="vg-mission-text"></p><div class="vg-progress"><span id="vg-progress"></span></div></aside>' +
+            '<div class="vg-topbar"><span class="vg-brand">VIREALYS</span><span class="vg-chip" id="vg-stars">0 etoile</span><span class="vg-chip" id="vg-rep">Aura 0</span><span class="vg-chip" id="vg-heat">Service calme</span><span class="vg-chip" id="vg-code">VRL-0000</span><span class="vg-chip" id="vg-sync">local</span></div>' +
+            '<aside class="vg-mission"><h2>Mission vivante</h2><p id="vg-mission-text"></p><div class="vg-progress"><span id="vg-progress"></span></div></aside>' +
+            '<aside class="vg-recipe"><h2>Plat signature</h2><div id="vg-recipe-card"></div><div id="vg-inventory"></div></aside>' +
             '<aside class="vg-passport"><h2>Passeport</h2><div class="vg-stamps" id="vg-stamps"></div><div class="vg-rewards" id="vg-rewards"></div></aside>' +
             '<aside class="vg-service"><h2>En salle</h2><div id="vg-loop"></div><div class="vg-service-code" id="vg-service-code">VRL-0000</div></aside>' +
-            '<div class="vg-dock-card" id="vg-dock"><h2 id="vg-dock-title"></h2><p id="vg-dock-text"></p><div class="vg-dock-actions"><button class="vg-button primary" id="vg-validate">Valider le tampon</button><a class="vg-button" id="vg-book" href="' + reservationUrl + '">Reserver pour convertir</a></div></div>' +
-            '<div class="vg-bottom"><button class="vg-button primary" id="vg-dock-btn">Accoster</button><button class="vg-button" id="vg-passport-btn">Code passeport</button><button class="vg-button" id="vg-reset">Recommencer</button></div>' +
+            '<div class="vg-dock-card" id="vg-dock"><h2 id="vg-dock-title"></h2><p id="vg-dock-text"></p><div class="vg-dock-actions"><button class="vg-button primary" id="vg-validate">Servir</button><a class="vg-button" id="vg-book" href="' + reservationUrl + '">Reserver pour convertir</a></div></div>' +
+            '<div class="vg-bottom"><button class="vg-button primary" id="vg-dock-btn">Accoster</button><button class="vg-button" id="vg-cycle">Changer recette</button><button class="vg-button" id="vg-passport-btn">Code passeport</button><button class="vg-button" id="vg-reset">Recommencer</button></div>' +
             '<div class="vg-joy" id="vg-joy"><span id="vg-joy-knob"></span></div>' +
             '<div class="vg-toast" id="vg-toast" role="status" aria-live="polite"></div>' +
             '</div>';
@@ -238,11 +192,14 @@
         canvas = $('vg-canvas');
         ctx = canvas.getContext('2d');
         ui.stars = $('vg-stars');
-        ui.cargo = $('vg-cargo');
+        ui.rep = $('vg-rep');
+        ui.heat = $('vg-heat');
         ui.code = $('vg-code');
         ui.sync = $('vg-sync');
         ui.mission = $('vg-mission-text');
         ui.progress = $('vg-progress');
+        ui.recipe = $('vg-recipe-card');
+        ui.inventory = $('vg-inventory');
         ui.stamps = $('vg-stamps');
         ui.rewards = $('vg-rewards');
         ui.loop = $('vg-loop');
@@ -250,10 +207,12 @@
         ui.dock = $('vg-dock');
         ui.dockTitle = $('vg-dock-title');
         ui.dockText = $('vg-dock-text');
+        ui.validate = $('vg-validate');
         ui.toast = $('vg-toast');
 
         $('vg-dock-btn').addEventListener('click', dock);
-        $('vg-validate').addEventListener('click', validateDock);
+        ui.validate.addEventListener('click', serveOrStamp);
+        $('vg-cycle').addEventListener('click', cycleRecipe);
         $('vg-passport-btn').addEventListener('click', showPassportCode);
         $('vg-reset').addEventListener('click', reset);
         bindControls();
@@ -266,11 +225,10 @@
         document.addEventListener('keydown', function (e) {
             keys[e.key.toLowerCase()] = true;
             if (e.key === 'Enter' || e.key.toLowerCase() === 'e') dock();
+            if (e.key.toLowerCase() === 'r') cycleRecipe();
         });
         document.addEventListener('keyup', function (e) { keys[e.key.toLowerCase()] = false; });
-
-        var joyEl = $('vg-joy');
-        var knob = $('vg-joy-knob');
+        var joyEl = $('vg-joy'), knob = $('vg-joy-knob');
         if (!joyEl) return;
         joyEl.addEventListener('pointerdown', function (e) {
             joy.active = true;
@@ -286,20 +244,16 @@
     }
 
     function moveJoy(e, knob) {
-        var dx = e.clientX - joy.x;
-        var dy = e.clientY - joy.y;
-        var d = Math.sqrt(dx * dx + dy * dy) || 1;
-        var m = 32;
+        var dx = e.clientX - joy.x, dy = e.clientY - joy.y;
+        var d = Math.sqrt(dx * dx + dy * dy) || 1, m = 32;
         if (d > m) { dx = dx / d * m; dy = dy / d * m; }
-        joy.dx = dx / m;
-        joy.dy = dy / m;
+        joy.dx = dx / m; joy.dy = dy / m;
         knob.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
     }
 
     function endJoy(knob) {
         joy.active = false;
-        joy.dx = 0;
-        joy.dy = 0;
+        joy.dx = 0; joy.dy = 0;
         knob.style.transform = 'translate(0,0)';
     }
 
@@ -340,6 +294,11 @@
             ui.dock.classList.remove('open');
         }
 
+        if (frame - lastHeatTick > 90) {
+            lastHeatTick = frame;
+            state.heat = clamp(state.heat + 0.28 - Math.min(state.reputation, 100) * 0.002, 0, 100);
+        }
+
         nearIsland = null;
         var nd = DOCK_DIST;
         ISLANDS.forEach(function (island) {
@@ -348,16 +307,21 @@
         });
 
         INGREDIENTS.forEach(function (item) {
-            if (has(state.cargo, item.id)) return;
-            if (dist(state.boat.x, state.boat.y, item.x, item.y) < PICKUP_DIST) {
-                state.cargo.push(item.id);
-                state.stars += item.value;
-                unlockRewards();
-                toast('Ingredient collecte: ' + item.label + ' +' + item.value + ' etoiles');
-                save();
-            }
+            if (item.cooldown && item.cooldown > frame) return;
+            if (dist(state.boat.x, state.boat.y, item.x, item.y) < PICKUP_DIST) collect(item);
         });
         updateUI();
+    }
+
+    function collect(item) {
+        state.inventory[item.id] = count(item.id) + 1;
+        if (!has(state.discovered, item.id)) state.discovered.push(item.id);
+        state.stars += item.value;
+        state.heat = clamp(state.heat + 1.4, 0, 100);
+        item.cooldown = frame + 620 + Math.floor(Math.random() * 360);
+        unlockRewards();
+        toast(item.label + ' collecte. Stock: ' + count(item.id));
+        save();
     }
 
     function unlockRewards() {
@@ -375,37 +339,76 @@
             return;
         }
         state.selected = nearIsland.id;
+        var recipe = recipeById(state.activeRecipe);
+        var isRecipeIsland = recipe.island === nearIsland.id;
+        ui.validate.textContent = isRecipeIsland && canCook(recipe) ? 'Servir le plat' : 'Valider le tampon';
         ui.dockTitle.textContent = nearIsland.name + ' - ' + nearIsland.zone;
-        ui.dockText.textContent = nearIsland.text + ' Recompense: ' + nearIsland.reward + '.';
+        ui.dockText.textContent = nearIsland.text + (isRecipeIsland ? ' Recette active: ' + recipe.name + '.' : ' Recompense: ' + nearIsland.reward + '.');
         ui.dock.classList.add('open');
     }
 
-    function validateDock() {
+    function serveOrStamp() {
         var island = ISLANDS.find(function (x) { return x.id === state.selected; });
         if (!island) return;
-        var firstVisit = !has(state.stamps, island.id);
-        if (firstVisit) {
-            state.stamps.push(island.id);
-            state.stars += 40 + state.cargo.length * 4;
-            if (!has(state.realRewards, island.id)) state.realRewards.push(island.id);
-            toast('Tampon ajoute: ' + island.name + '. En salle: ' + realRewardFor(island) + '.');
+        var recipe = recipeById(state.activeRecipe);
+        if (recipe.island === island.id && canCook(recipe) && !has(state.dishes, recipe.id)) {
+            serveRecipe(recipe, island);
         } else {
-            state.stars += 12;
-            toast('Route revisitee: +12 etoiles. Revenez avec un nouveau code en salle.');
+            stampIsland(island);
         }
-        if (!has(state.visited, island.id)) state.visited.push(island.id);
         unlockRewards();
         ui.dock.classList.remove('open');
         save();
         updateUI();
     }
 
+    function serveRecipe(recipe, island) {
+        consume(recipe);
+        state.dishes.push(recipe.id);
+        if (!has(state.stamps, island.id)) state.stamps.push(island.id);
+        if (!has(state.visited, island.id)) state.visited.push(island.id);
+        if (!has(state.realRewards, recipe.id)) state.realRewards.push(recipe.id);
+        state.stars += recipe.stars + Math.max(0, Math.round(35 - state.heat / 3));
+        state.reputation = clamp(state.reputation + recipe.reputation, 0, 999);
+        state.heat = clamp(state.heat - 28, 0, 100);
+        state.chapter = Math.max(state.chapter, recipe.chapter + 1);
+        state.activeRecipe = nextRecipe().id;
+        toast(recipe.name + ' servi. En salle: ' + recipe.real + '.');
+    }
+
+    function stampIsland(island) {
+        var firstVisit = !has(state.stamps, island.id);
+        if (firstVisit) {
+            state.stamps.push(island.id);
+            state.stars += 42 + Object.keys(state.inventory).length * 3;
+            toast('Tampon ajoute: ' + island.name + '.');
+        } else {
+            state.stars += 12;
+            toast('Route revisitee: +12 etoiles. Revenez avec un nouveau code en salle.');
+        }
+        if (!has(state.visited, island.id)) state.visited.push(island.id);
+    }
+
+    function cycleRecipe() {
+        var current = RECIPES.indexOf(recipeById(state.activeRecipe));
+        for (var i = 1; i <= RECIPES.length; i++) {
+            var next = RECIPES[(current + i) % RECIPES.length];
+            if (!has(state.dishes, next.id)) {
+                state.activeRecipe = next.id;
+                toast('Nouvelle recette active: ' + next.name);
+                updateUI();
+                save();
+                return;
+            }
+        }
+        state.activeRecipe = RECIPES[0].id;
+        toast('Saison complete. Continuez pour monter l aura du passeport.');
+    }
+
     function showPassportCode() {
         var code = passportCode();
         toast('Code passeport: ' + code + ' - a valider par l equipe en salle.');
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(code).catch(function () {});
-        }
+        if (navigator.clipboard) navigator.clipboard.writeText(code).catch(function () {});
     }
 
     function reset() {
@@ -414,32 +417,59 @@
         state = {
             boat: { x: 800, y: 475, angle: -0.35 },
             stars: 0,
+            reputation: 0,
+            heat: 18,
+            chapter: 1,
+            activeRecipe: 'nacre_yuzu',
+            inventory: {},
             cargo: [],
             stamps: [],
+            dishes: [],
             rewards: [],
             realRewards: [],
             visited: [],
+            discovered: [],
             selected: null,
-            muted: false,
             updated_at: 0
         };
         save();
         toast('Nouveau passeport cree.');
     }
 
+    function updateSyncText() {
+        if (ui.sync) ui.sync.textContent = syncStatus;
+    }
+
     function updateUI() {
+        var recipe = recipeById(state.activeRecipe);
         ui.stars.textContent = state.stars + (state.stars > 1 ? ' etoiles' : ' etoile');
-        ui.cargo.textContent = state.cargo.length + ' ingredient' + (state.cargo.length > 1 ? 's' : '');
+        ui.rep.textContent = 'Aura ' + state.reputation;
+        ui.heat.textContent = state.heat > 68 ? 'Service intense' : (state.heat > 38 ? 'Service vivant' : 'Service calme');
         ui.code.textContent = passportCode();
         if (ui.serviceCode) ui.serviceCode.textContent = passportCode();
         updateSyncText();
-        var active = ISLANDS.find(function (x) { return !has(state.stamps, x.id); }) || ISLANDS[0];
-        ui.mission.textContent = 'Rejoignez ' + active.name + ', collectez trois ingredients, puis validez le tampon pour transformer vos etoiles en recompense reelle.';
-        var progress = Math.min(100, Math.round((state.stamps.length / ISLANDS.length) * 100));
-        ui.progress.style.width = progress + '%';
 
-        ui.stamps.innerHTML = ISLANDS.map(function (island) {
-            return '<span class="vg-stamp ' + (has(state.stamps, island.id) ? 'earned' : '') + '">' + island.name.replace('Ile ', '') + '</span>';
+        var missing = Object.keys(recipe.needs).filter(function (id) { return count(id) < recipe.needs[id]; });
+        var island = islandById(recipe.island);
+        ui.mission.textContent = missing.length
+            ? 'Composez ' + recipe.name + ' pour ' + island.name + '. Il manque: ' + missing.map(function (id) { return itemById(id).label; }).join(', ') + '.'
+            : 'Tous les ingredients sont prets. Accostez a ' + island.name + ' pour servir le plat et debloquer une recompense reelle.';
+        ui.progress.style.width = Math.round((state.dishes.length / RECIPES.length) * 100) + '%';
+
+        ui.recipe.innerHTML = '<strong>' + recipe.name + '</strong><p>' + recipe.brief + '</p><div class="vg-needs">' +
+            Object.keys(recipe.needs).map(function (id) {
+                var item = itemById(id);
+                var ok = count(id) >= recipe.needs[id];
+                return '<span class="' + (ok ? 'ready' : '') + '">' + item.label + ' ' + count(id) + '/' + recipe.needs[id] + '</span>';
+            }).join('') + '</div><small>Chapitre ' + recipe.chapter + ' - ' + island.name + '</small>';
+
+        var inventoryItems = INGREDIENTS.filter(function (item) { return count(item.id) > 0; });
+        ui.inventory.innerHTML = inventoryItems.length
+            ? inventoryItems.map(function (item) { return '<span>' + item.label + ' x' + count(item.id) + '</span>'; }).join('')
+            : '<span>Inventaire vide</span>';
+
+        ui.stamps.innerHTML = ISLANDS.map(function (i) {
+            return '<span class="vg-stamp ' + (has(state.stamps, i.id) ? 'earned' : '') + '">' + i.name.replace('Ile ', '') + '</span>';
         }).join('');
 
         ui.rewards.innerHTML = REWARDS.map(function (reward) {
@@ -447,18 +477,21 @@
             return '<div class="vg-reward"><span>' + reward.label + '</span><strong>' + (ok ? 'pret' : reward.stars + '*') + '</strong></div>';
         }).join('');
 
-        if (ui.loop) {
-            ui.loop.innerHTML = REAL_LOOP.map(function (step) {
-                return '<div class="vg-loop-step ' + (step.done() ? 'done' : '') + '"><span></span><strong>' + step.label + '</strong></div>';
-            }).join('');
-        }
+        ui.loop.innerHTML = [
+            ['Recettes servies', state.dishes.length + '/' + RECIPES.length, state.dishes.length > 0],
+            ['Code presente en salle', state.rewards.length + ' bonus', state.rewards.length > 0],
+            ['Reputation immersive', state.reputation + ' aura', state.reputation >= 50],
+            ['Retour desirable', state.dishes.length >= 4 ? 'route rare' : 'en cours', state.dishes.length >= 4]
+        ].map(function (step) {
+            return '<div class="vg-loop-step ' + (step[2] ? 'done' : '') + '"><span></span><strong>' + step[0] + '</strong><em>' + step[1] + '</em></div>';
+        }).join('');
     }
 
     function toast(msg) {
         ui.toast.textContent = msg;
         ui.toast.classList.add('show');
         clearTimeout(toastTimer);
-        toastTimer = setTimeout(function () { ui.toast.classList.remove('show'); }, 2800);
+        toastTimer = setTimeout(function () { ui.toast.classList.remove('show'); }, 3200);
     }
 
     function draw() {
@@ -479,26 +512,24 @@
         g.addColorStop(1, '#0a1510');
         ctx.fillStyle = g;
         ctx.fillRect(0, 0, W, H);
-
         ctx.save();
-        ctx.globalAlpha = 0.22;
+        ctx.globalAlpha = state.heat > 65 ? 0.34 : 0.22;
         for (var y = -30; y < WORLD.h + 60; y += 34) {
             ctx.beginPath();
             for (var x = -20; x < WORLD.w + 20; x += 26) {
-                var yy = y + Math.sin((x + frame * 1.2) * 0.018 + y * 0.02) * 8;
+                var yy = y + Math.sin((x + frame * 1.4) * 0.018 + y * 0.02) * (state.heat > 65 ? 12 : 8);
                 if (x === -20) ctx.moveTo(sx(x), sy(yy));
                 else ctx.lineTo(sx(x), sy(yy));
             }
-            ctx.strokeStyle = 'rgba(125,211,199,.17)';
+            ctx.strokeStyle = state.heat > 65 ? 'rgba(244,179,107,.22)' : 'rgba(125,211,199,.17)';
             ctx.lineWidth = Math.max(1, ss(1.2));
             ctx.stroke();
         }
         ctx.restore();
-
-        for (var i = 0; i < 90; i++) {
+        for (var i = 0; i < 110; i++) {
             var px = (i * 173 + frame * 0.08) % WORLD.w;
             var py = (i * 97) % WORLD.h;
-            ctx.fillStyle = i % 7 === 0 ? 'rgba(214,160,95,.7)' : 'rgba(247,239,226,.46)';
+            ctx.fillStyle = i % 7 === 0 ? 'rgba(214,160,95,.72)' : 'rgba(247,239,226,.44)';
             ctx.beginPath();
             ctx.arc(sx(px), sy(py), Math.max(.6, ss(i % 7 === 0 ? 1.8 : 1.1)), 0, Math.PI * 2);
             ctx.fill();
@@ -506,39 +537,37 @@
     }
 
     function drawRoutes() {
+        var recipe = recipeById(state.activeRecipe);
         ctx.save();
         ctx.setLineDash([ss(10), ss(14)]);
         ctx.lineWidth = Math.max(1.5, ss(2));
-        ctx.strokeStyle = 'rgba(214,160,95,.42)';
-        ctx.beginPath();
-        ctx.moveTo(sx(800), sy(475));
         ISLANDS.forEach(function (island) {
-            ctx.quadraticCurveTo(sx((800 + island.x) / 2), sy((475 + island.y) / 2 - 50), sx(island.x), sy(island.y));
+            ctx.strokeStyle = recipe.island === island.id ? 'rgba(247,239,226,.72)' : 'rgba(214,160,95,.32)';
+            ctx.beginPath();
             ctx.moveTo(sx(800), sy(475));
+            ctx.quadraticCurveTo(sx((800 + island.x) / 2), sy((475 + island.y) / 2 - 50), sx(island.x), sy(island.y));
+            ctx.stroke();
         });
-        ctx.stroke();
         ctx.setLineDash([]);
         ctx.restore();
     }
 
     function drawRestaurantPier() {
-        var x = sx(800), y = sy(475), r = ss(122);
+        var x = sx(800), y = sy(475), r = ss(126);
         ctx.save();
-        ctx.fillStyle = 'rgba(247,239,226,.07)';
+        ctx.fillStyle = 'rgba(247,239,226,.075)';
         ctx.strokeStyle = 'rgba(214,160,95,.36)';
         ctx.lineWidth = Math.max(1, ss(2));
         ctx.beginPath();
         ctx.ellipse(x, y, r * 1.22, r * .58, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
-
         ctx.strokeStyle = 'rgba(125,211,199,.24)';
         ctx.setLineDash([ss(8), ss(10)]);
         ctx.beginPath();
         ctx.arc(x, y, r * .75, 0, Math.PI * 2);
         ctx.stroke();
         ctx.setLineDash([]);
-
         for (var i = 0; i < 5; i++) {
             var a = -Math.PI * .85 + i * Math.PI * .42;
             var tx = x + Math.cos(a) * r * .75;
@@ -550,20 +579,20 @@
             ctx.fill();
             ctx.stroke();
         }
-
         ctx.fillStyle = '#fff7eb';
         ctx.font = '700 ' + Math.max(12, ss(15)) + 'px sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('Restaurant reel', x, y - r * .58);
         ctx.font = Math.max(10, ss(11)) + 'px sans-serif';
         ctx.fillStyle = '#b9c6c0';
-        ctx.fillText('ramenez le code passeport en salle', x, y - r * .42);
+        ctx.fillText('servez ici pour creer le desir de visite', x, y - r * .42);
         ctx.restore();
     }
 
     function drawIsland(island) {
         var x = sx(island.x), y = sy(island.y), r = ss(island.r);
         var active = nearIsland && nearIsland.id === island.id;
+        var recipeActive = recipeById(state.activeRecipe).island === island.id;
         var grd = ctx.createRadialGradient(x - r * .25, y - r * .3, 0, x, y, r * 1.25);
         grd.addColorStop(0, island.color);
         grd.addColorStop(.62, '#263323');
@@ -579,22 +608,19 @@
         }
         ctx.closePath();
         ctx.fill();
-
-        ctx.strokeStyle = active ? island.accent : 'rgba(247,239,226,.16)';
-        ctx.lineWidth = active ? Math.max(2, ss(3)) : Math.max(1, ss(1));
+        ctx.strokeStyle = active || recipeActive ? island.accent : 'rgba(247,239,226,.16)';
+        ctx.lineWidth = active ? Math.max(2, ss(4)) : Math.max(1, ss(recipeActive ? 3 : 1));
         ctx.stroke();
-
         drawLantern(x - r * .25, y - r * .35, island.accent);
         drawLantern(x + r * .22, y - r * .25, island.accent);
         drawTableMark(x, y + r * .08, r * .42, island.accent);
-
         ctx.font = '700 ' + Math.max(12, ss(16)) + 'px sans-serif';
         ctx.textAlign = 'center';
         ctx.fillStyle = '#fff7eb';
         ctx.fillText(island.name, x, y + r + ss(28));
         ctx.font = Math.max(10, ss(12)) + 'px sans-serif';
-        ctx.fillStyle = '#b9c6c0';
-        ctx.fillText(island.zone, x, y + r + ss(46));
+        ctx.fillStyle = recipeActive ? '#fff1a8' : '#b9c6c0';
+        ctx.fillText(recipeActive ? 'recette active' : island.zone, x, y + r + ss(46));
     }
 
     function drawLantern(x, y, color) {
@@ -628,7 +654,7 @@
     }
 
     function drawIngredient(item) {
-        if (has(state.cargo, item.id)) return;
+        if (item.cooldown && item.cooldown > frame) return;
         var pulse = 1 + Math.sin(frame * .05 + item.x) * .12;
         var x = sx(item.x), y = sy(item.y), r = ss(16 * pulse);
         ctx.save();
@@ -650,9 +676,7 @@
     }
 
     function drawBoat() {
-        var x = sx(state.boat.x), y = sy(state.boat.y);
-        var a = state.boat.angle;
-        var s = ss(1);
+        var x = sx(state.boat.x), y = sy(state.boat.y), a = state.boat.angle, s = ss(1);
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(a + Math.PI / 2);
