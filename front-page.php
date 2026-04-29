@@ -171,7 +171,6 @@ $menus = array(
             <div class="constellation-orbit orbit-two" aria-hidden="true"></div>
             <div class="constellation-core" aria-hidden="true">
                 <span>V</span>
-                <small><?php esc_html_e( 'passeport vivant', 'virealys' ); ?></small>
             </div>
             <div class="constellation-ledger" aria-hidden="true">
                 <span>jeu</span>
@@ -376,6 +375,14 @@ $menus = array(
             <article class="v-template-card" data-reveal>
                 <strong><?php esc_html_e( 'Saisons de retour', 'virealys' ); ?></strong>
                 <p><?php esc_html_e( 'Une soiree complete relance de nouvelles commandes et cree une raison naturelle de revenir.', 'virealys' ); ?></p>
+            </article>
+            <article class="v-template-card" data-reveal>
+                <strong><?php esc_html_e( 'Equipage a recruter', 'virealys' ); ?></strong>
+                <p><?php esc_html_e( 'Cartographe, chef narratif, concierge et astronome changent les bonus du passeport sur la duree.', 'virealys' ); ?></p>
+            </article>
+            <article class="v-template-card" data-reveal>
+                <strong><?php esc_html_e( 'Astres a collectionner', 'virealys' ); ?></strong>
+                <p><?php esc_html_e( 'Les paliers de constellation recompensent la fidelite, la maitrise des recettes et les visites repetees.', 'virealys' ); ?></p>
             </article>
         </div>
     </div>

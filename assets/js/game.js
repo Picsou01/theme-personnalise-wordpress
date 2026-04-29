@@ -53,7 +53,13 @@
         { stars: 120, id: 'cocktail', label: 'Cocktail Constellation -50%' },
         { stars: 260, id: 'amuse', label: 'Amuse-bouche secret offert' },
         { stars: 520, id: 'priority', label: 'Acces prioritaire Pays du mois' },
-        { stars: 900, id: 'table', label: 'Table immersive recommandee' }
+        { stars: 900, id: 'table', label: 'Table immersive recommandee' },
+        { stars: 1250, id: 'parfum', label: 'Parfum de table surprise' },
+        { stars: 1650, id: 'dessert', label: 'Dessert cache a annoncer' },
+        { stars: 2150, id: 'chef', label: 'Message du chef au passeport' },
+        { stars: 2800, id: 'duo', label: 'Bonus duo pour prochaine visite' },
+        { stars: 3600, id: 'salon', label: 'Salon immersif conseille' },
+        { stars: 4600, id: 'invitation', label: 'Invitation avant-premiere pays' }
     ];
 
     var CONTRACTS = [
@@ -61,14 +67,57 @@
         { id: 'table_producteurs', label: 'Table Producteurs', recipe: 'terre_truffe', brief: 'Une table locale cherche une preuve de terroir.', reward: 'Accord huile/pain offert', stars: 95, reputation: 14, tokens: 1 },
         { id: 'salon_vr', label: 'Salon VR douce', recipe: 'orbite_miso', brief: 'Une equipe reserve la sequence immersive.', reward: 'Passage VR prioritaire', stars: 115, reputation: 18, tokens: 2 },
         { id: 'anniversaire', label: 'Anniversaire Sensoriel', recipe: 'songe_lavande', brief: 'Une surprise parfumee doit finir la soiree.', reward: 'Dessert cache active', stars: 130, reputation: 20, tokens: 2 },
-        { id: 'afterwork', label: 'Afterwork Constellation', recipe: 'constellation_bar', brief: 'Le bar veut un moment social qui donne envie de revenir.', reward: 'Cocktail signature -50%', stars: 145, reputation: 24, tokens: 2 }
+        { id: 'afterwork', label: 'Afterwork Constellation', recipe: 'constellation_bar', brief: 'Le bar veut un moment social qui donne envie de revenir.', reward: 'Cocktail signature -50%', stars: 145, reputation: 24, tokens: 2 },
+        { id: 'critique', label: 'Critique discret', recipe: 'terre_truffe', brief: 'Un palais exigeant teste la coherence slow food.', reward: 'Accord producteur rare', stars: 160, reputation: 26, tokens: 2 },
+        { id: 'premier_voyage', label: 'Premiere fois', recipe: 'nacre_yuzu', brief: 'Une table decouvre Virealys et doit etre accrochee vite.', reward: 'Visa decouverte double', stars: 125, reputation: 18, tokens: 2 },
+        { id: 'nuit_orbite', label: 'Nuit Orbitale', recipe: 'orbite_miso', brief: 'La salle immersive demande un plat qui marque les esprits.', reward: 'Scene VR rallongee', stars: 175, reputation: 28, tokens: 3 },
+        { id: 'table_fidele', label: 'Table fidele', recipe: 'songe_lavande', brief: 'Des habitues veulent une raison de revenir le mois suivant.', reward: 'Attention retour', stars: 190, reputation: 30, tokens: 3 },
+        { id: 'bar_secret', label: 'Bar secret', recipe: 'constellation_bar', brief: 'Le ponton teste une creation sociale a collectionner.', reward: 'Signature bar reservee', stars: 210, reputation: 34, tokens: 3 }
     ];
 
     var UPGRADES = [
         { id: 'mise', label: 'Mise en place', cost: 2, text: 'Collectes plus rentables et service plus propre.' },
         { id: 'sommelier', label: 'Sommelier holographique', cost: 4, text: 'Chaque plat servi gagne plus d aura.' },
         { id: 'brigade', label: 'Brigade synchronisee', cost: 6, text: 'La pression de service monte moins vite.' },
-        { id: 'atelier', label: 'Atelier constellation', cost: 9, text: 'Les commandes completent plus vite la saison.' }
+        { id: 'atelier', label: 'Atelier constellation', cost: 9, text: 'Les commandes completent plus vite la saison.' },
+        { id: 'cave', label: 'Cave narrative', cost: 12, text: 'Les recompenses etoiles arrivent plus vite.' },
+        { id: 'memoire', label: 'Memoire client', cost: 16, text: 'Les tables fideles rapportent plus de visas.' },
+        { id: 'salon', label: 'Salon prive', cost: 21, text: 'Chaque soiree complete ajoute un bonus reel plus fort.' },
+        { id: 'observatoire', label: 'Observatoire Virealys', cost: 28, text: 'La constellation progresse en boucle longue.' }
+    ];
+
+    var CREW = [
+        { id: 'cartographe', label: 'Cartographe des saveurs', cost: 3, text: 'Ingredients plus rapides et bonus sur le pays de saison.' },
+        { id: 'chef', label: 'Chef narratif', cost: 5, text: 'Recettes servies plus fortes et maitrise plus rapide.' },
+        { id: 'concierge', label: 'Concierge passeport', cost: 8, text: 'Les commandes donnent plus de visas convertibles.' },
+        { id: 'regisseur', label: 'Regisseur sensoriel', cost: 12, text: 'La pression de service est mieux controlee.' },
+        { id: 'astronome', label: 'Astronome de salle', cost: 18, text: 'Les paliers de constellation donnent plus de progression.' }
+    ];
+
+    var SEASON_THEMES = [
+        { label: 'Maree Yuzu', short: 'Yuzu', ingredient: 'yuzu', text: 'Le yuzu rapporte plus et pousse la route Voyage.' },
+        { label: 'Nuit Truffe', short: 'Truffe', ingredient: 'truffe', text: 'Le terroir devient la route la plus rentable.' },
+        { label: 'Orbite Miso', short: 'Miso', ingredient: 'miso', text: 'Les plats VR gagnent plus d aura.' },
+        { label: 'Songe Lavande', short: 'Lavande', ingredient: 'lavande', text: 'Le sensoriel avance plus vite.' },
+        { label: 'Bar Constellation', short: 'Bar', ingredient: 'agrume', text: 'Le ponton social charge les recompenses.' }
+    ];
+
+    var MILESTONES = [
+        { id: 'first_table', label: 'Premiere table conquise', text: 'Une commande en salle validee.', tokens: 1, test: function () { return state.contractsDone.length >= 1; } },
+        { id: 'full_evening', label: 'Soiree complete', text: 'Un service entier termine.', tokens: 1, test: function () { return state.serviceDay >= 2; } },
+        { id: 'first_season', label: 'Saison vivante', text: 'Atteindre la saison 2.', tokens: 2, test: function () { return seasonLevel() >= 2; } },
+        { id: 'all_islands', label: 'Tour des iles', text: 'Tous les tampons du passeport.', tokens: 2, test: function () { return state.stamps.length >= ISLANDS.length; } },
+        { id: 'all_recipes', label: 'Carte complete', text: 'Toutes les recettes servies au moins une fois.', tokens: 2, test: function () { return state.dishes.length >= RECIPES.length; } },
+        { id: 'master_one', label: 'Maitrise signature', text: 'Une recette servie trois fois.', tokens: 2, test: function () { return masteryCount() >= 1; } },
+        { id: 'master_three', label: 'Brigade sure', text: 'Trois recettes maitrisees.', tokens: 3, test: function () { return masteryCount() >= 3; } },
+        { id: 'full_mastery', label: 'Carte legendaire', text: 'Toutes les recettes maitrisees.', tokens: 5, test: function () { return masteryCount() >= RECIPES.length; } },
+        { id: 'crew_three', label: 'Equipe formee', text: 'Trois membres d equipage recrutes.', tokens: 3, test: function () { return state.crew.length >= 3; } },
+        { id: 'crew_full', label: 'Brigade complete', text: 'Tout l equipage est recrute.', tokens: 5, test: function () { return state.crew.length >= CREW.length; } },
+        { id: 'upgrades_full', label: 'Restaurant augmente', text: 'Toutes les ameliorations achetees.', tokens: 5, test: function () { return state.upgrades.length >= UPGRADES.length; } },
+        { id: 'aura_250', label: 'Aura reconnue', text: 'Atteindre 250 aura.', tokens: 2, test: function () { return state.reputation >= 250; } },
+        { id: 'aura_600', label: 'Aura culte', text: 'Atteindre 600 aura.', tokens: 4, test: function () { return state.reputation >= 600; } },
+        { id: 'season_five', label: 'Constellation stable', text: 'Atteindre la saison 5.', tokens: 4, test: function () { return seasonLevel() >= 5; } },
+        { id: 'season_ten', label: 'Constellation infinie', text: 'Atteindre la saison 10.', tokens: 8, test: function () { return seasonLevel() >= 10; } }
     ];
 
     var canvas, ctx, root, ui = {}, W = 1, H = 1, DPR = 1, scale = 1, ox = 0, oy = 0;
@@ -94,6 +143,8 @@
         seasonXp: 0,
         contractsDone: [],
         upgrades: [],
+        crew: [],
+        milestones: [],
         servedCounts: {},
         selected: null,
         updated_at: 0
@@ -110,7 +161,15 @@
     function count(id) { return Number(state.inventory[id] || 0); }
     function served(id) { return Number((state.servedCounts && state.servedCounts[id]) || 0); }
     function hasUpgrade(id) { return has(state.upgrades, id); }
+    function hasCrew(id) { return has(state.crew, id); }
+    function totalServed() {
+        return Object.keys(state.servedCounts || {}).reduce(function (sum, id) { return sum + served(id); }, 0);
+    }
+    function masteryCount() {
+        return RECIPES.filter(function (recipe) { return served(recipe.id) >= 3; }).length;
+    }
     function seasonLevel() { return Math.floor(Number(state.seasonXp || 0) / 260) + 1; }
+    function seasonTheme() { return SEASON_THEMES[(seasonLevel() - 1) % SEASON_THEMES.length]; }
     function contractKey(contract) { return 'J' + state.serviceDay + '-' + contract.id; }
     function activeContracts() {
         return [0, 1, 2].map(function (slot) {
@@ -120,6 +179,12 @@
     function contractDone(contract) { return has(state.contractsDone, contractKey(contract)); }
     function nextUpgrade() {
         return UPGRADES.find(function (upgrade) { return !hasUpgrade(upgrade.id); });
+    }
+    function nextCrew() {
+        return CREW.find(function (member) { return !hasCrew(member.id); });
+    }
+    function rewardTarget(reward) {
+        return Math.max(60, reward.stars - (hasUpgrade('cave') ? Math.round(reward.stars * 0.12) : 0));
     }
 
     function load() {
@@ -148,6 +213,8 @@
         state.discovered = Array.isArray(state.discovered) ? state.discovered : [];
         state.contractsDone = Array.isArray(state.contractsDone) ? state.contractsDone : [];
         state.upgrades = Array.isArray(state.upgrades) ? state.upgrades : [];
+        state.crew = Array.isArray(state.crew) ? state.crew : [];
+        state.milestones = Array.isArray(state.milestones) ? state.milestones : [];
         state.servedCounts = state.servedCounts && typeof state.servedCounts === 'object' ? state.servedCounts : {};
         state.tokens = Number(state.tokens || 0);
         state.serviceDay = Math.max(1, Number(state.serviceDay || 1));
@@ -192,7 +259,7 @@
     }
 
     function passportCode() {
-        var raw = [state.stamps.join('-') || 'START', state.dishes.join('-') || 'NO-DISH', state.stars, state.reputation, state.tokens, state.serviceDay, seasonLevel()].join('|');
+        var raw = [state.stamps.join('-') || 'START', state.dishes.join('-') || 'NO-DISH', state.milestones.join('-') || 'NO-ASTRE', state.stars, state.reputation, state.tokens, state.serviceDay, seasonLevel()].join('|');
         var hash = 0;
         for (var i = 0; i < raw.length; i++) hash = (hash * 31 + raw.charCodeAt(i)) % 9973;
         return 'VRL-' + String(hash).padStart(4, '0') + '-' + seasonLevel() + state.rewards.length;
@@ -221,8 +288,8 @@
             '<div class="vg-topbar"><span class="vg-brand">VIREALYS</span><span class="vg-chip" id="vg-stars">0 etoile</span><span class="vg-chip" id="vg-rep">Aura 0</span><span class="vg-chip" id="vg-day">Jour 1</span><span class="vg-chip" id="vg-season">Saison 1</span><span class="vg-chip" id="vg-tokens">0 visa</span><span class="vg-chip" id="vg-heat">Service calme</span><span class="vg-chip" id="vg-code">VRL-0000</span><span class="vg-chip" id="vg-sync">local</span></div>' +
             '<aside class="vg-mission"><h2>Mission vivante</h2><p id="vg-mission-text"></p><div class="vg-progress"><span id="vg-progress"></span></div></aside>' +
             '<aside class="vg-recipe"><h2>Plat signature</h2><div id="vg-recipe-card"></div><div id="vg-inventory"></div></aside>' +
-            '<aside class="vg-passport"><h2>Passeport</h2><div class="vg-stamps" id="vg-stamps"></div><div class="vg-rewards" id="vg-rewards"></div></aside>' +
-            '<aside class="vg-service"><h2>Commandes en salle</h2><div id="vg-loop"></div><div class="vg-upgrade-box"><button class="vg-button" id="vg-upgrade">Ameliorer</button><small id="vg-upgrade-next"></small></div><div class="vg-service-code" id="vg-service-code">VRL-0000</div></aside>' +
+            '<aside class="vg-passport"><h2>Passeport</h2><div class="vg-stamps" id="vg-stamps"></div><div class="vg-rewards" id="vg-rewards"></div><div class="vg-longterm" id="vg-longterm"></div></aside>' +
+            '<aside class="vg-service"><h2>Commandes en salle</h2><div id="vg-loop"></div><div class="vg-upgrade-box"><button class="vg-button" id="vg-upgrade">Ameliorer</button><small id="vg-upgrade-next"></small></div><div class="vg-upgrade-box"><button class="vg-button" id="vg-crew">Recruter</button><small id="vg-crew-next"></small></div><div class="vg-service-code" id="vg-service-code">VRL-0000</div></aside>' +
             '<div class="vg-dock-card" id="vg-dock"><h2 id="vg-dock-title"></h2><p id="vg-dock-text"></p><div class="vg-dock-actions"><button class="vg-button primary" id="vg-validate">Servir</button><a class="vg-button" id="vg-book" href="' + reservationUrl + '">Reserver pour convertir</a></div></div>' +
             '<div class="vg-bottom"><button class="vg-button primary" id="vg-dock-btn">Accoster</button><button class="vg-button" id="vg-cycle">Changer recette</button><button class="vg-button" id="vg-passport-btn">Code passeport</button><button class="vg-button" id="vg-reset">Recommencer</button></div>' +
             '<div class="vg-joy" id="vg-joy"><span id="vg-joy-knob"></span></div>' +
@@ -245,10 +312,13 @@
         ui.inventory = $('vg-inventory');
         ui.stamps = $('vg-stamps');
         ui.rewards = $('vg-rewards');
+        ui.longterm = $('vg-longterm');
         ui.loop = $('vg-loop');
         ui.serviceCode = $('vg-service-code');
         ui.upgrade = $('vg-upgrade');
         ui.upgradeNext = $('vg-upgrade-next');
+        ui.crew = $('vg-crew');
+        ui.crewNext = $('vg-crew-next');
         ui.dock = $('vg-dock');
         ui.dockTitle = $('vg-dock-title');
         ui.dockText = $('vg-dock-text');
@@ -261,6 +331,7 @@
         $('vg-passport-btn').addEventListener('click', showPassportCode);
         $('vg-reset').addEventListener('click', reset);
         ui.upgrade.addEventListener('click', buyUpgrade);
+        ui.crew.addEventListener('click', buyCrew);
         bindControls();
         resize();
         window.addEventListener('resize', resize);
@@ -342,7 +413,7 @@
 
         if (frame - lastHeatTick > 90) {
             lastHeatTick = frame;
-            state.heat = clamp(state.heat + 0.28 - Math.min(state.reputation, 100) * 0.002 - (hasUpgrade('brigade') ? 0.12 : 0), 0, 100);
+            state.heat = clamp(state.heat + 0.28 - Math.min(state.reputation, 100) * 0.002 - (hasUpgrade('brigade') ? 0.12 : 0) - (hasCrew('regisseur') ? 0.08 : 0), 0, 100);
         }
 
         nearIsland = null;
@@ -360,23 +431,37 @@
     }
 
     function collect(item) {
+        var theme = seasonTheme();
+        var themeBonus = item.id === theme.ingredient ? 9 + seasonLevel() : 0;
+        var cooldown = 620 - (hasCrew('cartographe') ? 110 : 0) - (hasUpgrade('atelier') ? 120 : 0);
         state.inventory[item.id] = count(item.id) + 1;
         if (!has(state.discovered, item.id)) state.discovered.push(item.id);
-        state.stars += item.value + (hasUpgrade('mise') ? 4 : 0);
-        state.seasonXp += 2;
+        state.stars += item.value + (hasUpgrade('mise') ? 4 : 0) + (hasCrew('cartographe') ? 3 : 0) + themeBonus;
+        state.seasonXp += 2 + (themeBonus ? 3 : 0);
         state.heat = clamp(state.heat + (hasUpgrade('mise') ? 0.8 : 1.4), 0, 100);
-        item.cooldown = frame + (hasUpgrade('atelier') ? 450 : 620) + Math.floor(Math.random() * 360);
+        item.cooldown = frame + Math.max(260, cooldown) + Math.floor(Math.random() * 360);
         unlockRewards();
-        toast(item.label + ' collecte. Stock: ' + count(item.id));
+        toast(item.label + ' collecte. Stock: ' + count(item.id) + (themeBonus ? ' Bonus saison: ' + theme.label + '.' : ''));
         save();
     }
 
     function unlockRewards() {
         REWARDS.forEach(function (reward) {
-            if (state.stars >= reward.stars && !has(state.rewards, reward.id)) {
+            if (state.stars >= rewardTarget(reward) && !has(state.rewards, reward.id)) {
                 state.rewards.push(reward.id);
                 toast('Recompense debloquee: ' + reward.label);
             }
+        });
+        unlockMilestones();
+    }
+
+    function unlockMilestones() {
+        MILESTONES.forEach(function (milestone) {
+            if (has(state.milestones, milestone.id) || !milestone.test()) return;
+            state.milestones.push(milestone.id);
+            state.tokens += milestone.tokens + (hasCrew('astronome') ? 1 : 0);
+            state.seasonXp += 28 + (hasCrew('astronome') ? 18 : 0);
+            toast('Astre debloque: ' + milestone.label + ' +' + milestone.tokens + ' visas.');
         });
     }
 
@@ -386,18 +471,19 @@
             if (contract.recipe !== recipe.id || contractDone(contract)) return;
             state.contractsDone.push(contractKey(contract));
             state.stars += contract.stars;
-            state.tokens += contract.tokens;
+            state.tokens += contract.tokens + (hasCrew('concierge') ? 1 : 0) + (hasUpgrade('memoire') ? 1 : 0);
             state.reputation = clamp(state.reputation + contract.reputation, 0, 999);
             state.seasonXp += 45 + (hasUpgrade('atelier') ? 20 : 0);
             completed.push(contract);
         });
 
         if (completed.length && activeContracts().every(contractDone)) {
+            var eveningVisas = 2 + (hasUpgrade('salon') ? 2 : 0);
             state.serviceDay += 1;
-            state.tokens += 2;
-            state.seasonXp += 90 + (hasUpgrade('atelier') ? 40 : 0);
-            state.heat = clamp(state.heat - 22, 0, 100);
-            toast('Soiree validee. Nouveau service, +2 visas et une constellation plus forte.');
+            state.tokens += eveningVisas;
+            state.seasonXp += 90 + (hasUpgrade('atelier') ? 40 : 0) + (hasUpgrade('observatoire') ? 50 : 0);
+            state.heat = clamp(state.heat - 22 - (hasCrew('regisseur') ? 10 : 0), 0, 100);
+            toast('Soiree validee. Nouveau service, +' + eveningVisas + ' visas et une constellation plus forte.');
         }
         return completed;
     }
@@ -417,6 +503,27 @@
         state.reputation = clamp(state.reputation + 10, 0, 999);
         state.seasonXp += 35;
         toast('Amelioration active: ' + upgrade.label + '.');
+        unlockRewards();
+        save();
+        updateUI();
+    }
+
+    function buyCrew() {
+        var member = nextCrew();
+        if (!member) {
+            toast('Tout l equipage Virealys est recrute.');
+            return;
+        }
+        if (state.tokens < member.cost) {
+            toast(member.label + ' demande ' + member.cost + ' visas.');
+            return;
+        }
+        state.tokens -= member.cost;
+        state.crew.push(member.id);
+        state.reputation = clamp(state.reputation + 14, 0, 999);
+        state.seasonXp += 45;
+        toast('Equipage recrute: ' + member.label + '.');
+        unlockRewards();
         save();
         updateUI();
     }
@@ -459,9 +566,9 @@
         if (!has(state.stamps, island.id)) state.stamps.push(island.id);
         if (!has(state.visited, island.id)) state.visited.push(island.id);
         if (!has(state.realRewards, recipe.id)) state.realRewards.push(recipe.id);
-        state.stars += recipe.stars + Math.max(0, Math.round(35 - state.heat / 3)) + (hasUpgrade('sommelier') ? 28 : 0);
-        state.reputation = clamp(state.reputation + recipe.reputation + (hasUpgrade('sommelier') ? 7 : 0), 0, 999);
-        state.seasonXp += 32 + recipe.chapter * 10 + (firstServe ? 35 : 0);
+        state.stars += recipe.stars + Math.max(0, Math.round(35 - state.heat / 3)) + (hasUpgrade('sommelier') ? 28 : 0) + (hasCrew('chef') ? 24 : 0);
+        state.reputation = clamp(state.reputation + recipe.reputation + (hasUpgrade('sommelier') ? 7 : 0) + (hasCrew('chef') ? 6 : 0), 0, 999);
+        state.seasonXp += 32 + recipe.chapter * 10 + (firstServe ? 35 : 0) + (hasCrew('chef') ? 12 : 0);
         state.heat = clamp(state.heat - (hasUpgrade('mise') ? 36 : 28), 0, 100);
         state.chapter = Math.max(state.chapter, recipe.chapter + 1);
         var completed = completeContracts(recipe);
@@ -523,6 +630,8 @@
             seasonXp: 0,
             contractsDone: [],
             upgrades: [],
+            crew: [],
+            milestones: [],
             servedCounts: {},
             selected: null,
             updated_at: 0
@@ -537,10 +646,11 @@
 
     function updateUI() {
         var recipe = recipeById(state.activeRecipe);
+        var theme = seasonTheme();
         ui.stars.textContent = state.stars + (state.stars > 1 ? ' etoiles' : ' etoile');
         ui.rep.textContent = 'Aura ' + state.reputation;
         ui.day.textContent = 'Jour ' + state.serviceDay;
-        ui.season.textContent = 'Saison ' + seasonLevel();
+        ui.season.textContent = 'S' + seasonLevel() + ' ' + theme.short;
         ui.tokens.textContent = state.tokens + (state.tokens > 1 ? ' visas' : ' visa');
         ui.heat.textContent = state.heat > 68 ? 'Service intense' : (state.heat > 38 ? 'Service vivant' : 'Service calme');
         ui.code.textContent = passportCode();
@@ -551,8 +661,8 @@
         var island = islandById(recipe.island);
         var contractTarget = activeContracts().find(function (contract) { return contract.recipe === recipe.id && !contractDone(contract); });
         ui.mission.textContent = missing.length
-            ? 'Composez ' + recipe.name + ' pour ' + island.name + '. Il manque: ' + missing.map(function (id) { return itemById(id).label; }).join(', ') + '.'
-            : 'Tous les ingredients sont prets. Accostez a ' + island.name + ' pour servir ' + (contractTarget ? contractTarget.label : 'la route libre') + ' et alimenter le passeport reel.';
+            ? 'Saison ' + theme.label + '. Composez ' + recipe.name + ' pour ' + island.name + '. Il manque: ' + missing.map(function (id) { return itemById(id).label; }).join(', ') + '.'
+            : 'Saison ' + theme.label + '. Accostez a ' + island.name + ' pour servir ' + (contractTarget ? contractTarget.label : 'la route libre') + ' et alimenter le passeport reel.';
         ui.progress.style.width = Math.round((state.seasonXp % 260) / 260 * 100) + '%';
 
         ui.recipe.innerHTML = '<strong>' + recipe.name + '</strong><p>' + recipe.brief + '</p><div class="vg-needs">' +
@@ -571,9 +681,18 @@
             return '<span class="vg-stamp ' + (has(state.stamps, i.id) ? 'earned' : '') + '">' + i.name.replace('Ile ', '') + '</span>';
         }).join('');
 
-        ui.rewards.innerHTML = REWARDS.map(function (reward) {
+        var visibleRewards = REWARDS.filter(function (reward) { return has(state.rewards, reward.id); }).slice(-3)
+            .concat(REWARDS.filter(function (reward) { return !has(state.rewards, reward.id); }).slice(0, 5));
+        ui.rewards.innerHTML = '<div class="vg-panel-count">Recompenses ' + state.rewards.length + '/' + REWARDS.length + '</div>' + visibleRewards.map(function (reward) {
             var ok = has(state.rewards, reward.id);
-            return '<div class="vg-reward"><span>' + reward.label + '</span><strong>' + (ok ? 'pret' : reward.stars + '*') + '</strong></div>';
+            return '<div class="vg-reward"><span>' + reward.label + '</span><strong>' + (ok ? 'pret' : rewardTarget(reward) + '*') + '</strong></div>';
+        }).join('');
+
+        var visibleMilestones = MILESTONES.filter(function (milestone) { return has(state.milestones, milestone.id); }).slice(-3)
+            .concat(MILESTONES.filter(function (milestone) { return !has(state.milestones, milestone.id); }).slice(0, 5));
+        ui.longterm.innerHTML = '<h3>Constellation ' + state.milestones.length + '/' + MILESTONES.length + '</h3>' + visibleMilestones.map(function (milestone) {
+            var ok = has(state.milestones, milestone.id);
+            return '<div class="vg-milestone ' + (ok ? 'done' : '') + '"><strong>' + milestone.label + '</strong><span>' + (ok ? 'actif' : milestone.text) + '</span></div>';
         }).join('');
 
         ui.loop.innerHTML = activeContracts().map(function (contract) {
@@ -585,7 +704,12 @@
         var upgrade = nextUpgrade();
         ui.upgrade.disabled = !upgrade;
         ui.upgrade.textContent = upgrade ? 'Ameliorer - ' + upgrade.cost + ' visas' : 'Brigade complete';
-        ui.upgradeNext.textContent = upgrade ? upgrade.label + ': ' + upgrade.text : 'Toutes les couches de progression sont actives.';
+        ui.upgradeNext.textContent = upgrade ? upgrade.label + ': ' + upgrade.text + ' (' + state.upgrades.length + '/' + UPGRADES.length + ')' : 'Toutes les couches de progression sont actives.';
+
+        var member = nextCrew();
+        ui.crew.disabled = !member;
+        ui.crew.textContent = member ? 'Recruter - ' + member.cost + ' visas' : 'Equipage complet';
+        ui.crewNext.textContent = member ? member.label + ': ' + member.text + ' (' + state.crew.length + '/' + CREW.length + ')' : 'Tous les roles de l experience sont actifs.';
     }
 
     function toast(msg) {
@@ -599,6 +723,7 @@
         ctx.clearRect(0, 0, W, H);
         drawWater();
         drawRestaurantPier();
+        drawConstellationProgress();
         drawRoutes();
         drawContracts();
         ISLANDS.forEach(drawIsland);
@@ -679,6 +804,32 @@
             ctx.fillStyle = done ? 'rgba(125,211,199,.95)' : 'rgba(214,160,95,.95)';
             ctx.font = Math.max(9, ss(10)) + 'px sans-serif';
             ctx.fillText(done ? 'servi' : recipe.name, x, y + ss(12));
+        });
+        ctx.restore();
+    }
+
+    function drawConstellationProgress() {
+        var cx = sx(800), cy = sy(475), r = ss(178);
+        ctx.save();
+        MILESTONES.forEach(function (milestone, i) {
+            var a = -Math.PI / 2 + (i / MILESTONES.length) * Math.PI * 2 + frame * 0.0008;
+            var unlocked = has(state.milestones, milestone.id);
+            var x = cx + Math.cos(a) * r;
+            var y = cy + Math.sin(a) * r * 0.62;
+            ctx.fillStyle = unlocked ? 'rgba(255,241,168,.94)' : 'rgba(247,239,226,.18)';
+            ctx.strokeStyle = unlocked ? 'rgba(255,241,168,.55)' : 'rgba(247,239,226,.08)';
+            ctx.lineWidth = Math.max(1, ss(1));
+            ctx.beginPath();
+            ctx.arc(x, y, Math.max(2, ss(unlocked ? 4.4 : 2.8)), 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            if (unlocked) {
+                ctx.globalAlpha = 0.18;
+                ctx.beginPath();
+                ctx.arc(x, y, ss(14), 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
         });
         ctx.restore();
     }

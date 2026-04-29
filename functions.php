@@ -5,7 +5,7 @@
  */
 
 if ( ! defined( 'VIREALYS_VERSION' ) ) {
-    define( 'VIREALYS_VERSION', '12.2.0' );
+    define( 'VIREALYS_VERSION', '12.3.0' );
 }
 
 /* ── THEME SETUP ── */
@@ -260,6 +260,18 @@ function virealys_sanitize_passport_inventory( $items ) {
     return $safe;
 }
 
+function virealys_sanitize_passport_counters( $items ) {
+    $items = is_array( $items ) ? $items : array();
+    $safe = array();
+    foreach ( $items as $key => $value ) {
+        if ( ! is_scalar( $key ) ) continue;
+        $id = sanitize_key( (string) $key );
+        if ( $id === '' ) continue;
+        $safe[ $id ] = max( 0, min( 999, absint( $value ) ) );
+    }
+    return $safe;
+}
+
 function virealys_sanitize_passport( $passport ) {
     $boat = isset( $passport['boat'] ) && is_array( $passport['boat'] ) ? $passport['boat'] : array();
     $selected = isset( $passport['selected'] ) ? sanitize_key( $passport['selected'] ) : '';
@@ -279,7 +291,7 @@ function virealys_sanitize_passport( $passport ) {
         'seasonXp'   => max( 0, min( 99999, absint( $passport['seasonXp'] ?? 0 ) ) ),
         'activeRecipe' => is_scalar( $passport['activeRecipe'] ?? '' ) ? sanitize_key( (string) $passport['activeRecipe'] ) : '',
         'inventory'  => virealys_sanitize_passport_inventory( $passport['inventory'] ?? array() ),
-        'servedCounts' => virealys_sanitize_passport_inventory( $passport['servedCounts'] ?? array() ),
+        'servedCounts' => virealys_sanitize_passport_counters( $passport['servedCounts'] ?? array() ),
         'cargo'      => virealys_sanitize_passport_list( $passport['cargo'] ?? array(), 80 ),
         'stamps'     => virealys_sanitize_passport_list( $passport['stamps'] ?? array(), 20 ),
         'dishes'     => virealys_sanitize_passport_list( $passport['dishes'] ?? array(), 30 ),
@@ -289,6 +301,8 @@ function virealys_sanitize_passport( $passport ) {
         'discovered' => virealys_sanitize_passport_list( $passport['discovered'] ?? array(), 80 ),
         'contractsDone' => virealys_sanitize_passport_list( $passport['contractsDone'] ?? array(), 300 ),
         'upgrades'   => virealys_sanitize_passport_list( $passport['upgrades'] ?? array(), 20 ),
+        'crew'       => virealys_sanitize_passport_list( $passport['crew'] ?? array(), 20 ),
+        'milestones' => virealys_sanitize_passport_list( $passport['milestones'] ?? array(), 80 ),
         'selected'   => $selected ?: null,
         'muted'      => ! empty( $passport['muted'] ),
         'updated_at' => max( 0, absint( $passport['updated_at'] ?? time() ) ),
