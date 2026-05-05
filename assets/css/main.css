@@ -971,6 +971,7 @@ body{background:var(--vr-night);color:#dce7e2}
 .v-architecture-grid article{min-height:150px;padding:1.1rem;border:1px solid rgba(247,239,226,.12);border-radius:8px;background:linear-gradient(180deg,rgba(247,239,226,.055),rgba(125,211,199,.025))}
 .v-architecture-grid strong{display:block;color:var(--vr-gold);font-family:var(--font-heading);font-size:.98rem;margin-bottom:.4rem}
 .v-architecture-grid span{display:block;color:#b9c6c0;font-size:.9rem;line-height:1.55}
+.v-architecture-grid article:last-child{border-color:rgba(125,211,199,.28);background:linear-gradient(180deg,rgba(125,211,199,.09),rgba(214,160,95,.035))}
 .v-reservation-shell{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,.82fr);gap:2rem;align-items:center;padding:2rem;border:1px solid rgba(247,239,226,.12);border-radius:8px;background:linear-gradient(135deg,rgba(247,239,226,.08),rgba(125,211,199,.04))}
 .v-reservation-side{display:grid;gap:1rem}
 .v-reservation-media{aspect-ratio:16/9}

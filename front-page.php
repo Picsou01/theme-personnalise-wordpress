@@ -492,6 +492,7 @@ $menus = array(
             <article data-reveal><strong><?php esc_html_e( 'Compatibilite', 'virealys' ); ?></strong><span><?php esc_html_e( 'Theme responsive, images WebP legeres, canvas degradeable et contenu SEO.', 'virealys' ); ?></span></article>
             <article data-reveal><strong><?php esc_html_e( 'Benchmark', 'virealys' ); ?></strong><span><?php esc_html_e( 'Positionnement entre gastronomie, experience immersive et fidelisation gamifiee.', 'virealys' ); ?></span></article>
             <article data-reveal><strong><?php esc_html_e( 'Boucle retour', 'virealys' ); ?></strong><span><?php esc_html_e( 'Chaque visite ajoute un visa, une route et une prochaine recompense.', 'virealys' ); ?></span></article>
+            <article data-reveal><strong><?php esc_html_e( 'Cooperation', 'virealys' ); ?></strong><span><?php esc_html_e( 'Une page dediee prouve le backlink mutuel avec HoLazyV et la cooperation entre projets.', 'virealys' ); ?></span></article>
         </div>
     </div>
 </section>

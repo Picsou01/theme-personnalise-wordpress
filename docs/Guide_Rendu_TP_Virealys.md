@@ -19,6 +19,7 @@ Pages a avoir :
 - Passeport
 - Reservation
 - Jeu bonus
+- Partenariat HoLazyV
 - Dossier TP
 
 Articles a avoir :
@@ -101,9 +102,10 @@ Elements d'ergonomie a montrer :
 - Images compressees en WebP.
 
 Backlink :
-- Faire un lien entrant depuis le site d'un autre etudiant vers Virealys.
-- Ajouter en retour un lien vers son site dans un article ou une page partenaire.
-- Expliquer que le backlink aide l'autorite SEO et la decouverte locale.
+- Le backlink retenu est une cooperation mutuelle avec HoLazyV : https://www.holazyv.labo.infochartreux.fr/
+- La page Virealys dediee est `partenariat-holazyv`.
+- Ajouter en retour un lien depuis HoLazyV vers Virealys.
+- Expliquer que le backlink aide l'autorite SEO, la decouverte locale et le maillage entre projets pedagogiques.
 
 Benchmark local / distant :
 - Local : comparer le site en localhost ou environnement de test.
@@ -111,22 +113,27 @@ Benchmark local / distant :
 - Outils possibles : PageSpeed Insights, Lighthouse, GTmetrix, WebPageTest.
 - Mesurer : performance, accessibilite, bonnes pratiques, SEO, poids des images, temps de chargement.
 
-## 6. Reseaux sociaux
+## 6. Presence responsable sans reseaux sociaux commerciaux
 
-Compte conseille :
-- Instagram ou TikTok, car le concept est tres visuel.
+Position Virealys :
+- L'entreprise assume de ne pas utiliser les reseaux sociaux commerciaux.
+- Justification : refus de l'economie de l'attention, de la collecte massive de donnees et de l'enrichissement de plateformes publicitaires fondees sur le temps disponible des utilisateurs.
+- Coherence avec le slow food : Virealys defend le temps long, la presence, le gout, la relation directe et la sobriete.
 
-A faire :
-- Creer le profil Virealys.
-- Completer photo, bio, lien vers le site.
-- Publier un post sur le pays du mois.
-- Inviter d'autres etudiants a suivre/interagir.
+Canaux de remplacement :
+- Site WordPress proprietaire.
+- SEO naturel.
+- Google Business Profile.
+- Newsletter opt-in.
+- Backlinks partenaires.
+- Evenements en salle et bouche-a-oreille reel.
 
 Captures a fournir :
-- Profil rempli.
-- Post publie.
-- Statistiques du post : vues, likes, commentaires ou portee.
-- Preuve de la toile sociale : abonnements, interactions, invitations.
+- Page du dossier expliquant le refus assume des reseaux sociaux.
+- Backlink HoLazyV + lien retour.
+- Fiche Google Business Profile.
+- Statistiques emailing / Analytics / Site Kit.
+- Si le professeur exige absolument un reseau social : creer une page minimale pedagogique, sans publicite payante, avec redirection vers le site officiel.
 
 ## 7. Marketing emailing
 
@@ -140,7 +147,8 @@ Objectif de campagne :
 
 Base CSV :
 - Utilise le fichier `docs/emailing/base_clients_virealys.csv`.
-- Champs importants : email, prenom, segment, zone_interet, pays_prefere, consentement, niveau_passeport.
+- Champs importants : email, prenom, age, sexe, segment, zone_interet, pays_prefere, consentement, niveau_passeport.
+- Source actuelle : fichier `Dev presence en ligne.xlsx`, adapte en base emailing pour le TP.
 
 Segmentation :
 - Curieux : n'ont pas encore reserve.
@@ -185,10 +193,10 @@ Utiles :
 - Mobile + desktop.
 - Roue de navigation desktop.
 - Jeu bonus.
-- Backlink.
+- Backlink : page Partenariat HoLazyV + lien retour HoLazyV.
 - Benchmark local et distant.
-- Profil reseau social.
-- Publication + statistiques.
+- Justification du refus des reseaux sociaux commerciaux.
+- Preuves alternatives : SEO, backlink, fiche locale, newsletter, statistiques site/emailing.
 - CSV clients.
 - Template email.
 - Import emailing.

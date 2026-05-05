@@ -35,6 +35,7 @@
                     <li><a href="<?php echo esc_url( virealys_get_page_url( 'zones' ) ); ?>">Zones</a></li>
                     <li><a href="<?php echo esc_url( virealys_get_page_url( 'passeport' ) ); ?>">Passeport</a></li>
                     <li><a href="<?php echo esc_url( virealys_get_page_url( 'voyage-game' ) ); ?>">Jeu bonus</a></li>
+                    <li><a href="<?php echo esc_url( virealys_get_page_url( 'partenariat-holazyv' ) ); ?>">Partenariat HoLazyV</a></li>
                     <li><a href="<?php echo esc_url( virealys_get_page_url( 'dossier-rendu' ) ); ?>">Dossier TP</a></li>
                 </ul>
             </div>

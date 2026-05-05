@@ -5,7 +5,7 @@
  */
 
 if ( ! defined( 'VIREALYS_VERSION' ) ) {
-    define( 'VIREALYS_VERSION', '13.0.0' );
+    define( 'VIREALYS_VERSION', '13.1.0' );
 }
 
 /* ── THEME SETUP ── */
@@ -178,6 +178,7 @@ function virealys_scripts() {
             'zones'             => virealys_get_page_url( 'zones' ),
             'ambiances'         => virealys_get_page_url( 'ambiances' ),
             'passeport'         => virealys_get_page_url( 'passeport' ),
+            'partenariat-holazyv' => virealys_get_page_url( 'partenariat-holazyv' ),
             'reservation'       => virealys_get_page_url( 'reservation' ),
             'voyage-game'       => virealys_get_page_url( 'voyage-game' ),
             '__constellation__' => home_url( '/' ),
@@ -517,6 +518,7 @@ function virealys_overlay_fallback_menu() {
         'ambiances'   => 'Pays du mois',
         'passeport'   => 'Passeport',
         'voyage-game' => 'Jeu',
+        'partenariat-holazyv' => 'Partenariat',
         'reservation' => 'Reservation',
     );
     echo '<ul class="overlay-nav-list">';
@@ -528,7 +530,7 @@ function virealys_overlay_fallback_menu() {
 }
 
 function virealys_footer_fallback() {
-    $links = array( 'concept' => 'Concept', 'menus' => 'Menus', 'zones' => 'Zones', 'ambiances' => 'Pays du mois', 'passeport' => 'Passeport', 'voyage-game' => 'Jeu', 'dossier-rendu' => 'Dossier TP' );
+    $links = array( 'concept' => 'Concept', 'menus' => 'Menus', 'zones' => 'Zones', 'ambiances' => 'Pays du mois', 'passeport' => 'Passeport', 'voyage-game' => 'Jeu', 'partenariat-holazyv' => 'Partenariat HoLazyV', 'dossier-rendu' => 'Dossier TP' );
     echo '<ul class="footer-links">';
     foreach ( $links as $s => $l ) echo '<li><a href="' . esc_url( virealys_get_page_url( $s ) ) . '">' . esc_html( $l ) . '</a></li>';
     echo '</ul>';
@@ -538,7 +540,7 @@ function virealys_footer_fallback() {
 
 function virealys_school_seed_pages() {
     if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) return;
-    if ( get_option( 'virealys_school_seeded_v13' ) ) return;
+    if ( get_option( 'virealys_school_seeded_v14' ) ) return;
 
     $img = trailingslashit( get_template_directory_uri() ) . 'assets/images/';
     $pages = array(
@@ -580,7 +582,12 @@ function virealys_school_seed_pages() {
         'dossier-rendu' => array(
             'title'    => 'Dossier TP',
             'template' => '',
-            'content'  => '<h2>Preuves a fournir</h2><p>Cette page regroupe les elements a montrer dans le dossier: USP, SEO, fiche Google, geolocalisation, ergonomie, backlink, benchmark, reseaux sociaux et campagne emailing.</p><ul><li>Plugin SEO configure.</li><li>Fiche Google Business Profile complete.</li><li>Backlink avec un autre etudiant.</li><li>Base CSV et campagne emailing.</li><li>Captures des statistiques.</li></ul>',
+            'content'  => '<h2>Preuves a fournir</h2><p>Cette page regroupe les elements a montrer dans le dossier: USP, SEO, fiche Google, geolocalisation, ergonomie, backlink, benchmark, position ethique face aux reseaux sociaux et campagne emailing.</p><ul><li>Plugin SEO configure.</li><li>Fiche Google Business Profile complete.</li><li>Backlink avec HoLazyV.</li><li>Base CSV et campagne emailing.</li><li>Captures des statistiques.</li></ul>',
+        ),
+        'partenariat-holazyv' => array(
+            'title'    => 'Partenariat HoLazyV',
+            'template' => '',
+            'content'  => '<h2>Backlink et cooperation mutuelle</h2><p>Virealys integre un backlink vers HoLazyV dans le cadre d une cooperation mutuelle entre projets pedagogiques. Ce lien prouve le travail de netlinking demande dans le TP et montre que le site n est pas isole.</p><p><a class="btn btn-glow" href="https://www.holazyv.labo.infochartreux.fr/" target="_blank" rel="noopener">Visiter HoLazyV</a></p><h2>Interet SEO</h2><p>Un backlink contextualise aide les moteurs de recherche a comprendre les relations entre sites. Ici, le lien est coherent car HoLazyV et Virealys partagent une logique d experience immersive et de projet scolaire en ligne.</p><h2>Preuve pour le dossier</h2><ul><li>Capture de cette page Virealys avec le lien vers HoLazyV.</li><li>Capture du lien retour depuis HoLazyV vers Virealys.</li><li>Explication: cooperation mutuelle, autorite SEO, maillage entre projets.</li></ul>',
         ),
     );
 
@@ -603,7 +610,7 @@ function virealys_school_seed_pages() {
             $page_id = wp_insert_post( $postarr );
         }
         if ( $page_id && ! is_wp_error( $page_id ) ) {
-            update_post_meta( $page_id, '_virealys_seeded_content', 'v13' );
+            update_post_meta( $page_id, '_virealys_seeded_content', 'v14' );
             if ( $page['template'] ) update_post_meta( $page_id, '_wp_page_template', $page['template'] );
         }
     }
@@ -636,7 +643,7 @@ function virealys_school_seed_pages() {
         }
     }
 
-    update_option( 'virealys_school_seeded_v13', time(), false );
+    update_option( 'virealys_school_seeded_v14', time(), false );
 }
 add_action( 'admin_init', 'virealys_school_seed_pages' );
 
