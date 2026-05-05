@@ -35,12 +35,13 @@
         <?php endif; ?>
     </a>
     <nav class="v-site-nav-links" aria-label="<?php esc_attr_e( 'Navigation rapide', 'virealys' ); ?>">
-        <a href="<?php echo esc_url( home_url( '/#zones' ) ); ?>"><?php esc_html_e( 'Zones', 'virealys' ); ?></a>
-        <a href="<?php echo esc_url( home_url( '/#passeport' ) ); ?>"><?php esc_html_e( 'Passeport', 'virealys' ); ?></a>
-        <a href="<?php echo esc_url( home_url( '/#menus' ) ); ?>"><?php esc_html_e( 'Menus', 'virealys' ); ?></a>
+        <a href="<?php echo esc_url( virealys_get_page_url( 'concept' ) ); ?>"><?php esc_html_e( 'Concept', 'virealys' ); ?></a>
+        <a href="<?php echo esc_url( virealys_get_page_url( 'menus' ) ); ?>"><?php esc_html_e( 'Menus', 'virealys' ); ?></a>
+        <a href="<?php echo esc_url( virealys_get_page_url( 'zones' ) ); ?>"><?php esc_html_e( 'Zones', 'virealys' ); ?></a>
+        <a href="<?php echo esc_url( virealys_get_page_url( 'passeport' ) ); ?>"><?php esc_html_e( 'Passeport', 'virealys' ); ?></a>
     </nav>
     <div class="v-site-actions">
-        <a href="<?php echo esc_url( home_url( '/#reservation' ) ); ?>" class="v-nav-cta"><?php esc_html_e( 'Reserver', 'virealys' ); ?></a>
+        <a href="<?php echo esc_url( virealys_get_page_url( 'reservation' ) ); ?>" class="v-nav-cta"><?php esc_html_e( 'Reserver', 'virealys' ); ?></a>
         <button class="v-menu-button" id="nav-dock-menu-btn" type="button" aria-label="<?php esc_attr_e( 'Ouvrir le menu', 'virealys' ); ?>" aria-controls="menu-overlay" aria-expanded="false">
             <span class="dock-menu-icon" aria-hidden="true"><span></span><span></span><span></span></span>
         </button>

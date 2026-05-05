@@ -5,7 +5,7 @@
  */
 
 if ( ! defined( 'VIREALYS_VERSION' ) ) {
-    define( 'VIREALYS_VERSION', '12.3.0' );
+    define( 'VIREALYS_VERSION', '13.0.0' );
 }
 
 /* ── THEME SETUP ── */
@@ -173,12 +173,12 @@ function virealys_scripts() {
         'theme_url' => get_template_directory_uri(),
         'home_url'  => home_url( '/' ),
         'routes'    => array(
-            'concept'           => home_url( '/#concept' ),
-            'menus'             => home_url( '/#menus' ),
-            'zones'             => home_url( '/#zones' ),
-            'ambiances'         => home_url( '/#pays-du-mois' ),
-            'passeport'         => home_url( '/#passeport' ),
-            'reservation'       => home_url( '/#reservation' ),
+            'concept'           => virealys_get_page_url( 'concept' ),
+            'menus'             => virealys_get_page_url( 'menus' ),
+            'zones'             => virealys_get_page_url( 'zones' ),
+            'ambiances'         => virealys_get_page_url( 'ambiances' ),
+            'passeport'         => virealys_get_page_url( 'passeport' ),
+            'reservation'       => virealys_get_page_url( 'reservation' ),
             'voyage-game'       => virealys_get_page_url( 'voyage-game' ),
             '__constellation__' => home_url( '/' ),
         ),
@@ -511,27 +511,134 @@ function virealys_get_page_url( $slug ) {
 
 function virealys_overlay_fallback_menu() {
     $pages = array(
-        '#concept'       => 'Le Concept',
-        '#zones'         => 'Les 4 Zones',
-        '#pays-du-mois'  => 'Pays du mois',
-        '#passeport'     => 'Passeport',
-        'voyage-game'    => 'Le Jeu',
-        '#reservation'   => 'Reserver',
+        'concept'     => 'Concept',
+        'menus'       => 'Menus',
+        'zones'       => 'Zones',
+        'ambiances'   => 'Pays du mois',
+        'passeport'   => 'Passeport',
+        'voyage-game' => 'Jeu',
+        'reservation' => 'Reservation',
     );
     echo '<ul class="overlay-nav-list">';
     foreach ( $pages as $s => $l ) {
-        $url = str_starts_with( $s, '#' ) ? home_url( '/' . $s ) : virealys_get_page_url( $s );
+        $url = virealys_get_page_url( $s );
         echo '<li><a href="' . esc_url( $url ) . '" class="nav-link overlay-nav-link">' . esc_html( $l ) . '</a></li>';
     }
     echo '</ul>';
 }
 
 function virealys_footer_fallback() {
-    $links = array( 'concept' => 'Le Concept', 'menus' => 'Nos Menus', 'zones' => 'Les Zones', 'passeport' => 'Passeport', 'voyage-game' => 'Le Jeu' );
+    $links = array( 'concept' => 'Concept', 'menus' => 'Menus', 'zones' => 'Zones', 'ambiances' => 'Pays du mois', 'passeport' => 'Passeport', 'voyage-game' => 'Jeu', 'dossier-rendu' => 'Dossier TP' );
     echo '<ul class="footer-links">';
     foreach ( $links as $s => $l ) echo '<li><a href="' . esc_url( virealys_get_page_url( $s ) ) . '">' . esc_html( $l ) . '</a></li>';
     echo '</ul>';
 }
+
+/* ── SCHOOL CONTENT SEED ── */
+
+function virealys_school_seed_pages() {
+    if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) return;
+    if ( get_option( 'virealys_school_seeded_v13' ) ) return;
+
+    $img = trailingslashit( get_template_directory_uri() ) . 'assets/images/';
+    $pages = array(
+        'concept' => array(
+            'title'    => 'Concept',
+            'template' => '',
+            'content'  => '<h2>Un restaurant slow food adaptatif</h2><p>Virealys est un site pedagogique et fictif autour d un restaurant slow food holographique. Le sujet est volontairement precis: un restaurant immersif qui propose plusieurs niveaux d experience, du repas normal au menu gastronomique plus ambitieux.</p><h2>USP</h2><ul><li>Repas classique ou experience plus gastronomique selon le budget.</li><li>Decoration holographique et sections inspirees de plusieurs pays.</li><li>Option VR pour manger dans un environnement choisi.</li><li>Bouchees d air aromatique et hologrammes comestibles comme effet sensoriel fictif.</li><li>Passeport client et jeu bonus pour fideliser sans remplacer le restaurant.</li></ul><figure><img src="' . esc_url( $img . 'virealys-hero-immersive.webp' ) . '" alt="Ambiances du restaurant Virealys"></figure>',
+        ),
+        'menus' => array(
+            'title'    => 'Menus',
+            'template' => '',
+            'content'  => '<h2>Une carte lisible</h2><p>Les menus sont classes par intensite pour rester credibles: Classique, Voyage, Immersif et Sensoriel. Cette organisation aide l utilisateur a comparer rapidement les prix, les options et le niveau d immersion.</p><h2>Exemples</h2><ul><li>Menu Classique: cuisine de saison et passeport cree.</li><li>Menu Voyage: pays du mois et accord boisson.</li><li>Menu Immersif: table augmentee et VR optionnelle.</li><li>Menu Sensoriel: experience complete et plat cache eligible.</li></ul><figure><img src="' . esc_url( $img . 'virealys-menu-holo.webp' ) . '" alt="Menus holographiques Virealys"></figure>',
+        ),
+        'zones' => array(
+            'title'    => 'Zones',
+            'template' => '',
+            'content'  => '<h2>Quatre sections dans le restaurant</h2><p>Les zones rendent l USP concrete: Origine pour le slow food, Voyage pour les pays, Immersion pour la VR douce et Sensorielle pour les hologrammes et effets de table.</p><figure><img src="' . esc_url( $img . 'virealys-zone-asie.webp' ) . '" alt="Zone Voyage Virealys"></figure><h2>Ergonomie</h2><p>Le choix par zone reduit la confusion: chaque client comprend le prix, le niveau d immersion et la recompense possible avant de reserver.</p>',
+        ),
+        'ambiances' => array(
+            'title'    => 'Pays du mois',
+            'template' => 'templates/template-ambiance.php',
+            'content'  => '<h2>Destination evolutive</h2><p>Le pays du mois renouvelle le contenu du site et du restaurant. Il permet d ajouter des articles, des images, une campagne emailing et des publications sociales sans changer le concept.</p><figure><img src="' . esc_url( $img . 'virealys-zone-france.webp' ) . '" alt="Ambiance France holographique"></figure>',
+        ),
+        'passeport' => array(
+            'title'    => 'Passeport',
+            'template' => '',
+            'content'  => '<h2>Passeport client</h2><p>Le passeport numerique garde les tampons, les visites et les recompenses. Il relie le site, la reservation, le jeu bonus et la salle.</p><h2>Recompenses fictives</h2><ul><li>Cocktail Constellation.</li><li>Amuse-bouche secret.</li><li>Priorite sur le pays du mois.</li><li>Invitation a une avant-premiere fictive.</li></ul><figure><img src="' . esc_url( $img . 'virealys-passport.webp' ) . '" alt="Passeport numerique Virealys"></figure>',
+        ),
+        'reservation' => array(
+            'title'    => 'Reservation',
+            'template' => 'templates/template-contact.php',
+            'content'  => '<h2>Reservation pedagogique</h2><p>Le formulaire ideal doit demander la date, la zone, le pays choisi, les allergies et le code passeport. Cette page sert a demontrer l ergonomie et la geolocalisation du restaurant fictif.</p><figure><img src="' . esc_url( $img . 'virealys-reservation.webp' ) . '" alt="Interface de reservation Virealys"></figure>',
+        ),
+        'voyage-game' => array(
+            'title'    => 'Le Jeu',
+            'template' => 'templates/template-game.php',
+            'content'  => '<p>Jeu bonus Virealys: exploration, recettes et passeport.</p>',
+        ),
+        'dossier-rendu' => array(
+            'title'    => 'Dossier TP',
+            'template' => '',
+            'content'  => '<h2>Preuves a fournir</h2><p>Cette page regroupe les elements a montrer dans le dossier: USP, SEO, fiche Google, geolocalisation, ergonomie, backlink, benchmark, reseaux sociaux et campagne emailing.</p><ul><li>Plugin SEO configure.</li><li>Fiche Google Business Profile complete.</li><li>Backlink avec un autre etudiant.</li><li>Base CSV et campagne emailing.</li><li>Captures des statistiques.</li></ul>',
+        ),
+    );
+
+    foreach ( $pages as $slug => $page ) {
+        $existing = get_page_by_path( $slug );
+        $postarr = array(
+            'post_title'   => $page['title'],
+            'post_name'    => $slug,
+            'post_content' => wp_kses_post( $page['content'] ),
+            'post_status'  => 'publish',
+            'post_type'    => 'page',
+        );
+        if ( $existing ) {
+            if ( get_post_meta( $existing->ID, '_virealys_seeded_content', true ) || trim( wp_strip_all_tags( $existing->post_content ) ) === '' ) {
+                $postarr['ID'] = $existing->ID;
+                wp_update_post( $postarr );
+            }
+            $page_id = $existing->ID;
+        } else {
+            $page_id = wp_insert_post( $postarr );
+        }
+        if ( $page_id && ! is_wp_error( $page_id ) ) {
+            update_post_meta( $page_id, '_virealys_seeded_content', 'v13' );
+            if ( $page['template'] ) update_post_meta( $page_id, '_wp_page_template', $page['template'] );
+        }
+    }
+
+    $posts = array(
+        'slow-food-holographique' => array(
+            'title'   => 'Slow Food holographique: garder le gout au centre',
+            'content' => '<p>Le concept Virealys ne vend pas seulement de la technologie. Le slow food reste la base: produits de saison, producteurs locaux et assiette lisible. Les hologrammes servent a raconter l origine du plat.</p>',
+        ),
+        'pays-du-mois-japon-nocturne' => array(
+            'title'   => 'Pays du mois: Japon nocturne',
+            'content' => '<p>Le Japon nocturne sert d exemple de destination: lumiere douce, yuzu, shiso, ambiance urbaine et narration de table. Ce contenu peut nourrir le SEO, les reseaux sociaux et la newsletter.</p>',
+        ),
+        'campagne-emailing-virealys' => array(
+            'title'   => 'Campagne emailing: faire revenir les clients',
+            'content' => '<p>La campagne emailing cible trois segments: curieux du concept, clients deja venus et amateurs d experiences immersives. L objectif est de transformer l interet pour le jeu et le passeport en reservation.</p>',
+        ),
+    );
+
+    foreach ( $posts as $slug => $post ) {
+        $existing = get_page_by_path( $slug, OBJECT, 'post' );
+        if ( ! $existing ) {
+            wp_insert_post( array(
+                'post_title'   => $post['title'],
+                'post_name'    => $slug,
+                'post_content' => wp_kses_post( $post['content'] ),
+                'post_status'  => 'publish',
+                'post_type'    => 'post',
+            ) );
+        }
+    }
+
+    update_option( 'virealys_school_seeded_v13', time(), false );
+}
+add_action( 'admin_init', 'virealys_school_seed_pages' );
 
 /* ── CUSTOMIZER ── */
 

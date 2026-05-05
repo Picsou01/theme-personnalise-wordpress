@@ -1,0 +1,6 @@
+email;prenom;nom;segment;zone_interet;pays_prefere;niveau_passeport;derniere_visite;consentement;source
+adrien.demo@example.com;Adrien;Martin;passeport;Immersion;Japon;Argent;2026-04-12;oui;jeu
+lea.demo@example.com;Lea;Durand;curieux;Voyage;Italie;Nouveau;;oui;instagram
+nora.demo@example.com;Nora;Petit;client;Origine;France;Bronze;2026-03-21;oui;reservation
+yannis.demo@example.com;Yannis;Moreau;passeport;Sensorielle;Espace;Or;2026-04-28;oui;newsletter
+emma.demo@example.com;Emma;Roux;curieux;Voyage;Japon;Nouveau;;oui;salon

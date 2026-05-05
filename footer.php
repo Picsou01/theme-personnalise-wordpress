@@ -6,8 +6,8 @@
         <div class="footer-grid">
             <div class="footer-col footer-brand">
                 <a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="logo-text">VIREALYS</a>
-                <p class="footer-tagline"><?php echo esc_html( get_theme_mod( 'footer_tagline', 'On ne vient pas manger. On vient vivre un monde.' ) ); ?></p>
-                <p class="footer-note">Slow Food, pays evolutifs, passeport numerique et recompenses a debloquer en salle.</p>
+                <p class="footer-tagline"><?php echo esc_html( get_theme_mod( 'footer_tagline', 'Restaurant slow food holographique.' ) ); ?></p>
+                <p class="footer-note">Site pedagogique et fictif. Slow Food, pays evolutifs, VR optionnelle et passeport client.</p>
                 <div class="footer-social">
                     <?php if ( get_theme_mod( 'instagram_url' ) ) : ?>
                         <a href="<?php echo esc_url( get_theme_mod( 'instagram_url' ) ); ?>" target="_blank" rel="noopener" aria-label="Instagram">
@@ -30,11 +30,12 @@
             <div class="footer-col">
                 <h4>Explorer</h4>
                 <ul class="footer-links">
-                    <li><a href="<?php echo esc_url( home_url( '/#zones' ) ); ?>">Les 4 zones</a></li>
-                    <li><a href="<?php echo esc_url( home_url( '/#pays-du-mois' ) ); ?>">Pays du mois</a></li>
-                    <li><a href="<?php echo esc_url( home_url( '/#passeport' ) ); ?>">Passeport</a></li>
-                    <li><a href="<?php echo esc_url( home_url( '/#jeu' ) ); ?>">Jeu</a></li>
-                    <li><a href="<?php echo esc_url( home_url( '/#reservation' ) ); ?>">Reservation</a></li>
+                    <li><a href="<?php echo esc_url( virealys_get_page_url( 'concept' ) ); ?>">Concept</a></li>
+                    <li><a href="<?php echo esc_url( virealys_get_page_url( 'menus' ) ); ?>">Menus</a></li>
+                    <li><a href="<?php echo esc_url( virealys_get_page_url( 'zones' ) ); ?>">Zones</a></li>
+                    <li><a href="<?php echo esc_url( virealys_get_page_url( 'passeport' ) ); ?>">Passeport</a></li>
+                    <li><a href="<?php echo esc_url( virealys_get_page_url( 'voyage-game' ) ); ?>">Jeu bonus</a></li>
+                    <li><a href="<?php echo esc_url( virealys_get_page_url( 'dossier-rendu' ) ); ?>">Dossier TP</a></li>
                 </ul>
             </div>
 
@@ -63,7 +64,7 @@
                     <?php if ( get_theme_mod( 'address' ) ) : ?>
                         <li><?php echo esc_html( get_theme_mod( 'address' ) ); ?></li>
                     <?php endif; ?>
-                    <li><a href="<?php echo esc_url( home_url( '/#reservation' ) ); ?>">Transformer une recompense</a></li>
+                    <li><a href="<?php echo esc_url( virealys_get_page_url( 'reservation' ) ); ?>">Reservation</a></li>
                 </ul>
             </div>
         </div>
