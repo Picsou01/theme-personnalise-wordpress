@@ -5,7 +5,7 @@
  */
 
 if ( ! defined( 'VIREALYS_VERSION' ) ) {
-    define( 'VIREALYS_VERSION', '13.1.0' );
+    define( 'VIREALYS_VERSION', '13.2.0' );
 }
 
 /* ── THEME SETUP ── */
@@ -510,6 +510,10 @@ function virealys_get_page_url( $slug ) {
     return $c[ $slug ];
 }
 
+function virealys_holazyv_page_content() {
+    return '<h2>Cooperation officielle avec HoLazyV</h2><p>Virealys met en avant HoLazyV dans le cadre d une cooperation mutuelle entre deux projets pedagogiques immersifs. Cette page sert de backlink clair, contextualise et facile a capturer pour le dossier.</p><p><a class="btn btn-glow" href="https://www.holazyv.labo.infochartreux.fr/" target="_blank" rel="noopener">Acceder au site HoLazyV</a></p><h2>Pourquoi ce lien est coherent</h2><p>HoLazyV et Virealys partagent une logique d experience en ligne: univers immersif, parcours utilisateur et demonstration concrete de presence web. Le lien n est pas place au hasard: il explique une vraie cooperation entre sites.</p><h2>Preuves a mettre dans le rendu</h2><ul><li>Capture de cette page Virealys avec le bouton vers HoLazyV.</li><li>Capture du lien retour depuis HoLazyV vers Virealys.</li><li>Explication: backlink contextualise, cooperation mutuelle et maillage SEO entre projets.</li></ul>';
+}
+
 function virealys_overlay_fallback_menu() {
     $pages = array(
         'concept'     => 'Concept',
@@ -540,7 +544,7 @@ function virealys_footer_fallback() {
 
 function virealys_school_seed_pages() {
     if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) return;
-    if ( get_option( 'virealys_school_seeded_v14' ) ) return;
+    if ( get_option( 'virealys_school_seeded_v15' ) && get_page_by_path( 'partenariat-holazyv' ) ) return;
 
     $img = trailingslashit( get_template_directory_uri() ) . 'assets/images/';
     $pages = array(
@@ -587,7 +591,7 @@ function virealys_school_seed_pages() {
         'partenariat-holazyv' => array(
             'title'    => 'Partenariat HoLazyV',
             'template' => '',
-            'content'  => '<h2>Backlink et cooperation mutuelle</h2><p>Virealys integre un backlink vers HoLazyV dans le cadre d une cooperation mutuelle entre projets pedagogiques. Ce lien prouve le travail de netlinking demande dans le TP et montre que le site n est pas isole.</p><p><a class="btn btn-glow" href="https://www.holazyv.labo.infochartreux.fr/" target="_blank" rel="noopener">Visiter HoLazyV</a></p><h2>Interet SEO</h2><p>Un backlink contextualise aide les moteurs de recherche a comprendre les relations entre sites. Ici, le lien est coherent car HoLazyV et Virealys partagent une logique d experience immersive et de projet scolaire en ligne.</p><h2>Preuve pour le dossier</h2><ul><li>Capture de cette page Virealys avec le lien vers HoLazyV.</li><li>Capture du lien retour depuis HoLazyV vers Virealys.</li><li>Explication: cooperation mutuelle, autorite SEO, maillage entre projets.</li></ul>',
+            'content'  => virealys_holazyv_page_content(),
         ),
     );
 
@@ -610,7 +614,7 @@ function virealys_school_seed_pages() {
             $page_id = wp_insert_post( $postarr );
         }
         if ( $page_id && ! is_wp_error( $page_id ) ) {
-            update_post_meta( $page_id, '_virealys_seeded_content', 'v14' );
+            update_post_meta( $page_id, '_virealys_seeded_content', 'v15' );
             if ( $page['template'] ) update_post_meta( $page_id, '_wp_page_template', $page['template'] );
         }
     }
@@ -643,9 +647,53 @@ function virealys_school_seed_pages() {
         }
     }
 
-    update_option( 'virealys_school_seeded_v14', time(), false );
+    update_option( 'virealys_school_seeded_v15', time(), false );
+    flush_rewrite_rules( false );
 }
 add_action( 'admin_init', 'virealys_school_seed_pages' );
+
+function virealys_holazyv_virtual_page() {
+    if ( ! is_404() ) return;
+    global $wp;
+    if ( trim( $wp->request, '/' ) !== 'partenariat-holazyv' ) return;
+
+    status_header( 200 );
+    nocache_headers();
+    add_filter( 'document_title_parts', function( $parts ) {
+        $parts['title'] = 'Partenariat HoLazyV';
+        return $parts;
+    } );
+    get_header();
+    ?>
+    <section class="v-page-hero v-page-hero-partenariat-holazyv">
+        <div class="page-hero-overlay"></div>
+        <div class="container v-page-hero-grid">
+            <div data-reveal>
+                <span class="section-label"><?php esc_html_e( 'Backlink officiel', 'virealys' ); ?></span>
+                <h1 class="v-page-title"><?php esc_html_e( 'Partenariat HoLazyV', 'virealys' ); ?></h1>
+                <p class="v-page-desc"><?php esc_html_e( 'Une page dediee pour prouver la cooperation mutuelle et le lien SEO entre projets.', 'virealys' ); ?></p>
+            </div>
+            <div class="v-page-mini-map" data-reveal aria-hidden="true">
+                <span class="v-mini-star">Lien</span>
+                <span class="v-mini-star">SEO</span>
+                <span class="v-mini-star">Preuve</span>
+                <span class="v-mini-star">Retour</span>
+            </div>
+        </div>
+    </section>
+    <section class="section v-page-body" data-reveal>
+        <div class="container v-page-layout">
+            <div class="page-content v-page-content">
+                <?php echo wp_kses_post( virealys_holazyv_page_content() ); ?>
+            </div>
+        </div>
+    </section>
+    <?php
+    get_template_part( 'template-parts/constellation-return' );
+    get_footer();
+    exit;
+}
+add_action( 'template_redirect', 'virealys_holazyv_virtual_page', 1 );
 
 /* ── CUSTOMIZER ── */
 
