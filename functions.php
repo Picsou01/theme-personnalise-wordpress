@@ -5,7 +5,7 @@
  */
 
 if ( ! defined( 'VIREALYS_VERSION' ) ) {
-    define( 'VIREALYS_VERSION', '13.2.0' );
+    define( 'VIREALYS_VERSION', '13.3.0' );
 }
 
 /* ── THEME SETUP ── */
@@ -511,7 +511,7 @@ function virealys_get_page_url( $slug ) {
 }
 
 function virealys_holazyv_page_content() {
-    return '<h2>Cooperation officielle avec HoLazyV</h2><p>Virealys met en avant HoLazyV dans le cadre d une cooperation mutuelle entre deux projets pedagogiques immersifs. Cette page sert de backlink clair, contextualise et facile a capturer pour le dossier.</p><p><a class="btn btn-glow" href="https://www.holazyv.labo.infochartreux.fr/" target="_blank" rel="noopener">Acceder au site HoLazyV</a></p><h2>Pourquoi ce lien est coherent</h2><p>HoLazyV et Virealys partagent une logique d experience en ligne: univers immersif, parcours utilisateur et demonstration concrete de presence web. Le lien n est pas place au hasard: il explique une vraie cooperation entre sites.</p><h2>Preuves a mettre dans le rendu</h2><ul><li>Capture de cette page Virealys avec le bouton vers HoLazyV.</li><li>Capture du lien retour depuis HoLazyV vers Virealys.</li><li>Explication: backlink contextualise, cooperation mutuelle et maillage SEO entre projets.</li></ul>';
+    return '<h2>Une utilite concrete: HoLazyV equipe l immersion Virealys</h2><p>La cooperation ne sert pas seulement au SEO. HoLazyV devient le partenaire technologique fictif de Virealys pour transformer l experience du restaurant: casques VR ultra-legers, projections holographiques de plats, menus en realite augmentee, ambiances virtuelles par table et accessoires holographiques pour le personnel.</p><p><a class="btn btn-glow" href="https://www.holazyv.labo.infochartreux.fr/" target="_blank" rel="noopener">Decouvrir HoLazyV</a></p><h2>Ce que le client y gagne</h2><ul><li>Avant la reservation: le client peut decouvrir sur HoLazyV les technologies qui seront utilisees pendant son repas.</li><li>Pendant le service: Virealys utilise les modules HoLazyV pour afficher le menu, projeter l origine des produits et installer l ambiance du pays choisi.</li><li>Apres le repas: le passeport Virealys peut debloquer des recompenses liees a HoLazyV, comme un filtre holographique souvenir, une priorite sur une table immersive ou une invitation a tester une nouvelle capsule VR.</li></ul><h2>Une boucle commune</h2><p>Virealys apporte le contexte gastronomique, HoLazyV apporte la couche immersive. Ensemble, les deux projets creent un parcours complet: decouverte en ligne, reservation, experience en salle, passeport numerique, recompense et envie de revenir pour tester une nouvelle ambiance.</p><h2>Interet pour le dossier</h2><ul><li>Backlink contextualise vers HoLazyV, avec une vraie raison d etre.</li><li>Cooperation B2B coherente avec le theme Slow Food holographique.</li><li>Preuve de maillage entre deux sites WordPress pedagogiques.</li><li>Argument clair: le lien aide le referencement, mais il renforce aussi l univers et la credibilite du concept.</li></ul>';
 }
 
 function virealys_overlay_fallback_menu() {
@@ -544,7 +544,7 @@ function virealys_footer_fallback() {
 
 function virealys_school_seed_pages() {
     if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) return;
-    if ( get_option( 'virealys_school_seeded_v15' ) && get_page_by_path( 'partenariat-holazyv' ) ) return;
+    if ( get_option( 'virealys_school_seeded_v16' ) && get_page_by_path( 'partenariat-holazyv' ) ) return;
 
     $img = trailingslashit( get_template_directory_uri() ) . 'assets/images/';
     $pages = array(
@@ -614,7 +614,7 @@ function virealys_school_seed_pages() {
             $page_id = wp_insert_post( $postarr );
         }
         if ( $page_id && ! is_wp_error( $page_id ) ) {
-            update_post_meta( $page_id, '_virealys_seeded_content', 'v15' );
+            update_post_meta( $page_id, '_virealys_seeded_content', 'v16' );
             if ( $page['template'] ) update_post_meta( $page_id, '_wp_page_template', $page['template'] );
         }
     }
@@ -647,7 +647,7 @@ function virealys_school_seed_pages() {
         }
     }
 
-    update_option( 'virealys_school_seeded_v15', time(), false );
+    update_option( 'virealys_school_seeded_v16', time(), false );
     flush_rewrite_rules( false );
 }
 add_action( 'admin_init', 'virealys_school_seed_pages' );
